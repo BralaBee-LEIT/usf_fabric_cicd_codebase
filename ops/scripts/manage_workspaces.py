@@ -137,6 +137,150 @@ def cmd_delete_workspace(args):
         return 1
 
 
+def cmd_delete_bulk(args):
+    """Delete multiple workspaces from IDs or file"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        workspace_ids = []
+        
+        # Read workspace IDs from file
+        if args.file:
+            try:
+                with open(args.file, 'r') as f:
+                    for line in f:
+                        line = line.strip()
+                        # Skip empty lines and comments
+                        if line and not line.startswith('#'):
+                            workspace_ids.append(line)
+            except FileNotFoundError:
+                print_error(f"File not found: {args.file}")
+                return 1
+            except Exception as e:
+                print_error(f"Error reading file: {e}")
+                return 1
+            
+            if not workspace_ids:
+                print_warning("No workspace IDs found in file")
+                return 0
+            
+            # Show warning with file info
+            print_warning(f"You are about to delete {len(workspace_ids)} workspace(s) from file:")
+            print_info(f"  File: {args.file}")
+            for ws_id in workspace_ids:
+                print(f"  - {ws_id}")
+        
+        # Use provided workspace IDs
+        elif args.workspace_ids:
+            workspace_ids = args.workspace_ids
+            
+            print_warning(f"You are about to delete {len(workspace_ids)} workspace(s):")
+            for ws_id in workspace_ids:
+                print(f"  - {ws_id}")
+        
+        else:
+            print_error("Please provide workspace IDs or use --file option")
+            return 1
+        
+        # Confirm deletion
+        if not args.yes:
+            confirmation = input(f"\nType 'DELETE {len(workspace_ids)}' to confirm: ")
+            if confirmation != f"DELETE {len(workspace_ids)}":
+                print_info("Deletion cancelled")
+                return 0
+        
+        # Delete workspaces
+        print_info(f"\n🗑️  Deleting {len(workspace_ids)} workspace(s)...")
+        
+        success_count = 0
+        fail_count = 0
+        
+        for workspace_id in workspace_ids:
+            try:
+                success = manager.delete_workspace(workspace_id, force=args.force)
+                if success:
+                    print_success(f"✓ Deleted workspace: {workspace_id}")
+                    success_count += 1
+                else:
+                    print_warning(f"✗ Workspace not found or already deleted: {workspace_id}")
+                    fail_count += 1
+            except Exception as e:
+                print_error(f"✗ Failed to delete {workspace_id}: {e}")
+                fail_count += 1
+        
+        # Print summary
+        print_info(f"\n📊 Summary:")
+        print_success(f"  ✓ Deleted: {success_count}")
+        if fail_count > 0:
+            print_error(f"  ✗ Failed: {fail_count}")
+        print_info(f"  📋 Total: {len(workspace_ids)}")
+        
+        return 0 if fail_count == 0 else 1
+        
+    except Exception as e:
+        print_error(f"Bulk deletion failed: {e}")
+        logger.exception("Bulk delete error")
+        return 1
+
+
+def cmd_delete_all(args):
+    """Delete all workspaces in the environment"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        
+        # Get all workspaces
+        workspaces = manager.list_workspaces()
+        
+        if not workspaces:
+            print_info("No workspaces found to delete")
+            return 0
+        
+        # Show warning
+        print_warning(f"⚠️  WARNING: You are about to delete ALL {len(workspaces)} workspaces:")
+        for ws in workspaces:
+            print(f"  - {ws.get('displayName', 'Unknown')} ({ws['id']})")
+        
+        # Confirm deletion
+        if not args.yes:
+            confirmation = input("\nType 'DELETE ALL' to confirm: ")
+            if confirmation != "DELETE ALL":
+                print_info("Deletion cancelled")
+                return 0
+        
+        # Delete all workspaces
+        print_info(f"\n🗑️  Deleting {len(workspaces)} workspace(s)...")
+        
+        workspace_ids = [ws['id'] for ws in workspaces]
+        success_count = 0
+        fail_count = 0
+        
+        for workspace_id in workspace_ids:
+            try:
+                success = manager.delete_workspace(workspace_id, force=args.force)
+                if success:
+                    print_success(f"✓ Deleted workspace: {workspace_id}")
+                    success_count += 1
+                else:
+                    print_warning(f"✗ Workspace not found or already deleted: {workspace_id}")
+                    fail_count += 1
+            except Exception as e:
+                print_error(f"✗ Failed to delete {workspace_id}: {e}")
+                fail_count += 1
+        
+        # Print summary
+        print_info(f"\n📊 Summary:")
+        print_success(f"  ✓ Deleted: {success_count}")
+        if fail_count > 0:
+            print_error(f"  ✗ Failed: {fail_count}")
+        print_info(f"  📋 Total: {len(workspace_ids)}")
+        
+        return 0 if fail_count == 0 else 1
+        
+    except Exception as e:
+        print_error(f"Delete all failed: {e}")
+        logger.exception("Delete all error")
+        return 1
+
+
 def cmd_update_workspace(args):
     """Update workspace properties"""
     try:
@@ -482,6 +626,28 @@ def main():
     parser_delete.add_argument('--force', action='store_true', help='Force deletion even if workspace has items')
     parser_delete.add_argument('-y', '--yes', action='store_true', help='Skip confirmation prompt')
     parser_delete.set_defaults(func=cmd_delete_workspace)
+    
+    # Delete bulk workspaces
+    parser_delete_bulk = subparsers.add_parser('delete-bulk', 
+                                               help='Delete multiple workspaces from IDs or file')
+    parser_delete_bulk.add_argument('workspace_ids', nargs='*', 
+                                   help='Workspace IDs to delete')
+    parser_delete_bulk.add_argument('--file', '-f',
+                                   help='File containing workspace IDs (one per line)')
+    parser_delete_bulk.add_argument('--force', action='store_true', 
+                                   help='Force deletion even if workspace has items')
+    parser_delete_bulk.add_argument('-y', '--yes', action='store_true', 
+                                   help='Skip confirmation prompt')
+    parser_delete_bulk.set_defaults(func=cmd_delete_bulk)
+    
+    # Delete all workspaces
+    parser_delete_all = subparsers.add_parser('delete-all', 
+                                             help='Delete all workspaces in environment')
+    parser_delete_all.add_argument('--force', action='store_true', 
+                                  help='Force deletion even if workspace has items')
+    parser_delete_all.add_argument('-y', '--yes', action='store_true', 
+                                  help='Skip confirmation prompt')
+    parser_delete_all.set_defaults(func=cmd_delete_all)
     
     # Update workspace
     parser_update = subparsers.add_parser('update', help='Update workspace properties')

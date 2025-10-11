@@ -1,0 +1,12 @@
+# Workspaces to Delete
+# One workspace ID per line
+# Lines starting with # are comments and will be ignored
+
+# Example workspace IDs (replace with actual IDs):
+# 8070ecd4-d1f2-4b08-addc-4a78adf2e1a4
+# 4f2a427d-9040-4bc6-b410-cbeb8e7c7bf4
+# e5ca7fe9-e1f2-470b-97aa-5723ffef40de
+
+# You can also add notes:
+# Dev workspace - created for testing
+# Test workspace - obsolete after migration

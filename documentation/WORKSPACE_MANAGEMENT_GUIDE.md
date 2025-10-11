@@ -94,6 +94,12 @@ python3 ops/scripts/manage_workspaces.py add-user WORKSPACE_ID user@example.com 
 
 # Create complete environment (dev + test + prod)
 python3 ops/scripts/manage_workspaces.py create-set my-project
+
+# Delete multiple workspaces from file
+python3 ops/scripts/manage_workspaces.py delete-bulk --file workspaces.txt
+
+# Delete all workspaces in environment
+python3 ops/scripts/manage_workspaces.py delete-all -e dev
 ```
 
 ### Python API Usage
@@ -236,6 +242,80 @@ python3 ops/scripts/manage_workspaces.py delete workspace-123
 # Force delete
 python3 ops/scripts/manage_workspaces.py delete workspace-123 --force -y
 ```
+
+#### Delete Bulk Workspaces
+
+Delete multiple workspaces from direct IDs or a file.
+
+```bash
+python3 ops/scripts/manage_workspaces.py delete-bulk [WORKSPACE_IDS...] [OPTIONS]
+
+Arguments:
+  WORKSPACE_IDS    # One or more workspace IDs (optional if using --file)
+
+Options:
+  --file, -f FILE  # File containing workspace IDs (one per line)
+  --force          # Force deletion even if workspace has items
+  -y, --yes        # Skip confirmation prompt
+```
+
+**File Format:**
+```txt
+# Comments are supported (lines starting with #)
+workspace-id-1
+workspace-id-2
+workspace-id-3
+```
+
+**Examples:**
+```bash
+# Delete specific workspaces by ID
+python3 ops/scripts/manage_workspaces.py delete-bulk \
+  workspace-id-1 workspace-id-2 workspace-id-3
+
+# Delete from file
+python3 ops/scripts/manage_workspaces.py delete-bulk --file workspaces_to_delete.txt
+
+# Delete from file without confirmation (automated)
+python3 ops/scripts/manage_workspaces.py delete-bulk -f cleanup.txt --yes
+
+# Force delete from file
+python3 ops/scripts/manage_workspaces.py delete-bulk -f cleanup.txt --force
+```
+
+#### Delete All Workspaces
+
+Delete all workspaces in the environment.
+
+```bash
+python3 ops/scripts/manage_workspaces.py delete-all [OPTIONS]
+
+Options:
+  --force          # Force deletion even if workspace has items
+  -y, --yes        # Skip confirmation prompt
+```
+
+**Examples:**
+```bash
+# Delete all with confirmation
+python3 ops/scripts/manage_workspaces.py delete-all
+
+# Delete all dev workspaces
+python3 ops/scripts/manage_workspaces.py delete-all -e dev
+
+# Delete all without confirmation (automated)
+python3 ops/scripts/manage_workspaces.py delete-all --yes
+
+# Force delete all
+python3 ops/scripts/manage_workspaces.py delete-all --force --yes
+```
+
+**⚠️ Safety Notes:**
+- `delete-bulk` requires typing `DELETE <count>` to confirm (e.g., "DELETE 5")
+- `delete-all` requires typing `DELETE ALL` to confirm
+- Use `--yes` flag to skip confirmation in automated scripts
+- Failed deletions are reported in the summary
+- Commands continue with remaining workspaces if some fail
 
 ### User Management Commands
 
