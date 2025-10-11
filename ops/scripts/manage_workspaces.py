@@ -1,0 +1,574 @@
+#!/usr/bin/env python3
+"""
+Microsoft Fabric Workspace Management CLI
+Command-line interface for managing workspaces and users across environments
+"""
+import argparse
+import sys
+import json
+import logging
+from typing import Optional, List
+from pathlib import Path
+
+# Add utilities to path
+sys.path.insert(0, str(Path(__file__).parent / "utilities"))
+
+from utilities.workspace_manager import (
+    WorkspaceManager,
+    WorkspaceRole,
+    CapacityType,
+    create_workspace_for_environment,
+    setup_complete_environment
+)
+from utilities.output import print_success, print_error, print_warning, print_info, print_table
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+
+def cmd_list_workspaces(args):
+    """List all workspaces"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        workspaces = manager.list_workspaces(
+            filter_by_environment=args.filter_env,
+            include_details=args.details
+        )
+        
+        if not workspaces:
+            print_warning("No workspaces found")
+            return 0
+        
+        # Prepare table data
+        headers = ["Name", "ID", "Type"]
+        if args.details:
+            headers.extend(["Capacity", "State", "Region"])
+        
+        rows = []
+        for ws in workspaces:
+            row = [
+                ws.get('displayName', 'N/A'),
+                ws.get('id', 'N/A'),
+                ws.get('type', 'Workspace')
+            ]
+            
+            if args.details:
+                row.extend([
+                    ws.get('capacityId', 'Trial'),
+                    ws.get('state', 'Active'),
+                    ws.get('region', 'N/A')
+                ])
+            
+            rows.append(row)
+        
+        print_table(headers, rows)
+        print_success(f"\nFound {len(workspaces)} workspace(s)")
+        
+        return 0
+        
+    except Exception as e:
+        print_error(f"Failed to list workspaces: {e}")
+        logger.exception("List workspaces error")
+        return 1
+
+
+def cmd_create_workspace(args):
+    """Create a new workspace"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        
+        # Parse capacity type
+        capacity_type = CapacityType(args.capacity_type) if args.capacity_type else CapacityType.TRIAL
+        
+        workspace = manager.create_workspace(
+            name=args.name,
+            description=args.description,
+            capacity_id=args.capacity_id,
+            capacity_type=capacity_type
+        )
+        
+        print_success(f"✓ Created workspace: {workspace.get('displayName')}")
+        print_info(f"  ID: {workspace.get('id')}")
+        
+        if args.json:
+            print(json.dumps(workspace, indent=2))
+        
+        return 0
+        
+    except Exception as e:
+        print_error(f"Failed to create workspace: {e}")
+        logger.exception("Create workspace error")
+        return 1
+
+
+def cmd_delete_workspace(args):
+    """Delete a workspace"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        
+        # Confirm deletion if not forced
+        if not args.yes:
+            workspace = manager.get_workspace_details(args.workspace_id)
+            workspace_name = workspace.get('displayName', args.workspace_id)
+            
+            print_warning(f"You are about to delete workspace: {workspace_name}")
+            confirmation = input("Type 'DELETE' to confirm: ")
+            
+            if confirmation != "DELETE":
+                print_info("Deletion cancelled")
+                return 0
+        
+        success = manager.delete_workspace(args.workspace_id, force=args.force)
+        
+        if success:
+            print_success(f"✓ Deleted workspace: {args.workspace_id}")
+            return 0
+        else:
+            print_warning("Workspace not found or already deleted")
+            return 1
+        
+    except Exception as e:
+        print_error(f"Failed to delete workspace: {e}")
+        logger.exception("Delete workspace error")
+        return 1
+
+
+def cmd_update_workspace(args):
+    """Update workspace properties"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        
+        workspace = manager.update_workspace(
+            workspace_id=args.workspace_id,
+            name=args.name,
+            description=args.description
+        )
+        
+        print_success(f"✓ Updated workspace: {workspace.get('displayName')}")
+        
+        if args.json:
+            print(json.dumps(workspace, indent=2))
+        
+        return 0
+        
+    except Exception as e:
+        print_error(f"Failed to update workspace: {e}")
+        logger.exception("Update workspace error")
+        return 1
+
+
+def cmd_get_workspace(args):
+    """Get workspace details"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        
+        if args.name:
+            workspace = manager.get_workspace_by_name(args.name)
+            if not workspace:
+                print_error(f"Workspace '{args.name}' not found")
+                return 1
+        else:
+            workspace = manager.get_workspace_details(args.workspace_id)
+        
+        # Display details
+        print_info(f"\n{'='*60}")
+        print_info(f"Workspace: {workspace.get('displayName')}")
+        print_info(f"{'='*60}")
+        print_info(f"ID:          {workspace.get('id')}")
+        print_info(f"Type:        {workspace.get('type', 'Workspace')}")
+        print_info(f"Capacity:    {workspace.get('capacityId', 'Trial')}")
+        print_info(f"State:       {workspace.get('state', 'Active')}")
+        
+        if workspace.get('description'):
+            print_info(f"Description: {workspace.get('description')}")
+        
+        # List items in workspace
+        items = manager.list_workspace_items(workspace['id'])
+        print_info(f"\nItems:       {len(items)}")
+        
+        if items and args.show_items:
+            print_info("\nWorkspace Items:")
+            item_headers = ["Name", "Type", "State"]
+            item_rows = [
+                [item.get('displayName'), item.get('type'), item.get('state', 'Active')]
+                for item in items[:10]  # Show first 10
+            ]
+            print_table(item_headers, item_rows)
+            
+            if len(items) > 10:
+                print_info(f"... and {len(items) - 10} more items")
+        
+        if args.json:
+            print("\n" + json.dumps(workspace, indent=2))
+        
+        return 0
+        
+    except Exception as e:
+        print_error(f"Failed to get workspace details: {e}")
+        logger.exception("Get workspace error")
+        return 1
+
+
+def cmd_list_users(args):
+    """List users in a workspace"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        users = manager.list_users(args.workspace_id)
+        
+        if not users:
+            print_warning("No users found in workspace")
+            return 0
+        
+        # Prepare table
+        headers = ["Principal", "Type", "Role"]
+        rows = [
+            [
+                user.get('identifier', 'N/A'),
+                user.get('principalType', 'User'),
+                user.get('workspaceRole', 'N/A')
+            ]
+            for user in users
+        ]
+        
+        print_table(headers, rows)
+        print_success(f"\nFound {len(users)} user(s)")
+        
+        if args.json:
+            print("\n" + json.dumps(users, indent=2))
+        
+        return 0
+        
+    except Exception as e:
+        print_error(f"Failed to list users: {e}")
+        logger.exception("List users error")
+        return 1
+
+
+def cmd_add_user(args):
+    """Add user to workspace"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        
+        # Parse role
+        role = WorkspaceRole(args.role)
+        
+        user = manager.add_user(
+            workspace_id=args.workspace_id,
+            principal_id=args.principal_id,
+            principal_type=args.principal_type,
+            role=role
+        )
+        
+        print_success(f"✓ Added {args.principal_type} '{args.principal_id}' with role '{role.value}'")
+        
+        if args.json:
+            print(json.dumps(user, indent=2))
+        
+        return 0
+        
+    except Exception as e:
+        print_error(f"Failed to add user: {e}")
+        logger.exception("Add user error")
+        return 1
+
+
+def cmd_remove_user(args):
+    """Remove user from workspace"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        
+        success = manager.remove_user(args.workspace_id, args.principal_id)
+        
+        if success:
+            print_success(f"✓ Removed user '{args.principal_id}'")
+            return 0
+        else:
+            print_warning("User not found in workspace")
+            return 1
+        
+    except Exception as e:
+        print_error(f"Failed to remove user: {e}")
+        logger.exception("Remove user error")
+        return 1
+
+
+def cmd_update_user_role(args):
+    """Update user role in workspace"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        
+        # Parse role
+        role = WorkspaceRole(args.role)
+        
+        user = manager.update_user_role(
+            workspace_id=args.workspace_id,
+            principal_id=args.principal_id,
+            new_role=role
+        )
+        
+        print_success(f"✓ Updated user '{args.principal_id}' to role '{role.value}'")
+        
+        if args.json:
+            print(json.dumps(user, indent=2))
+        
+        return 0
+        
+    except Exception as e:
+        print_error(f"Failed to update user role: {e}")
+        logger.exception("Update user role error")
+        return 1
+
+
+def cmd_create_workspace_set(args):
+    """Create workspaces for multiple environments"""
+    try:
+        manager = WorkspaceManager()
+        
+        # Parse environments
+        environments = args.environments.split(',') if args.environments else ['dev', 'test', 'prod']
+        
+        print_info(f"Creating workspaces for environments: {', '.join(environments)}")
+        
+        workspaces = manager.create_workspace_set(
+            base_name=args.name,
+            environments=environments,
+            description_template=args.description
+        )
+        
+        # Display results
+        success_count = sum(1 for ws in workspaces.values() if 'error' not in ws)
+        fail_count = len(workspaces) - success_count
+        
+        print_info("\nResults:")
+        for env, workspace in workspaces.items():
+            if 'error' in workspace:
+                print_error(f"  ✗ {env}: {workspace['error']}")
+            else:
+                print_success(f"  ✓ {env}: {workspace.get('displayName')} (ID: {workspace.get('id')})")
+        
+        print_info(f"\n{success_count} succeeded, {fail_count} failed")
+        
+        if args.json:
+            print("\n" + json.dumps(workspaces, indent=2))
+        
+        return 0 if fail_count == 0 else 1
+        
+    except Exception as e:
+        print_error(f"Failed to create workspace set: {e}")
+        logger.exception("Create workspace set error")
+        return 1
+
+
+def cmd_copy_users(args):
+    """Copy users between workspaces"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        
+        print_info(f"Copying users from {args.source_workspace_id} to {args.target_workspace_id}")
+        
+        results = manager.copy_users_between_workspaces(
+            source_workspace_id=args.source_workspace_id,
+            target_workspace_id=args.target_workspace_id
+        )
+        
+        # Display results
+        print_success(f"\n✓ Successfully copied {len(results['success'])} user(s)")
+        
+        if results['skipped']:
+            print_warning(f"⊘ Skipped {len(results['skipped'])} user(s) (already exists)")
+        
+        if results['failed']:
+            print_error(f"✗ Failed to copy {len(results['failed'])} user(s)")
+            for failure in results['failed']:
+                print_error(f"  - {failure['principal_id']}: {failure['error']}")
+        
+        if args.json:
+            print("\n" + json.dumps(results, indent=2))
+        
+        return 0
+        
+    except Exception as e:
+        print_error(f"Failed to copy users: {e}")
+        logger.exception("Copy users error")
+        return 1
+
+
+def cmd_setup_environment(args):
+    """Set up complete environment with workspaces and users"""
+    try:
+        print_info(f"Setting up complete environment for project: {args.project_name}")
+        
+        # Parse user emails
+        admin_emails = args.admins.split(',')
+        member_emails = args.members.split(',') if args.members else None
+        
+        workspaces = setup_complete_environment(
+            project_name=args.project_name,
+            admin_emails=admin_emails,
+            member_emails=member_emails
+        )
+        
+        # Display results
+        print_info("\nCreated Workspaces:")
+        for env, workspace in workspaces.items():
+            if 'error' in workspace:
+                print_error(f"  ✗ {env}: {workspace['error']}")
+            else:
+                print_success(f"  ✓ {env}: {workspace.get('displayName')}")
+        
+        print_success(f"\nAdded {len(admin_emails)} admin(s)")
+        if member_emails:
+            print_success(f"Added {len(member_emails)} member(s)")
+        
+        if args.json:
+            print("\n" + json.dumps(workspaces, indent=2))
+        
+        return 0
+        
+    except Exception as e:
+        print_error(f"Failed to setup environment: {e}")
+        logger.exception("Setup environment error")
+        return 1
+
+
+def main():
+    """Main CLI entry point"""
+    parser = argparse.ArgumentParser(
+        description="Microsoft Fabric Workspace Management CLI",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    
+    # Global options
+    parser.add_argument(
+        '-e', '--environment',
+        choices=['dev', 'test', 'prod'],
+        help='Target environment (filters workspaces by environment suffix)'
+    )
+    parser.add_argument(
+        '--json',
+        action='store_true',
+        help='Output results in JSON format'
+    )
+    parser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help='Enable verbose logging'
+    )
+    
+    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+    
+    # List workspaces
+    parser_list = subparsers.add_parser('list', help='List workspaces')
+    parser_list.add_argument('--filter-env', action='store_true', help='Filter by current environment')
+    parser_list.add_argument('--details', action='store_true', help='Include detailed information')
+    parser_list.set_defaults(func=cmd_list_workspaces)
+    
+    # Create workspace
+    parser_create = subparsers.add_parser('create', help='Create a new workspace')
+    parser_create.add_argument('name', help='Workspace name (without environment suffix)')
+    parser_create.add_argument('--description', help='Workspace description')
+    parser_create.add_argument('--capacity-id', help='Capacity ID')
+    parser_create.add_argument('--capacity-type', help='Capacity type', 
+                              choices=[c.value for c in CapacityType])
+    parser_create.set_defaults(func=cmd_create_workspace)
+    
+    # Delete workspace
+    parser_delete = subparsers.add_parser('delete', help='Delete a workspace')
+    parser_delete.add_argument('workspace_id', help='Workspace ID to delete')
+    parser_delete.add_argument('--force', action='store_true', help='Force deletion even if workspace has items')
+    parser_delete.add_argument('-y', '--yes', action='store_true', help='Skip confirmation prompt')
+    parser_delete.set_defaults(func=cmd_delete_workspace)
+    
+    # Update workspace
+    parser_update = subparsers.add_parser('update', help='Update workspace properties')
+    parser_update.add_argument('workspace_id', help='Workspace ID')
+    parser_update.add_argument('--name', help='New workspace name')
+    parser_update.add_argument('--description', help='New description')
+    parser_update.set_defaults(func=cmd_update_workspace)
+    
+    # Get workspace details
+    parser_get = subparsers.add_parser('get', help='Get workspace details')
+    group = parser_get.add_mutually_exclusive_group(required=True)
+    group.add_argument('--id', dest='workspace_id', help='Workspace ID')
+    group.add_argument('--name', help='Workspace name')
+    parser_get.add_argument('--show-items', action='store_true', help='Show workspace items')
+    parser_get.set_defaults(func=cmd_get_workspace)
+    
+    # List users
+    parser_list_users = subparsers.add_parser('list-users', help='List users in workspace')
+    parser_list_users.add_argument('workspace_id', help='Workspace ID')
+    parser_list_users.set_defaults(func=cmd_list_users)
+    
+    # Add user
+    parser_add_user = subparsers.add_parser('add-user', help='Add user to workspace')
+    parser_add_user.add_argument('workspace_id', help='Workspace ID')
+    parser_add_user.add_argument('principal_id', help='User email or service principal ID')
+    parser_add_user.add_argument('--role', default='Viewer', 
+                                choices=[r.value for r in WorkspaceRole],
+                                help='Workspace role (default: Viewer)')
+    parser_add_user.add_argument('--principal-type', default='User',
+                                choices=['User', 'Group', 'ServicePrincipal'],
+                                help='Principal type (default: User)')
+    parser_add_user.set_defaults(func=cmd_add_user)
+    
+    # Remove user
+    parser_remove_user = subparsers.add_parser('remove-user', help='Remove user from workspace')
+    parser_remove_user.add_argument('workspace_id', help='Workspace ID')
+    parser_remove_user.add_argument('principal_id', help='User email or service principal ID')
+    parser_remove_user.set_defaults(func=cmd_remove_user)
+    
+    # Update user role
+    parser_update_role = subparsers.add_parser('update-role', help='Update user role in workspace')
+    parser_update_role.add_argument('workspace_id', help='Workspace ID')
+    parser_update_role.add_argument('principal_id', help='User email or service principal ID')
+    parser_update_role.add_argument('role', choices=[r.value for r in WorkspaceRole],
+                                   help='New workspace role')
+    parser_update_role.set_defaults(func=cmd_update_user_role)
+    
+    # Create workspace set
+    parser_create_set = subparsers.add_parser('create-set', 
+                                             help='Create workspaces for multiple environments')
+    parser_create_set.add_argument('name', help='Base workspace name')
+    parser_create_set.add_argument('--environments', default='dev,test,prod',
+                                  help='Comma-separated environments (default: dev,test,prod)')
+    parser_create_set.add_argument('--description', 
+                                  help='Description template (use {env} for environment)')
+    parser_create_set.set_defaults(func=cmd_create_workspace_set)
+    
+    # Copy users
+    parser_copy = subparsers.add_parser('copy-users', help='Copy users between workspaces')
+    parser_copy.add_argument('source_workspace_id', help='Source workspace ID')
+    parser_copy.add_argument('target_workspace_id', help='Target workspace ID')
+    parser_copy.set_defaults(func=cmd_copy_users)
+    
+    # Setup environment
+    parser_setup = subparsers.add_parser('setup', 
+                                        help='Set up complete environment (dev/test/prod + users)')
+    parser_setup.add_argument('project_name', help='Project name')
+    parser_setup.add_argument('--admins', required=True,
+                            help='Comma-separated admin emails')
+    parser_setup.add_argument('--members',
+                            help='Comma-separated member emails')
+    parser_setup.set_defaults(func=cmd_setup_environment)
+    
+    # Parse arguments
+    args = parser.parse_args()
+    
+    # Set log level
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+    
+    # Execute command
+    if not args.command:
+        parser.print_help()
+        return 1
+    
+    return args.func(args)
+
+
+if __name__ == '__main__':
+    sys.exit(main())
