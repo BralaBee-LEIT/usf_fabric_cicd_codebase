@@ -1,0 +1,108 @@
+dataset: gold.customer_analytics
+owner: ${DATA_OWNER_EMAIL}
+description: Customer analytics aggregated data for business intelligence reporting
+version: "2.1.0"
+
+tags:
+  - analytics
+  - customer
+  - gold-layer
+  - bi-ready
+
+slas:
+  freshness: PT4H        # Updated every 4 hours
+  completeness: 99.5%    # 99.5% completeness required
+  accuracy: 98.0%        # 98% accuracy requirement
+  availability: 99.9%    # High availability SLA
+
+schema:
+  - name: customer_id
+    type: string
+    nullable: false
+    description: Unique customer identifier
+    constraints:
+      - unique
+      - not_null
+  
+  - name: customer_segment
+    type: string
+    nullable: false
+    description: Customer segmentation category
+    valid_values: ["Enterprise", "SMB", "Individual"]
+  
+  - name: total_revenue_ytd
+    type: decimal
+    nullable: false
+    description: Year-to-date revenue from customer
+    precision: 10
+    scale: 2
+  
+  - name: last_purchase_date
+    type: date
+    nullable: true
+    description: Date of most recent purchase
+  
+  - name: customer_lifetime_value
+    type: decimal
+    nullable: true
+    description: Calculated customer lifetime value
+    precision: 12
+    scale: 2
+  
+  - name: risk_score
+    type: integer
+    nullable: true
+    description: Customer churn risk score (0-100)
+    constraints:
+      - range: [0, 100]
+  
+  - name: created_at
+    type: timestamp
+    nullable: false
+    description: Record creation timestamp
+  
+  - name: updated_at
+    type: timestamp
+    nullable: false
+    description: Record last update timestamp
+
+breaking_changes:
+  - removing columns
+  - changing column types
+  - changing primary keys
+  - modifying not_null constraints
+
+quality_rules:
+  - name: no_negative_revenue
+    expression: "total_revenue_ytd >= 0"
+    severity: high
+  
+  - name: valid_risk_score_range
+    expression: "risk_score IS NULL OR (risk_score >= 0 AND risk_score <= 100)"
+    severity: high
+  
+  - name: updated_after_created
+    expression: "updated_at >= created_at"
+    severity: medium
+
+data_lineage:
+  upstream_datasets:
+    - bronze.crm_customers
+    - bronze.sales_transactions
+    - silver.customer_enriched
+  
+  transformation_logic: |
+    Aggregates customer data from CRM and sales systems,
+    applies segmentation rules, calculates lifetime value
+    and risk scores using ML models.
+
+governance:
+  data_classification: internal
+  pii_fields: []  # No PII in aggregated analytics
+  retention_policy: "7 years"
+  access_control: "analytics_team, bi_users"
+
+contact:
+  technical_owner: ${TECHNICAL_LEAD_EMAIL}
+  business_owner: analytics-lead@company.com
+  steward: data-steward@company.com

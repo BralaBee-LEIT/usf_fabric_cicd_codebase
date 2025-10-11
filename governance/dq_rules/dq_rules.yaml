@@ -1,0 +1,11 @@
+rules:
+  - name: incidents_not_null
+    dataset: silver.servicenow_incidents
+    check: not_null
+    columns: [incident_id, opened_at, short_description]
+    threshold: 100%
+  - name: incidents_unique_id
+    dataset: silver.servicenow_incidents
+    check: unique
+    columns: [incident_id]
+    threshold: 100%

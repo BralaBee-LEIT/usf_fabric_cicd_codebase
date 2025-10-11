@@ -1,0 +1,61 @@
+rules:
+  - name: sales_amount_validity
+    dataset: silver.sales_transactions
+    check: range
+    columns: [amount]
+    threshold: 99.9%
+    severity: high
+    description: "Sales amount must be positive and within realistic range"
+    owner: finance-team@company.com
+
+  - name: sales_date_consistency
+    dataset: silver.sales_transactions
+    check: timeliness
+    columns: [transaction_date, created_date]
+    threshold: 99%
+    severity: medium
+    description: "Transaction date should not be in the future"
+    owner: finance-team@company.com
+    
+  - name: sales_customer_reference
+    dataset: silver.sales_transactions
+    check: completeness
+    columns: [customer_id, product_id]
+    threshold: 100%
+    severity: high
+    description: "Customer and product references must be present"
+    owner: finance-team@company.com
+
+  - name: sales_duplicate_prevention
+    dataset: silver.sales_transactions
+    check: unique
+    columns: [transaction_id]
+    threshold: 100%
+    severity: critical
+    description: "Transaction ID must be unique"
+    owner: finance-team@company.com
+
+  - name: sales_currency_validation
+    dataset: silver.sales_transactions
+    check: enum
+    columns: [currency_code]
+    threshold: 100%
+    severity: high
+    description: "Currency code must be valid ISO 4217 code"
+    owner: finance-team@company.com
+
+metadata:
+  version: "2.1.0"
+  description: "Sales transaction data quality rules for silver layer"
+  owner: "finance-team@company.com"
+  last_updated: "2024-10-08"
+  
+datasets:
+  - silver.sales_transactions
+  - gold.sales_aggregates
+
+categories:
+  - accuracy
+  - completeness
+  - validity
+  - uniqueness

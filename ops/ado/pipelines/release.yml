@@ -1,0 +1,71 @@
+# Azure DevOps multi-stage release for Dev -> QA -> Prod
+trigger: none
+
+stages:
+- stage: Dev
+  displayName: Deploy to Dev (usf-fabric-dev)
+  jobs:
+  - job: DeployDev
+    pool: usf-deploy-agents
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifact: fabric_bundle
+        path: $(Pipeline.Workspace)/artifact
+    - task: AzureCLI@2
+      displayName: Deploy Fabric assets
+      inputs:
+        azureSubscription: spn-fabric-dev
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          python ops/scripts/deploy_fabric.py --workspace "usf-fabric-dev" --bundle "$(Pipeline.Workspace)/artifact/fabric_bundle.zip"
+    - task: AzureCLI@2
+      displayName: Trigger Purview scan (Dev)
+      inputs:
+        azureSubscription: spn-purview
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          python ops/scripts/trigger_purview_scan.py --env dev
+
+- stage: QA
+  displayName: Deploy to QA (usf-fabric-qa)
+  dependsOn: Dev
+  jobs:
+  - job: DeployQA
+    pool: usf-deploy-agents
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifact: fabric_bundle
+        path: $(Pipeline.Workspace)/artifact
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: spn-fabric-qa
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          python ops/scripts/deploy_fabric.py --workspace "usf-fabric-qa" --bundle "$(Pipeline.Workspace)/artifact/fabric_bundle.zip"
+          python ops/scripts/run_dq_gate.py --env qa --threshold-profile strict
+
+- stage: Prod
+  displayName: Deploy to Prod (usf-fabric-prod)
+  dependsOn: QA
+  jobs:
+  - job: DeployProd
+    pool: usf-deploy-agents
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifact: fabric_bundle
+        path: $(Pipeline.Workspace)/artifact
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: spn-fabric-prod
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          python ops/scripts/deploy_fabric.py --workspace "usf-fabric-prod" --bundle "$(Pipeline.Workspace)/artifact/fabric_bundle.zip" --mode promote
+          python ops/scripts/deploy_powerbi.py --pipeline "USF BI Pipeline" --stage "Prod"
+          python ops/scripts/trigger_purview_scan.py --env prod

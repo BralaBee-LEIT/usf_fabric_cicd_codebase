@@ -1,0 +1,154 @@
+name: Fabric Git Integration Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      workspace:
+        description: 'Fabric workspace to sync'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - test
+      sync_direction:
+        description: 'Sync direction'
+        required: true
+        type: choice
+        options:
+          - 'git-to-workspace'
+          - 'workspace-to-git'
+      commit_message:
+        description: 'Commit message (for workspace-to-git)'
+        required: false
+        default: 'Sync from Fabric workspace'
+
+  schedule:
+    # Auto-sync from workspace to Git daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  fabric-git-sync:
+    name: Fabric Git Integration Sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r ops/requirements.txt
+
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Determine sync parameters
+        id: sync_params
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "workspace=dev" >> $GITHUB_OUTPUT
+            echo "direction=workspace-to-git" >> $GITHUB_OUTPUT
+            echo "commit_message=Automated sync from Fabric workspace $(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+          else
+            echo "workspace=${{ inputs.workspace }}" >> $GITHUB_OUTPUT
+            echo "direction=${{ inputs.sync_direction }}" >> $GITHUB_OUTPUT
+            echo "commit_message=${{ inputs.commit_message || 'Manual sync from GitHub Actions' }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Sync Git to Workspace
+        if: steps.sync_params.outputs.direction == 'git-to-workspace'
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          FABRIC_WORKSPACE: ${{ steps.sync_params.outputs.workspace }}
+        run: |
+          python ops/scripts/sync_fabric_git.py \
+            --workspace "$FABRIC_WORKSPACE" \
+            --action sync-to-workspace
+
+      - name: Sync Workspace to Git
+        if: steps.sync_params.outputs.direction == 'workspace-to-git'
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          FABRIC_WORKSPACE: ${{ steps.sync_params.outputs.workspace }}
+          COMMIT_MESSAGE: ${{ steps.sync_params.outputs.commit_message }}
+        run: |
+          # Create a new branch for workspace changes
+          BRANCH_NAME="fabric-sync-$(date +'%Y%m%d-%H%M%S')"
+          git checkout -b "$BRANCH_NAME"
+          
+          # Sync workspace changes to local Git
+          python ops/scripts/sync_fabric_git.py \
+            --workspace "$FABRIC_WORKSPACE" \
+            --action sync-to-git \
+            --commit-message "$COMMIT_MESSAGE"
+          
+          # Check if there are changes
+          if [ -n "$(git status --porcelain)" ]; then
+            # Configure Git
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            
+            # Add and commit changes
+            git add .
+            git commit -m "$COMMIT_MESSAGE"
+            
+            # Push branch
+            git push origin "$BRANCH_NAME"
+            
+            # Create pull request
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} gh pr create \
+              --title "🔄 Fabric Workspace Sync: $FABRIC_WORKSPACE" \
+              --body "Automated sync from Fabric workspace \`$FABRIC_WORKSPACE\`
+
+            **Sync Details:**
+            - Workspace: \`$FABRIC_WORKSPACE\`
+            - Timestamp: $(date +'%Y-%m-%d %H:%M:%S UTC')
+            - Triggered by: ${{ github.event_name }}
+
+            **Changes include:**
+            - Notebooks
+            - Data Pipelines  
+            - Dataflows Gen2
+            - Spark Job Definitions
+
+            Please review the changes before merging." \
+              --head "$BRANCH_NAME" \
+              --base main \
+              --label "fabric-sync,automated"
+          else
+            echo "No changes detected in workspace sync"
+          fi
+
+      - name: Validate sync results
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          FABRIC_WORKSPACE: ${{ steps.sync_params.outputs.workspace }}
+        run: |
+          python ops/scripts/validate_fabric_sync.py \
+            --workspace "$FABRIC_WORKSPACE" \
+            --direction ${{ steps.sync_params.outputs.direction }}
+
+      - name: Report sync status
+        if: always()
+        run: |
+          echo "## Fabric Git Sync Report" >> $GITHUB_STEP_SUMMARY
+          echo "- **Workspace:** ${{ steps.sync_params.outputs.workspace }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Direction:** ${{ steps.sync_params.outputs.direction }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp:** $(date +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY

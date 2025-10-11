@@ -1,0 +1,8 @@
+# CODEOWNERS: map directories to code owners (GitHub handles/teams)
+# Update organization name in project.config.json
+/data/                 @your-org/data-team
+/bi/                   @your-org/bi-team
+/governance/           @your-org/governance-team
+/integration/          @your-org/integration-team
+/platform/             @your-org/platform-team
+/ops/                  @your-org/devops-team

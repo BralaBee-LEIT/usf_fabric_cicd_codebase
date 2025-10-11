@@ -1,0 +1,65 @@
+{
+  "workspace": {
+    "name": "{{workspace}}",
+    "capacity_id": "${FABRIC_CAPACITY_TEST_ID}",
+    "capacity": "Premium_P1",
+    "region": "eastus2"
+  },
+  "data_sources": {
+    "lakehouse_name": "{{lakehouse}}",
+    "storage_account": "{{storage_account}}",
+    "key_vault": "{{key_vault}}",
+    "data_gateway": "{{data_gateway}}"
+  },
+  "connection_strings": {
+    "sql_server": "{{sql_server}}",
+    "cosmos_db": "{{cosmos_db}}",
+    "event_hub": "{{event_hub}}",
+    "service_bus": "{{service_bus}}"
+  },
+  "deployment": {
+    "mode": "promote",
+    "validation_level": "standard",
+    "approval_required": true,
+    "auto_deploy": false,
+    "rollback_enabled": true,
+    "staging_required": true
+  },
+  "monitoring": {
+    "health_check_interval": "6h",
+    "log_retention_days": 90,
+    "alert_threshold": {
+      "response_time_ms": 3000,
+      "error_rate_percent": 2,
+      "cpu_usage_percent": 70,
+      "memory_usage_percent": 80
+    },
+    "notification_channels": [
+      "email:${TEST_TEAM_EMAIL}",
+      "teams:${TEST_ALERTS_WEBHOOK}",
+      "pagerduty:${TEST_PAGERDUTY_KEY}"
+    ]
+  },
+  "security": {
+    "data_encryption": "enabled",
+    "network_isolation": "private_endpoint",
+    "audit_logging": "comprehensive",
+    "access_control": "rbac_strict"
+  },
+  "performance": {
+    "cache_enabled": true,
+    "parallel_execution": 8,
+    "batch_size": 5000,
+    "timeout_minutes": 60
+  },
+  "data_quality": {
+    "validation_rules": "strict",
+    "data_profiling": "enabled",
+    "anomaly_detection": "enabled",
+    "quality_gates": {
+      "completeness_threshold": 0.95,
+      "accuracy_threshold": 0.98,
+      "consistency_threshold": 0.99
+    }
+  }
+}

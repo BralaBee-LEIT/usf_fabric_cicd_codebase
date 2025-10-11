@@ -1,0 +1,42 @@
+rules:
+  - name: customer_completeness_check
+    dataset: bronze.customer_data
+    check: not_null
+    columns: [customer_id, email, registration_date]
+    threshold: 100%
+    severity: high
+    description: "Ensure critical customer fields are always populated"
+    owner: data-engineering@company.com
+
+  - name: customer_email_format
+    dataset: bronze.customer_data  
+    check: pattern
+    columns: [email]
+    threshold: 99.5%
+    severity: medium
+    description: "Validate email format using regex pattern"
+    owner: data-engineering@company.com
+    
+  - name: customer_unique_id
+    dataset: bronze.customer_data
+    check: unique
+    columns: [customer_id]
+    threshold: 100%
+    severity: critical
+    description: "Customer ID must be unique across all records"
+    owner: data-engineering@company.com
+
+metadata:
+  version: "1.2.0"
+  description: "Customer data quality rules for bronze layer"
+  owner: "data-engineering@company.com"
+  last_updated: "2024-10-08"
+  
+datasets:
+  - bronze.customer_data
+  - silver.customer_enriched
+
+categories:
+  - completeness
+  - uniqueness 
+  - validity

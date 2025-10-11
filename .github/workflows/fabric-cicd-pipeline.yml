@@ -1,0 +1,403 @@
+name: Fabric CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'notebooks/**'
+      - 'pipelines/**'
+      - 'dataflows/**'
+      - 'sparkjobdefinitions/**'
+      - 'data/**'
+      - 'governance/**'
+      - 'ops/**'
+
+env:
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  # Stage 1: Code Quality and Validation
+  code-quality:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r ops/requirements.txt
+
+      - name: Run Black formatter check
+        run: |
+          black --check --diff ops/ notebooks/ data/ || exit 1
+
+      - name: Run Flake8 linting
+        run: |
+          flake8 ops/ notebooks/ data/ --max-line-length=88 --extend-ignore=E203,W503
+
+      - name: Validate data contracts
+        run: |
+          python ops/scripts/validate_data_contracts.py \
+            --contracts-dir governance/data_contracts \
+            --output-format github
+
+      - name: Validate Fabric artifacts
+        run: |
+          python ops/scripts/validate_fabric_artifacts.py --path .
+
+      - name: Check notebook outputs are cleared
+        run: |
+          python ops/scripts/check_notebook_outputs.py --path notebooks/
+
+      - name: Validate data quality rules
+        run: |
+          python ops/scripts/validate_dq_rules.py \
+            --rules-dir governance/dq_rules \
+            --output-format github
+
+      - name: Upload contract validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: data-contract-validation
+          path: contract_validation_report.json
+
+      - name: Upload DQ rules validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dq-rules-validation
+          path: dq_rules_validation_report.json
+
+  # Stage 2: Unit and Integration Tests
+  unit-tests:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r ops/requirements.txt
+
+      - name: Run unit tests
+        run: |
+          pytest ops/tests/ -v --junitxml=test-results.xml --cov=ops --cov-report=xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            test-results.xml
+            coverage.xml
+
+  # Stage 3: Data Quality Gate
+  data-quality-gate:
+    name: Data Quality Validation
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r ops/requirements.txt
+
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Run Great Expectations validation
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          python ops/scripts/run_gx.py --profile ci --workspace usf-fabric-dev
+
+      - name: Upload DQ results
+        uses: actions/upload-artifact@v4
+        with:
+          name: data-quality-results
+          path: great_expectations/uncommitted/validations/
+
+  # Stage 4: Package Fabric Artifacts
+  package-artifacts:
+    name: Package Fabric Bundle
+    runs-on: ubuntu-latest
+    needs: [code-quality, unit-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r ops/requirements.txt
+
+      - name: Package Fabric artifacts
+        run: |
+          python ops/scripts/utilities/package_bundle.py \
+            --input . \
+            --output dist/fabric_bundle.zip \
+            --include-notebooks \
+            --include-pipelines \
+            --include-dataflows \
+            --exclude-tests
+
+      - name: Generate deployment manifest
+        run: |
+          python ops/scripts/generate_deployment_manifest.py \
+            --bundle dist/fabric_bundle.zip \
+            --output dist/deployment_manifest.json \
+            --git-sha ${{ github.sha }} \
+            --git-branch ${{ github.ref_name }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-deployment-bundle
+          path: |
+            dist/fabric_bundle.zip
+            dist/deployment_manifest.json
+          retention-days: 30
+
+  # Stage 5: Deploy to Development (Auto on main branch)
+  deploy-to-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    needs: [package-artifacts, data-quality-gate]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: development
+      url: https://fabric.microsoft.com/
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r ops/requirements.txt
+
+      - name: Download deployment bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: fabric-deployment-bundle
+          path: ./artifacts
+
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Development Workspace
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          FABRIC_WORKSPACE: usf-fabric-dev
+        run: |
+          python ops/scripts/deploy_fabric.py \
+            --workspace "$FABRIC_WORKSPACE" \
+            --bundle ./artifacts/fabric_bundle.zip \
+            --mode standard
+
+      - name: Update Git Integration (if configured)
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          FABRIC_WORKSPACE: usf-fabric-dev
+        run: |
+          python ops/scripts/sync_fabric_git.py \
+            --workspace "$FABRIC_WORKSPACE" \
+            --action sync-to-workspace \
+            --commit-message "Automated deployment from GitHub Actions"
+        continue-on-error: true
+
+      - name: Run post-deployment tests
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          python ops/scripts/run_smoke_tests.py --workspace usf-fabric-dev
+        continue-on-error: true
+
+  # Stage 6: Deploy to Test (Manual approval required)
+  deploy-to-test:
+    name: Deploy to Test
+    runs-on: ubuntu-latest
+    needs: deploy-to-dev
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: test
+      url: https://fabric.microsoft.com/
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r ops/requirements.txt
+
+      - name: Download deployment bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: fabric-deployment-bundle
+          path: ./artifacts
+
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Promote via Deployment Pipeline
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          DEPLOYMENT_PIPELINE_ID: ${{ secrets.FABRIC_DEPLOYMENT_PIPELINE_ID }}
+        run: |
+          python ops/scripts/deploy_fabric.py \
+            --workspace usf-fabric-test \
+            --deployment-pipeline-id "$DEPLOYMENT_PIPELINE_ID" \
+            --source-stage 0 \
+            --target-stage 1 \
+            --mode promote
+
+      - name: Run comprehensive tests
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          python ops/scripts/run_integration_tests.py --workspace usf-fabric-test
+
+  # Stage 7: Deploy to Production (Manual approval required)
+  deploy-to-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-to-test
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://fabric.microsoft.com/
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r ops/requirements.txt
+
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Promote to Production
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          DEPLOYMENT_PIPELINE_ID: ${{ secrets.FABRIC_DEPLOYMENT_PIPELINE_ID }}
+        run: |
+          python ops/scripts/deploy_fabric.py \
+            --workspace usf-fabric-prod \
+            --deployment-pipeline-id "$DEPLOYMENT_PIPELINE_ID" \
+            --source-stage 1 \
+            --target-stage 2 \
+            --mode promote
+
+      - name: Trigger Purview scan
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          python ops/scripts/trigger_purview_scan.py --env prod
+        continue-on-error: true
+
+      - name: Deploy Power BI reports
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          python ops/scripts/deploy_powerbi.py \
+            --pipeline "USF BI Pipeline" \
+            --stage "Production"
+        continue-on-error: true
+
+      - name: Create deployment tag
+        run: |
+          git tag "prod-deploy-$(date +'%Y%m%d-%H%M%S')"
+          git push origin --tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Security scan
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'

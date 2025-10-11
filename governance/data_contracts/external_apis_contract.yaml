@@ -1,0 +1,122 @@
+dataset: bronze.external_apis
+owner: ${DATA_OWNER_EMAIL}
+description: Raw data ingested from external API sources
+version: "1.0.0"
+
+tags:
+  - bronze-layer
+  - raw-data
+  - external-apis
+  - ingestion
+
+slas:
+  freshness: PT15M       # Updated every 15 minutes
+  completeness: 95.0%    # Lower completeness OK for raw data
+  availability: 99.5%    # High availability for continuous ingestion
+
+schema:
+  - name: source_system
+    type: string
+    nullable: false
+    description: Name of the source API system
+  
+  - name: api_endpoint
+    type: string
+    nullable: false
+    description: API endpoint that provided the data
+  
+  - name: request_id
+    type: string
+    nullable: false
+    description: Unique request identifier
+  
+  - name: response_payload
+    type: string
+    nullable: false
+    description: Raw JSON response from API
+  
+  - name: http_status_code
+    type: integer
+    nullable: false
+    description: HTTP response status code
+  
+  - name: response_headers
+    type: string
+    nullable: true
+    description: HTTP response headers as JSON
+  
+  - name: request_timestamp
+    type: timestamp
+    nullable: false
+    description: When the API request was made
+  
+  - name: response_timestamp
+    type: timestamp
+    nullable: false
+    description: When the API response was received
+  
+  - name: ingestion_timestamp
+    type: timestamp
+    nullable: false
+    description: When data was ingested into lake
+  
+  - name: data_size_bytes
+    type: integer
+    nullable: true
+    description: Size of response payload in bytes
+  
+  - name: processing_status
+    type: string
+    nullable: false
+    description: Status of data processing
+    valid_values: ["pending", "processing", "completed", "failed"]
+    default: "pending"
+
+breaking_changes:
+  - removing columns
+  - changing core data types
+  - modifying ingestion patterns
+
+quality_rules:
+  - name: valid_http_status
+    expression: "http_status_code >= 100 AND http_status_code < 600"
+    severity: medium
+  
+  - name: response_after_request
+    expression: "response_timestamp >= request_timestamp"
+    severity: high
+  
+  - name: ingestion_after_response
+    expression: "ingestion_timestamp >= response_timestamp"
+    severity: medium
+  
+  - name: non_empty_payload_for_success
+    expression: "(http_status_code < 400 AND LENGTH(response_payload) > 0) OR http_status_code >= 400"
+    severity: low
+
+data_lineage:
+  upstream_datasets: []  # Raw ingestion from external sources
+  
+  external_sources:
+    - name: "Third Party CRM API"
+      endpoint: "https://api.thirdparty.com/v1/customers"
+      frequency: "Every 15 minutes"
+    - name: "Weather Data API" 
+      endpoint: "https://weather-api.com/v2/current"
+      frequency: "Every 30 minutes"
+    - name: "Market Data Feed"
+      endpoint: "https://market-data.com/stream"
+      frequency: "Real-time"
+
+governance:
+  data_classification: restricted  # May contain external vendor data
+  pii_fields: ["response_payload"]  # Payload may contain PII
+  retention_policy: "2 years"
+  access_control: "data_engineering_team"
+  compliance_notes: |
+    External API data may be subject to vendor terms of service.
+    Ensure compliance with data sharing agreements.
+
+contact:
+  technical_owner: ${TECHNICAL_LEAD_EMAIL}
+  business_owner: integration-lead@company.com

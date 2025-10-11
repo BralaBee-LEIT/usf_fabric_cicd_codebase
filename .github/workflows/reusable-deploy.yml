@@ -1,0 +1,31 @@
+name: reusable-deploy
+on:
+  workflow_call:
+    inputs:
+      workspace:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Download bundle artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: fabric_bundle
+          path: ./artifact
+      - name: Install deps
+        run: pip install -r ops/requirements.txt
+      - name: Deploy to Fabric
+        env:
+          FABRIC_WORKSPACE: ${{ inputs.workspace }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          python ops/scripts/deploy_fabric.py --workspace "$FABRIC_WORKSPACE" --bundle ./artifact/fabric_bundle.zip

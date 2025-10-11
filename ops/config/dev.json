@@ -1,0 +1,53 @@
+{
+  "workspace": {
+    "name": "{{workspace}}",
+    "capacity_id": "${FABRIC_CAPACITY_DEV_ID}",
+    "capacity": "Trial",
+    "region": "eastus2"
+  },
+  "data_sources": {
+    "lakehouse_name": "{{lakehouse}}",
+    "storage_account": "{{storage_account}}",
+    "key_vault": "{{key_vault}}",
+    "data_gateway": "{{data_gateway}}"
+  },
+  "connection_strings": {
+    "sql_server": "{{sql_server}}",
+    "cosmos_db": "{{cosmos_db}}",
+    "event_hub": "{{event_hub}}",
+    "service_bus": "{{service_bus}}"
+  },
+  "deployment": {
+    "mode": "standard",
+    "validation_level": "basic",
+    "approval_required": false,
+    "auto_deploy": true,
+    "rollback_enabled": true
+  },
+  "monitoring": {
+    "health_check_interval": "8h",
+    "log_retention_days": 30,
+    "alert_threshold": {
+      "response_time_ms": 5000,
+      "error_rate_percent": 5,
+      "cpu_usage_percent": 80,
+      "memory_usage_percent": 85
+    },
+    "notification_channels": [
+      "email:${DEV_TEAM_EMAIL}",
+      "teams:${DEV_ALERTS_WEBHOOK}"
+    ]
+  },
+  "security": {
+    "data_encryption": "enabled",
+    "network_isolation": "public",
+    "audit_logging": "basic",
+    "access_control": "standard"
+  },
+  "performance": {
+    "cache_enabled": true,
+    "parallel_execution": 4,
+    "batch_size": 1000,
+    "timeout_minutes": 30
+  }
+}

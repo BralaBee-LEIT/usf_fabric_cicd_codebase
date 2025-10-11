@@ -1,0 +1,129 @@
+dataset: silver.sales_enriched
+owner: ${DATA_OWNER_EMAIL}
+description: Enriched sales transaction data with customer and product dimensions
+version: "1.3.0"
+
+tags:
+  - sales
+  - transactions
+  - silver-layer
+  - enriched
+
+slas:
+  freshness: PT1H        # Updated hourly
+  completeness: 99.9%    # High completeness for sales data
+  accuracy: 99.5%        # Critical accuracy requirement
+
+schema:
+  - name: transaction_id
+    type: string
+    nullable: false
+    description: Unique transaction identifier
+  
+  - name: customer_id
+    type: string
+    nullable: false
+    description: Customer identifier (foreign key)
+  
+  - name: product_id
+    type: string
+    nullable: false
+    description: Product identifier
+  
+  - name: transaction_date
+    type: timestamp
+    nullable: false
+    description: When the transaction occurred
+  
+  - name: amount
+    type: decimal
+    nullable: false
+    description: Transaction amount in USD
+    precision: 10
+    scale: 2
+  
+  - name: quantity
+    type: integer
+    nullable: false
+    description: Number of items purchased
+  
+  - name: discount_applied
+    type: decimal
+    nullable: true
+    description: Discount amount applied
+    precision: 8
+    scale: 2
+  
+  - name: payment_method
+    type: string
+    nullable: true
+    description: How customer paid
+    valid_values: ["Credit Card", "Cash", "Bank Transfer", "Digital Wallet"]
+  
+  - name: sales_rep_id
+    type: string
+    nullable: true
+    description: Sales representative who handled transaction
+  
+  - name: channel
+    type: string
+    nullable: false
+    description: Sales channel
+    valid_values: ["Online", "In-Store", "Phone", "Partner"]
+  
+  - name: customer_segment
+    type: string
+    nullable: true
+    description: Customer segment at time of transaction
+  
+  - name: product_category
+    type: string
+    nullable: true
+    description: Product category
+  
+  - name: is_return
+    type: boolean
+    nullable: false
+    description: Whether this is a return transaction
+    default: false
+
+breaking_changes:
+  - removing columns
+  - changing data types
+  - modifying primary key
+  - changing not null constraints
+
+quality_rules:
+  - name: positive_amount_for_sales
+    expression: "(is_return = false AND amount > 0) OR (is_return = true AND amount <= 0)"
+    severity: high
+  
+  - name: valid_quantity
+    expression: "quantity > 0"
+    severity: high
+  
+  - name: discount_not_exceeding_amount
+    expression: "discount_applied IS NULL OR discount_applied <= amount"
+    severity: medium
+
+data_lineage:
+  upstream_datasets:
+    - bronze.pos_transactions
+    - bronze.online_orders
+    - bronze.customer_master
+    - bronze.product_catalog
+  
+  transformation_logic: |
+    Combines transaction data from POS and online systems,
+    enriches with customer and product dimensions,
+    standardizes formats and applies business rules.
+
+governance:
+  data_classification: internal
+  pii_fields: []
+  retention_policy: "10 years"
+  access_control: "sales_team, analytics_team"
+
+contact:
+  technical_owner: ${TECHNICAL_LEAD_EMAIL}
+  business_owner: sales-director@company.com

@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "collection": "{{prefix}}-dev",
+    "scans": [
+      "lakehouse-dev"
+    ]
+  },
+  "qa": {
+    "collection": "{{prefix}}-qa",
+    "scans": [
+      "lakehouse-qa"
+    ]
+  },
+  "prod": {
+    "collection": "{{prefix}}-prod",
+    "scans": [
+      "lakehouse-prod"
+    ]
+  }
+}

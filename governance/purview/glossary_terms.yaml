@@ -1,0 +1,5 @@
+terms:
+  - name: Incident
+    definition: A ServiceNow incident record.
+  - name: Priority
+    definition: Business impact priority.

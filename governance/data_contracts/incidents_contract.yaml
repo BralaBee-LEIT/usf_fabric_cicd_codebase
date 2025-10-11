@@ -1,0 +1,18 @@
+dataset: gold.servicenow_incidents
+owner: ${DATA_OWNER_EMAIL}
+slas:
+  freshness: PT2H
+  completeness: 99.9%
+schema:
+  - name: incident_id
+    type: string
+    nullable: false
+  - name: opened_at
+    type: timestamp
+    nullable: false
+  - name: priority
+    type: string
+    nullable: true
+breaking_changes:
+  - removing columns
+  - changing types

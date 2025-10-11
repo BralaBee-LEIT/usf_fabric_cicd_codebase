@@ -1,0 +1,109 @@
+{
+  "workspace": {
+    "name": "{{workspace}}",
+    "capacity_id": "${FABRIC_CAPACITY_PROD_ID}",
+    "capacity": "Premium_P2",
+    "region": "eastus2",
+    "backup_region": "westus2"
+  },
+  "data_sources": {
+    "lakehouse_name": "{{lakehouse}}",
+    "storage_account": "{{storage_account}}",
+    "key_vault": "{{key_vault}}",
+    "data_gateway": "{{data_gateway}}",
+    "disaster_recovery_storage": "{{disaster_recovery_storage}}"
+  },
+  "connection_strings": {
+    "sql_server": "{{sql_server}}",
+    "sql_server_readonly": "{{sql_server_readonly}}",
+    "cosmos_db": "{{cosmos_db}}",
+    "event_hub": "{{event_hub}}",
+    "service_bus": "{{service_bus}}"
+  },
+  "deployment": {
+    "mode": "promote",
+    "validation_level": "strict",
+    "approval_required": true,
+    "auto_deploy": false,
+    "rollback_enabled": true,
+    "staging_required": true,
+    "blue_green_deployment": true,
+    "canary_deployment": {
+      "enabled": true,
+      "traffic_percentage": 10,
+      "success_threshold": 0.99
+    }
+  },
+  "monitoring": {
+    "health_check_interval": "2h",
+    "log_retention_days": 365,
+    "alert_threshold": {
+      "response_time_ms": 1000,
+      "error_rate_percent": 0.1,
+      "cpu_usage_percent": 60,
+      "memory_usage_percent": 70
+    },
+    "notification_channels": [
+      "email:${PROD_TEAM_EMAIL}",
+      "teams:${PROD_ALERTS_WEBHOOK}",
+      "pagerduty:${PROD_PAGERDUTY_KEY}",
+      "slack:${PROD_SLACK_WEBHOOK}"
+    ],
+    "sla_requirements": {
+      "availability_percent": 99.9,
+      "response_time_p95_ms": 500,
+      "response_time_p99_ms": 1000
+    }
+  },
+  "security": {
+    "data_encryption": "enabled",
+    "encryption_at_rest": "customer_managed_keys",
+    "network_isolation": "private_endpoint",
+    "audit_logging": "comprehensive",
+    "access_control": "rbac_strict",
+    "compliance_frameworks": ["SOC2", "GDPR", "HIPAA"],
+    "vulnerability_scanning": "enabled",
+    "threat_detection": "enabled"
+  },
+  "performance": {
+    "cache_enabled": true,
+    "parallel_execution": 16,
+    "batch_size": 10000,
+    "timeout_minutes": 120,
+    "auto_scaling": {
+      "enabled": true,
+      "min_capacity": 2,
+      "max_capacity": 8,
+      "scale_out_threshold": 0.7,
+      "scale_in_threshold": 0.3
+    }
+  },
+  "data_quality": {
+    "validation_rules": "strict",
+    "data_profiling": "enabled",
+    "anomaly_detection": "enabled",
+    "quality_gates": {
+      "completeness_threshold": 0.99,
+      "accuracy_threshold": 0.995,
+      "consistency_threshold": 0.999,
+      "timeliness_threshold_hours": 1
+    },
+    "data_lineage": "enabled",
+    "impact_analysis": "enabled"
+  },
+  "disaster_recovery": {
+    "backup_strategy": "geo_redundant",
+    "recovery_time_objective_hours": 4,
+    "recovery_point_objective_hours": 1,
+    "cross_region_replication": true,
+    "automated_failover": false,
+    "backup_retention_years": 7
+  },
+  "compliance": {
+    "data_retention_policy": "7_years",
+    "data_classification": "enabled",
+    "privacy_controls": "strict",
+    "audit_trail": "immutable",
+    "regulatory_reporting": "automated"
+  }
+}

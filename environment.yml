@@ -1,0 +1,12 @@
+name: fabric-cicd
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - git
+  - yamllint
+  - pip:
+    # Install all Python dependencies from requirements.txt
+    - -r ops/requirements.txt

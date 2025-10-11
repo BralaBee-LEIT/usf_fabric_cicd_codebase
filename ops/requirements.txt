@@ -1,0 +1,26 @@
+# Core Azure dependencies
+azure-identity==1.17.1
+azure-mgmt-resource==23.1.1
+msal==1.24.1
+
+# HTTP and data handling
+requests==2.32.3
+pyyaml==6.0.2
+tabulate==0.9.0
+
+# Data governance and quality
+azure-mgmt-purview==1.0.0
+great-expectations==1.2.5  # Updated to latest stable 1.x
+
+# Development and testing
+pytest==8.3.3  # Updated to latest
+pytest-cov==6.0.0  # Added for coverage reports
+black==24.8.0  # Updated to latest
+flake8==7.1.1  # Updated to latest
+yamllint==1.35.1  # Updated to latest
+
+# Security scanning
+pip-audit==2.7.3  # Added for dependency vulnerability scanning
+
+# Optional: Remove this line if fabric-cicd package doesn't exist
+# fabric-cicd==0.1.0

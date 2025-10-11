@@ -1,0 +1,201 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run security scan weekly on Mondays
+    - cron: '0 2 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Run pip-audit
+        run: |
+          pip-audit --requirement ops/requirements.txt --format json --output pip-audit-report.json || true
+
+      - name: Upload vulnerability report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pip-audit-report
+          path: pip-audit-report.json
+
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  code-security:
+    name: Code Security Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r ops/requirements.txt
+          pip install bandit safety
+
+      - name: Run Bandit security linter
+        run: |
+          bandit -r ops/ -f json -o bandit-report.json || true
+
+      - name: Run Safety check
+        run: |
+          safety check --json > safety-report.json || true
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            safety-report.json
+
+  sql-injection-check:
+    name: SQL Injection Pattern Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check for SQL injection patterns
+        run: |
+          python3 << 'EOF'
+          import re
+          import sys
+          from pathlib import Path
+
+          # Dangerous SQL patterns
+          patterns = [
+              r'f".*SELECT.*{',  # Python f-string SQL
+              r'\.format\(.*SELECT',  # .format() SQL
+              r'\+.*SELECT',  # String concatenation SQL
+          ]
+
+          issues = []
+          for py_file in Path('.').rglob('*.py'):
+              with open(py_file, 'r', encoding='utf-8', errors='ignore') as f:
+                  content = f.read()
+                  for pattern in patterns:
+                      if re.search(pattern, content, re.IGNORECASE):
+                          issues.append(f"{py_file}: Potential SQL injection risk with pattern: {pattern}")
+
+          if issues:
+              print("⚠️ Potential SQL injection risks found:")
+              for issue in issues:
+                  print(f"  - {issue}")
+              print("\nPlease use parameterized queries instead of string concatenation.")
+          else:
+              print("✅ No SQL injection patterns detected")
+
+          sys.exit(0)  # Don't fail the build, just warn
+          EOF
+
+  path-traversal-check:
+    name: Path Traversal Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r ops/requirements.txt
+
+      - name: Run path traversal validation tests
+        run: |
+          python3 << 'EOF'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, 'ops/scripts')
+          
+          from utilities.security_utils import SecurityValidator
+          
+          validator = SecurityValidator()
+          
+          # Test cases
+          test_cases = [
+              ("/base/dir/file.txt", "/base/dir", True),
+              ("/base/dir/../etc/passwd", "/base/dir", False),
+              ("../../etc/passwd", "/base/dir", False),
+          ]
+          
+          print("Running path traversal security tests...")
+          all_passed = True
+          
+          for file_path, base_dir, expected in test_cases:
+              result = validator.validate_path_traversal(file_path, base_dir)
+              status = "✅" if result == expected else "❌"
+              print(f"{status} {file_path} (expected: {expected}, got: {result})")
+              if result != expected:
+                  all_passed = False
+          
+          if all_passed:
+              print("\n✅ All path traversal security tests passed")
+              sys.exit(0)
+          else:
+              print("\n❌ Some path traversal security tests failed")
+              sys.exit(1)
+          EOF
+
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [dependency-scan, secret-scan, code-security, sql-injection-check, path-traversal-check]
+    if: always()
+    steps:
+      - name: Security Scan Summary
+        run: |
+          echo "## Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Scan | ${{ needs.dependency-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret Scan | ${{ needs.secret-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Security | ${{ needs.code-security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SQL Injection Check | ${{ needs.sql-injection-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Path Traversal Check | ${{ needs.path-traversal-check.result }} |" >> $GITHUB_STEP_SUMMARY

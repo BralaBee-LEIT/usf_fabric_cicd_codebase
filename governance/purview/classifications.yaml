@@ -1,0 +1,5 @@
+classifications:
+  - name: Confidential
+    rule: contains_pii
+  - name: Public
+    rule: none

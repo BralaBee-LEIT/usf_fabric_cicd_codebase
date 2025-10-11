@@ -1,0 +1,268 @@
+name: Fabric Deployment Monitoring
+
+on:
+  schedule:
+    # Run health checks every 4 hours during business hours (UTC)
+    - cron: '0 8,12,16,20 * * 1-5'
+  
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to check'
+        required: true
+        type: choice
+        options:
+          - 'dev'
+          - 'test' 
+          - 'prod'
+          - 'all'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  health-check:
+    name: Fabric Environment Health Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: ${{ github.event.inputs.environment == 'all' && fromJson('["dev", "test", "prod"]') || fromJson(format('["{0}"]', github.event.inputs.environment || 'dev')) }}
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r ops/requirements.txt
+
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set environment variables
+        id: env-config
+        run: |
+          case "${{ matrix.environment }}" in
+            "dev")
+              echo "workspace=usf-fabric-dev" >> $GITHUB_OUTPUT
+              echo "deployment_stage=0" >> $GITHUB_OUTPUT
+              ;;
+            "test")
+              echo "workspace=usf-fabric-test" >> $GITHUB_OUTPUT
+              echo "deployment_stage=1" >> $GITHUB_OUTPUT
+              ;;
+            "prod")
+              echo "workspace=usf-fabric-prod" >> $GITHUB_OUTPUT
+              echo "deployment_stage=2" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Check Fabric workspace health
+        id: fabric-health
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          FABRIC_WORKSPACE: ${{ steps.env-config.outputs.workspace }}
+        run: |
+          python ops/scripts/health_check_fabric.py \
+            --workspace "$FABRIC_WORKSPACE" \
+            --environment ${{ matrix.environment }} \
+            --output-format json > health-report-${{ matrix.environment }}.json
+          
+          # Parse health status
+          HEALTH_STATUS=$(cat health-report-${{ matrix.environment }}.json | jq -r '.overall_status')
+          echo "status=$HEALTH_STATUS" >> $GITHUB_OUTPUT
+          
+          # Check if critical issues exist
+          CRITICAL_ISSUES=$(cat health-report-${{ matrix.environment }}.json | jq -r '.critical_issues | length')
+          echo "critical_issues=$CRITICAL_ISSUES" >> $GITHUB_OUTPUT
+
+      - name: Check deployment pipeline health
+        if: matrix.environment != 'dev'
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          DEPLOYMENT_PIPELINE_ID: ${{ secrets.FABRIC_DEPLOYMENT_PIPELINE_ID }}
+        run: |
+          python ops/scripts/check_deployment_pipeline.py \
+            --pipeline-id "$DEPLOYMENT_PIPELINE_ID" \
+            --stage ${{ steps.env-config.outputs.deployment_stage }} \
+            --output-format json > pipeline-health-${{ matrix.environment }}.json
+
+      - name: Run data quality checks
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          FABRIC_WORKSPACE: ${{ steps.env-config.outputs.workspace }}
+        run: |
+          python ops/scripts/run_gx.py \
+            --profile monitoring \
+            --workspace "$FABRIC_WORKSPACE" \
+            --output-format json > dq-results-${{ matrix.environment }}.json
+        continue-on-error: true
+
+      - name: Check Power BI reports
+        if: matrix.environment == 'prod'
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          python ops/scripts/check_powerbi_health.py \
+            --pipeline "USF BI Pipeline" \
+            --output-format json > powerbi-health-${{ matrix.environment }}.json
+        continue-on-error: true
+
+      - name: Generate health summary
+        id: health-summary
+        run: |
+          python ops/scripts/generate_health_summary.py \
+            --environment ${{ matrix.environment }} \
+            --fabric-report health-report-${{ matrix.environment }}.json \
+            --dq-report dq-results-${{ matrix.environment }}.json \
+            --pipeline-report pipeline-health-${{ matrix.environment }}.json \
+            --powerbi-report powerbi-health-${{ matrix.environment }}.json \
+            --output summary-${{ matrix.environment }}.md
+
+      - name: Upload health reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-reports-${{ matrix.environment }}
+          path: |
+            *-${{ matrix.environment }}.json
+            summary-${{ matrix.environment }}.md
+
+      - name: Create issue for critical problems
+        if: steps.fabric-health.outputs.critical_issues > 0
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const environment = '${{ matrix.environment }}';
+            
+            // Read health report
+            const healthReport = JSON.parse(fs.readFileSync(`health-report-${environment}.json`, 'utf8'));
+            
+            // Create issue title
+            const title = `🚨 Critical Issues Detected in ${environment.toUpperCase()} Environment`;
+            
+            // Create issue body
+            const body = `## Critical Issues Detected
+            
+            **Environment:** ${environment.toUpperCase()}
+            **Workspace:** ${{ steps.env-config.outputs.workspace }}
+            **Detection Time:** ${new Date().toISOString()}
+            **Workflow:** [${context.workflow}](${context.payload.repository.html_url}/actions/runs/${context.runId})
+            
+            ### Issues Summary
+            ${healthReport.critical_issues.map(issue => `- **${issue.type}:** ${issue.description}`).join('\n')}
+            
+            ### Recommendations
+            ${healthReport.recommendations ? healthReport.recommendations.map(rec => `- ${rec}`).join('\n') : 'No specific recommendations available'}
+            
+            ### Health Report Details
+            \`\`\`json
+            ${JSON.stringify(healthReport, null, 2)}
+            \`\`\`
+            
+            ---
+            *This issue was automatically created by the Fabric Deployment Monitoring workflow.*`;
+            
+            // Create the issue
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'fabric', `environment:${environment}`, 'monitoring', 'critical']
+            });
+
+      - name: Update deployment status badge
+        if: matrix.environment == 'prod'
+        run: |
+          # Update status badge for production environment
+          STATUS_COLOR=$([ "${{ steps.fabric-health.outputs.status }}" = "healthy" ] && echo "success" || echo "critical")
+          echo "Production Status: ${{ steps.fabric-health.outputs.status }}" > deployment-status.md
+          
+          # Could integrate with shields.io or similar service here
+          echo "Status badge update completed"
+
+  # Aggregate health report
+  aggregate-report:
+    name: Generate Aggregate Health Report
+    runs-on: ubuntu-latest
+    needs: health-check
+    if: always()
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download all health reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: health-reports-*
+          merge-multiple: true
+
+      - name: Generate aggregate dashboard
+        run: |
+          python ops/scripts/generate_health_dashboard.py \
+            --input-pattern "*-*.json" \
+            --output health-dashboard.html \
+            --include-trends \
+            --include-alerts
+
+      - name: Upload dashboard
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-dashboard
+          path: health-dashboard.html
+
+      - name: Post summary to step summary
+        run: |
+          echo "## 📊 Fabric Environment Health Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Parse and display summary from each environment
+          for env in dev test prod; do
+            if [ -f "summary-${env}.md" ]; then
+              echo "### ${env^^} Environment" >> $GITHUB_STEP_SUMMARY
+              cat "summary-${env}.md" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Generated at: $(date +'%Y-%m-%d %H:%M:%S UTC')*" >> $GITHUB_STEP_SUMMARY
+
+  # Send notifications for critical issues
+  notifications:
+    name: Send Health Notifications
+    runs-on: ubuntu-latest
+    needs: health-check
+    if: failure()
+    
+    steps:
+      - name: Send Teams notification
+        uses: aliencube/microsoft-teams-actions@v0.8.0
+        with:
+          webhook_uri: ${{ secrets.TEAMS_WEBHOOK_URI }}
+          title: "🚨 Fabric Environment Health Alert"
+          summary: "Critical issues detected in Fabric environments"
+          text: |
+            One or more critical issues have been detected in the Microsoft Fabric environments.
+            
+            **Action Required:** Please check the GitHub Actions workflow and address any critical issues immediately.
+            
+            **Workflow:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          theme_color: "FF0000"
