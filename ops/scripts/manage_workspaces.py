@@ -20,7 +20,7 @@ from utilities.workspace_manager import (
     create_workspace_for_environment,
     setup_complete_environment
 )
-from utilities.output import print_success, print_error, print_warning, print_info, print_table
+from utilities.output import console_success as print_success, console_error as print_error, console_warning as print_warning, console_info as print_info, console_table as print_table
 
 # Configure logging
 logging.basicConfig(
