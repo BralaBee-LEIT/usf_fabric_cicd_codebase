@@ -421,9 +421,11 @@ class WorkspaceManager:
             Added user details
         """
         payload = {
-            "identifier": principal_id,
-            "principalType": principal_type,
-            "workspaceRole": role.value
+            "principal": {
+                "id": principal_id,
+                "type": principal_type
+            },
+            "role": role.value
         }
         
         try:
