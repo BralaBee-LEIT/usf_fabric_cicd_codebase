@@ -6,7 +6,7 @@ import json
 import logging
 import time
 from typing import Dict, List, Any, Optional
-from fabric_api import fabric_client
+from .fabric_api import fabric_client
 
 from .constants import (
     DEFAULT_POLLING_INTERVAL_SECONDS,
