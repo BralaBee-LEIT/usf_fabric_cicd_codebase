@@ -184,7 +184,7 @@ class WorkspaceManager:
         
         # Use config manager for consistent naming if available
         if self.config_manager:
-            return self.config_manager.generate_name("workspace", self.environment, base_name)
+            return self.config_manager.generate_name("workspace", self.environment, name=base_name)
         
         # Fallback to simple suffix
         return f"{base_name}-{self.environment}"
@@ -227,7 +227,7 @@ class WorkspaceManager:
             )
         
         try:
-            response = self._make_request('POST', 'v1/workspaces', json=payload)
+            response = self._make_request('POST', 'workspaces', json=payload)
             workspace = response.json()
             logger.info(f"✓ Created workspace: {workspace_name} (ID: {workspace.get('id')})")
             return workspace
@@ -263,7 +263,7 @@ class WorkspaceManager:
                 )
         
         try:
-            self._make_request('DELETE', f'v1/workspaces/{workspace_id}')
+            self._make_request('DELETE', f'workspaces/{workspace_id}')
             logger.info(f"✓ Deleted workspace: {workspace_name} (ID: {workspace_id})")
             return True
             
@@ -288,7 +288,7 @@ class WorkspaceManager:
         Returns:
             List of workspace objects
         """
-        response = self._make_request('GET', 'v1/workspaces')
+        response = self._make_request('GET', 'workspaces')
         workspaces = response.json().get('value', [])
         
         # Filter by environment if configured
@@ -321,7 +321,7 @@ class WorkspaceManager:
         Returns:
             Workspace details
         """
-        response = self._make_request('GET', f'v1/workspaces/{workspace_id}')
+        response = self._make_request('GET', f'workspaces/{workspace_id}')
         return response.json()
     
     def get_workspace_by_name(self, name: str) -> Optional[Dict[str, Any]]:
@@ -371,7 +371,7 @@ class WorkspaceManager:
         if not payload:
             raise ValueError("At least one property (name or description) must be provided")
         
-        response = self._make_request('PATCH', f'v1/workspaces/{workspace_id}', json=payload)
+        response = self._make_request('PATCH', f'workspaces/{workspace_id}', json=payload)
         logger.info(f"✓ Updated workspace {workspace_id}")
         return response.json()
     
@@ -390,7 +390,7 @@ class WorkspaceManager:
         Returns:
             List of workspace items
         """
-        endpoint = f'v1/workspaces/{workspace_id}/items'
+        endpoint = f'workspaces/{workspace_id}/items'
         if item_type:
             endpoint += f'?type={item_type}'
         
@@ -429,7 +429,7 @@ class WorkspaceManager:
         try:
             response = self._make_request(
                 'POST',
-                f'v1/workspaces/{workspace_id}/roleAssignments',
+                f'workspaces/{workspace_id}/roleAssignments',
                 json=payload
             )
             logger.info(
@@ -458,7 +458,7 @@ class WorkspaceManager:
         try:
             self._make_request(
                 'DELETE',
-                f'v1/workspaces/{workspace_id}/roleAssignments/{principal_id}'
+                f'workspaces/{workspace_id}/roleAssignments/{principal_id}'
             )
             logger.info(f"✓ Removed user '{principal_id}' from workspace {workspace_id}")
             return True
@@ -479,7 +479,7 @@ class WorkspaceManager:
         Returns:
             List of users with their roles
         """
-        response = self._make_request('GET', f'v1/workspaces/{workspace_id}/roleAssignments')
+        response = self._make_request('GET', f'workspaces/{workspace_id}/roleAssignments')
         users = response.json().get('value', [])
         logger.info(f"Found {len(users)} users in workspace {workspace_id}")
         return users
@@ -507,7 +507,7 @@ class WorkspaceManager:
         
         response = self._make_request(
             'PATCH',
-            f'v1/workspaces/{workspace_id}/roleAssignments/{principal_id}',
+            f'workspaces/{workspace_id}/roleAssignments/{principal_id}',
             json=payload
         )
         logger.info(
