@@ -8,6 +8,7 @@ This solution provides:
 - **Zero hardcoded values** (fully configurable via constants.py)
 - **GitHub Actions CI/CD** pipeline
 - **Environment-based** deployments (dev/test/prod)
+- **Workspace management** (create, delete, user management across environments)
 - **Standardized output utilities** (color-coded console with JSON mode)
 - **Configurable polling intervals** (fast testing, production tuning)
 - **Comprehensive security** (path traversal, SQL injection protection)
@@ -47,6 +48,7 @@ This installs:
 - ✅ Constants module (`ops/scripts/utilities/constants.py`) - 200+ configurable settings
 - ✅ Output utilities (`ops/scripts/utilities/output.py`) - Standardized console output
 - ✅ Security utilities (`ops/scripts/utilities/security_utils.py`) - Comprehensive protection
+- ✅ Workspace management (`ops/scripts/utilities/workspace_manager.py`) - Complete workspace & user operations
 
 ### 3. Configure Environment
 ```bash
@@ -385,18 +387,21 @@ python3 -c "from ops.scripts.utilities.constants import *; print('✅ Constants:
 python3 -c "from ops.scripts.utilities.output import console_success; console_success('Output utilities work!')"
 python3 -c "from ops.scripts.utilities.security_utils import SecurityValidator; print('✅ Security utilities loaded')"
 
-# 5. Test validators
+# 5. Test workspace management (list workspaces)
+python3 ops/scripts/manage_workspaces.py list
+
+# 6. Test validators
 python ops/scripts/validate_data_contracts.py --contracts-dir governance/data_contracts
 python ops/scripts/validate_dq_rules.py --rules-dir governance/dq_rules
 
-# 6. Run unit tests
+# 7. Run unit tests (includes workspace management tests)
 pytest ops/tests/ -v
 
-# 7. Check code quality
+# 8. Check code quality
 flake8 ops/scripts/ --count
 black ops/ --check
 
-# 8. Security scan
+# 9. Security scan
 pip-audit --requirement ops/requirements.txt
 
 # All should complete successfully ✅
@@ -408,25 +413,52 @@ Your Microsoft Fabric CI/CD solution is now configured with:
 - ✅ Multi-file governance support
 - ✅ Automated validation
 - ✅ CI/CD pipeline
+- ✅ Workspace management (dev/test/prod)
 - ✅ Zero hardcoded values (centralized in constants.py)
 - ✅ Standardized output utilities (color-coded console)
 - ✅ Comprehensive security (path traversal, SQL injection protection)
 - ✅ Deployment rollback capability
 - ✅ Performance optimized (LRU caching, configurable polling)
-- ✅ Unit test suite (25+ tests, 70%+ coverage)
+- ✅ Unit test suite (48+ tests, 73%+ coverage)
 - ✅ Production-ready architecture (95% complete)
 
 **Latest Enhancements (October 2025):**
 - 🆕 Constants module with 200+ configurable settings
 - 🆕 Output utilities for consistent UX
 - 🆕 Security utilities with 5 protection layers
+- 🆕 Workspace management (create, delete, user management)
+- 🆕 Environment-aware operations (dev/test/prod)
 - 🆕 Configurable polling intervals (fast testing)
 - 🆕 Specific exception handlers with logging
 - 🆕 Comprehensive documentation and tracking
+
+## 🏢 Workspace Management Quick Examples
+
+```bash
+# List all workspaces
+python3 ops/scripts/manage_workspaces.py list
+
+# Create workspace for dev environment
+python3 ops/scripts/manage_workspaces.py create my-workspace -e dev
+
+# Create complete environment (dev + test + prod)
+python3 ops/scripts/manage_workspaces.py create-set data-platform
+
+# Add user with admin role
+python3 ops/scripts/manage_workspaces.py add-user WORKSPACE_ID user@example.com --role Admin
+
+# Setup complete project with users
+python3 ops/scripts/manage_workspaces.py setup my-project \
+  --admins admin@example.com \
+  --members dev1@example.com,dev2@example.com
+```
+
+**See `documentation/WORKSPACE_MANAGEMENT_GUIDE.md` for complete guide!**
 
 Start by committing your changes and pushing to GitHub to trigger the CI/CD pipeline!
 
 **Next Steps:**
 1. Review `PROJECT_OVERVIEW.md` for complete solution architecture
-2. Check `MAINTENANCE_IMPROVEMENTS_COMPLETE.md` for latest changes
-3. See `PLACEHOLDER_IMPLEMENTATIONS.md` for future roadmap
+2. Check `documentation/WORKSPACE_MANAGEMENT_GUIDE.md` for workspace operations
+3. See `MAINTENANCE_IMPROVEMENTS_COMPLETE.md` for latest changes
+4. Review `PLACEHOLDER_IMPLEMENTATIONS.md` for future roadmap
