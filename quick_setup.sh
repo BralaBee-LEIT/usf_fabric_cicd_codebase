@@ -50,27 +50,67 @@ fi
 
 print_step "1" "Environment Check"
 
-# Check Python
-if command -v python3 &> /dev/null; then
-    PYTHON_VERSION=$(python3 --version | cut -d' ' -f2)
-    print_success "Python $PYTHON_VERSION found"
+# Check if conda is available
+if command -v conda &> /dev/null; then
+    print_success "Conda found"
+    
+    # Check if environment.yml exists
+    if [ -f "environment.yml" ]; then
+        print_success "environment.yml found"
+        
+        # Check if fabric-cicd environment exists
+        if conda env list | grep -q "^fabric-cicd "; then
+            print_success "fabric-cicd environment exists"
+            
+            # Check if we're in the correct environment
+            if [ "$CONDA_DEFAULT_ENV" = "fabric-cicd" ]; then
+                print_success "Already in fabric-cicd environment"
+            else
+                print_warning "Not in fabric-cicd environment (currently in: ${CONDA_DEFAULT_ENV:-none})"
+                echo -e "${YELLOW}Activating fabric-cicd environment...${NC}"
+                
+                # Note: We can't directly activate in a subshell, so we inform the user
+                echo -e "${YELLOW}Please run: conda activate fabric-cicd${NC}"
+                echo -e "${YELLOW}Then re-run this script${NC}"
+                exit 1
+            fi
+        else
+            print_warning "fabric-cicd environment does not exist"
+            echo -e "${YELLOW}Creating conda environment from environment.yml...${NC}"
+            conda env create -f environment.yml
+            print_success "Environment created successfully"
+            echo -e "${YELLOW}Please run: conda activate fabric-cicd${NC}"
+            echo -e "${YELLOW}Then re-run this script${NC}"
+            exit 0
+        fi
+        
+        # Verify Python version in environment
+        PYTHON_VERSION=$(python --version | cut -d' ' -f2)
+        print_success "Python $PYTHON_VERSION (from fabric-cicd environment)"
+        
+    else
+        print_error "environment.yml not found"
+        exit 1
+    fi
 else
-    print_error "Python 3 not found. Please install Python 3.8 or higher"
-    exit 1
-fi
-
-# Check virtual environment
-if [ -n "$VIRTUAL_ENV" ] || [ -n "$CONDA_DEFAULT_ENV" ]; then
+    # Fallback to regular Python check
+    print_warning "Conda not found, checking for Python..."
+    if command -v python3 &> /dev/null; then
+        PYTHON_VERSION=$(python3 --version | cut -d' ' -f2)
+        print_success "Python $PYTHON_VERSION found"
+    else
+        print_error "Python 3 not found. Please install Python 3.8 or higher"
+        exit 1
+    fi
+    
+    # Check virtual environment
     if [ -n "$VIRTUAL_ENV" ]; then
         print_success "Virtual environment: $(basename $VIRTUAL_ENV)"
     else
-        print_success "Conda environment: $CONDA_DEFAULT_ENV"
+        print_warning "No virtual environment detected"
+        echo -e "\n${YELLOW}Create a virtual environment first:${NC}"
+        echo "  python -m venv fabric-cicd-env && source fabric-cicd-env/bin/activate"
     fi
-else
-    print_warning "No virtual environment detected"
-    echo -e "\n${YELLOW}Create a virtual environment first:${NC}"
-    echo "  python -m venv fabric-cicd-env && source fabric-cicd-env/bin/activate"
-    echo "  # OR conda create -n fabric-cicd python=3.11 && conda activate fabric-cicd"
 fi
 
 print_step "2" "File Structure Check"

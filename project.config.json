@@ -1,9 +1,9 @@
 {
   "project": {
-    "name": "fabric-cicd",
-    "prefix": "your-project",
+    "name": "usf2-fabric-cicd",
+    "prefix": "usf2-fabric",
     "description": "Microsoft Fabric CI/CD Implementation",
-    "organization": "your-org"
+    "organization": "LEIT-TekSystems"
   },
   "naming_patterns": {
     "workspace": "{prefix}-fabric-{environment}",
