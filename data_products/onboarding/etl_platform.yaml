@@ -1,0 +1,32 @@
+product:
+  name: "ETL Platform"
+  owner_email: "data-engineering@company.com"
+  domain: "Customer Insights"
+  description: "Complete end-to-end ETL infrastructure for customer data processing"
+
+environments:
+  dev:
+    enabled: true
+    capacity_type: "trial"
+    description: "Development environment for ETL pipeline testing"
+  
+  test:
+    enabled: true
+    capacity_type: "trial"
+    description: "QA environment for ETL validation"
+  
+  prod:
+    enabled: false  # Enable when ready for production
+    capacity_type: "capacity"
+    capacity_id: "${FABRIC_CAPACITY_PROD_ID}"
+    description: "Production ETL environment"
+
+git:
+  organization: "${GITHUB_ORG}"
+  repository: "${GITHUB_REPO}"
+  feature_prefix: "feature"
+  directory: "data_products/etl_platform"
+
+automation:
+  audit_reference: "ETL-SETUP-001"
+  create_default_items: true

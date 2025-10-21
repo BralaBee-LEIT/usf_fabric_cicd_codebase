@@ -1,0 +1,49 @@
+{
+  "products": [
+    {
+      "product": "Sample Data Product",
+      "slug": "sample_data_product",
+      "owner_email": "owner@example.com",
+      "domain": "Customer Insights",
+      "audit_reference": "JIRA-000",
+      "dev_workspace_id": null,
+      "feature_workspaces": {},
+      "git": {
+        "repository": "${GITHUB_REPO}",
+        "organization": "${GITHUB_ORG}",
+        "directory": "data_products/sample_data_product",
+        "default_branch": "main"
+      }
+    },
+    {
+      "product": "Customer Analytics",
+      "slug": "customer_analytics",
+      "owner_email": "data-team@company.com",
+      "domain": "Customer Insights",
+      "audit_reference": "JIRA-12345",
+      "dev_workspace_id": "be8d1df8-9067-4557-a179-fd706a38dd20",
+      "feature_workspaces": {},
+      "git": {
+        "repository": "${GITHUB_REPO}",
+        "organization": "${GITHUB_ORG}",
+        "directory": "data_products/customer_analytics",
+        "default_branch": "main"
+      }
+    },
+    {
+      "product": "Sales Analytics",
+      "slug": "sales_analytics",
+      "owner_email": "sales-team@company.com",
+      "domain": "Sales Insights",
+      "audit_reference": "JIRA-67890",
+      "dev_workspace_id": "f6f36e51-99e7-424e-aba6-1aa70b92d4e2",
+      "feature_workspaces": {},
+      "git": {
+        "repository": "${GITHUB_REPO}",
+        "organization": "${GITHUB_ORG}",
+        "directory": "data_products/sales_analytics",
+        "default_branch": "main"
+      }
+    }
+  ]
+}

@@ -65,6 +65,7 @@
       "prod": "{prefix}-prod"
     }
   },
+  "products": [],
   "metadata": {
     "created_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
     "version": "1.0.0",

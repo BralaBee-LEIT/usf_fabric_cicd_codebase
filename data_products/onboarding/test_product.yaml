@@ -1,0 +1,26 @@
+product:
+  name: Test Data Product
+  description: "Testing workspace templating"
+  owner: your-email@company.com
+  team: Your Team
+
+environments:
+  dev:
+    enabled: true
+    capacity_type: trial
+    capacity_id: null
+    description: "Test environment"
+
+git:
+  provider: GitHub
+  default_branch: main
+
+scaffold:
+  directories:
+    - data/bronze
+    - data/silver
+    - notebooks
+  notebooks:
+    - name: test_notebook
+      language: PySpark
+      description: "Test notebook"

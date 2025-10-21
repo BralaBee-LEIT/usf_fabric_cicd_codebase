@@ -1,0 +1,741 @@
+# Live Microsoft Fabric Run Guide
+
+**Document Version**: 1.0  
+**Last Updated**: 18 October 2025  
+**Purpose**: Explains what happens when running the onboarding automation against a live Microsoft Fabric environment.
+
+---
+
+## Overview
+
+This guide details the behavior of `ops/scripts/onboard_data_product.py` when executed against a **live Microsoft Fabric tenant** without skip flags. Use this to understand the API calls, resource provisioning, and integration steps that occur during a real deployment.
+
+---
+
+## Command Syntax
+
+### Basic Live Run
+```bash
+python ops/scripts/onboard_data_product.py \
+  data_products/onboarding/sample_product.yaml
+```
+
+### With Feature Branch
+```bash
+python ops/scripts/onboard_data_product.py \
+  data_products/onboarding/sample_product.yaml \
+  --feature ABC-123
+```
+
+### Available Flags
+| Flag | Effect |
+|------|--------|
+| `--dry-run` | Preview actions without making changes |
+| `--skip-workspaces` | Skip Fabric workspace provisioning |
+| `--skip-git` | Skip Git operations (branch creation, workspace linking) |
+| `--skip-scaffold` | Skip repository scaffold generation |
+| `--json` | Output results as JSON for CI/CD integration |
+
+---
+
+## Execution Flow
+
+### 1. Environment & Authentication
+
+#### What Happens
+- Script loads environment variables from `.env` and `.env.local`
+- Reads required credentials:
+  - `AZURE_TENANT_ID`
+  - `AZURE_CLIENT_ID`
+  - `AZURE_CLIENT_SECRET`
+- `WorkspaceManager` initializes and acquires OAuth token via MSAL (Microsoft Authentication Library)
+
+#### Validation
+```python
+if not all([tenant_id, client_id, client_secret]):
+    raise ValueError("Azure credentials required. Set AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET")
+```
+
+#### Expected Behavior
+- ✅ Token acquired successfully → proceeds to workspace provisioning
+- ❌ Credentials missing/invalid → **script exits with error message**
+
+---
+
+### 2. DEV Workspace Provisioning
+
+#### Descriptor Configuration
+```yaml
+product:
+  name: Sample Data Product
+
+environments:
+  dev:
+    enabled: true
+    capacity_type: trial  # or premium_p1, fabric_f8, etc.
+    capacity_id: null     # optional - specify for Premium/Fabric capacities
+    description: "Development environment"
+```
+
+#### API Call
+```http
+POST https://api.fabric.microsoft.com/v1/workspaces
+Authorization: Bearer {access_token}
+Content-Type: application/json
+
+{
+  "displayName": "Sample Data Product [DEV]",
+  "description": "DEV workspace for Sample Data Product",
+  "capacityId": null  // or specific capacity GUID
+}
+```
+
+#### Python Implementation
+```python
+workspace_manager.create_workspace(
+    name="Sample Data Product [DEV]",
+    description="DEV workspace for Sample Data Product",
+    capacity_id=None,
+    capacity_type=CapacityType.TRIAL
+)
+```
+
+#### Result
+- ✅ **New workspace created** in Fabric tenant
+  - Name: `Sample Data Product [DEV]`
+  - Type: Trial capacity (or specified capacity)
+  - Status: Active, empty
+- ⚠️ **Workspace exists** → Script warns and reuses existing workspace
+- ❌ **API failure** → Script logs error and continues (workspace creation is optional with `--skip-workspaces`)
+
+#### Return Value
+```json
+{
+  "id": "abc-123-workspace-guid",
+  "displayName": "Sample Data Product [DEV]",
+  "type": "Workspace",
+  "capacityId": null
+}
+```
+
+---
+
+### 3. Feature Workspace Provisioning
+
+Only executed when `--feature <TICKET>` is provided.
+
+#### API Call
+```http
+POST https://api.fabric.microsoft.com/v1/workspaces
+Authorization: Bearer {access_token}
+Content-Type: application/json
+
+{
+  "displayName": "Sample Data Product [Feature ABC-123]",
+  "description": "Feature workspace (ABC-123) for Sample Data Product",
+  "capacityId": null
+}
+```
+
+#### Python Implementation
+```python
+workspace_manager.create_workspace(
+    name=f"{product.name} [Feature {feature_ticket}]",
+    description=f"Feature workspace ({feature_ticket}) for {product.name}",
+    capacity_id=product.dev.capacity_id,
+    capacity_type=product.dev.capacity_type
+)
+```
+
+#### Result
+- ✅ **Feature workspace created**
+  - Name: `Sample Data Product [Feature ABC-123]`
+  - Purpose: Isolated environment for feature development
+  - Lifecycle: Typically deleted after feature merge
+
+---
+
+### 4. Repository Scaffold Generation
+
+#### What Happens
+```python
+# Copy template structure
+source: data_products/templates/base_product/
+target: data_products/sample_data_product/
+
+# Creates structure:
+data_products/sample_data_product/
+├── README.md
+├── workspace/
+├── pipelines/
+├── notebooks/
+├── datasets/
+└── docs/
+```
+
+#### Template Copy
+- If `data_products/templates/base_product/` exists → **copies recursively**
+- Otherwise → **creates default structure with placeholder folders**
+
+#### README Generation
+```markdown
+# Sample Data Product
+
+This folder was generated by the onboarding automation.
+
+## Structure
+- `workspace/` – placeholders for Fabric workspace exports
+- `pipelines/` – deployment-ready pipeline definitions
+- `notebooks/` – notebooks synced with Fabric Git integration
+- `datasets/` – semantic models and dataset assets
+- `docs/` – product-specific documentation
+```
+
+---
+
+### 5. Git Branch Creation
+
+Only executed when `--feature <TICKET>` is provided and `--skip-git` is **not** used.
+
+#### Git Operations
+```bash
+# 1. Get current branch
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+# 2. Check if feature branch exists
+git rev-parse --verify sample_data_product/feature/ABC-123
+
+# 3a. If branch exists - checkout and update
+git checkout sample_data_product/feature/ABC-123
+git add data_products/sample_data_product
+git commit -m "chore(onboarding): refresh scaffold for Sample Data Product (ABC-123)"
+
+# 3b. If branch doesn't exist - create from main
+git checkout -b sample_data_product/feature/ABC-123 main
+git add data_products/sample_data_product
+git commit -m "chore(onboarding): bootstrap Sample Data Product (ABC-123)"
+
+# 4. Return to original branch
+git checkout ${current_branch}
+```
+
+#### Branch Naming Convention
+```
+{product_slug}/{feature_prefix}/{ticket_id}
+
+Examples:
+- sample_data_product/feature/ABC-123
+- customer_insights/feature/JIRA-456
+- sales_analytics/feature/PLAT-789
+```
+
+#### Auto-Commit Behavior
+Controlled by descriptor:
+```yaml
+git:
+  auto_commit: true  # default
+```
+
+If `auto_commit: false` → scaffold is staged but **not committed**
+
+---
+
+### 6. Fabric ↔ Git Integration
+
+Links the feature workspace to the Git branch for bidirectional sync.
+
+#### API Call
+```http
+POST https://api.fabric.microsoft.com/v1/workspaces/{workspace_id}/git/connect
+Authorization: Bearer {access_token}
+Content-Type: application/json
+
+{
+  "gitProviderType": "GitHub",
+  "organization": "your-github-org",
+  "repository": "usf-fabric-cicd",
+  "branch": "sample_data_product/feature/ABC-123",
+  "directoryName": "data_products/sample_data_product"
+}
+```
+
+#### Python Implementation
+```python
+from utilities.fabric_deployment_pipeline import FabricGitIntegration
+
+integration = FabricGitIntegration(workspace_name="Sample Data Product [Feature ABC-123]")
+integration.connect_to_git(
+    git_provider="GitHub",
+    organization="your-github-org",
+    repository="usf-fabric-cicd",
+    branch="sample_data_product/feature/ABC-123",
+    directory="data_products/sample_data_product"
+)
+```
+
+#### Result
+- ✅ **Workspace linked to Git**
+  - Fabric workspace UI shows Git integration panel
+  - Changes in workspace can be committed to branch
+  - Changes in branch can be pulled to workspace
+- 🔄 **Sync enabled**
+  - Manual sync: User triggers from Fabric UI
+  - Automatic sync: Configured via workspace settings
+
+#### Fabric Portal View
+```
+Workspace: Sample Data Product [Feature ABC-123]
+├── Git Settings
+│   ├── Provider: GitHub
+│   ├── Repository: your-github-org/usf-fabric-cicd
+│   ├── Branch: sample_data_product/feature/ABC-123
+│   ├── Directory: data_products/sample_data_product
+│   └── Status: Connected ✓
+└── Workspace Items (empty initially)
+```
+
+---
+
+### 7. Registry & Audit Updates
+
+#### Registry Update
+File: `data_products/registry.json`
+
+```json
+{
+  "products": [
+    {
+      "product": "Sample Data Product",
+      "slug": "sample_data_product",
+      "owner_email": "owner@example.com",
+      "domain": "Customer Insights",
+      "audit_reference": "JIRA-000",
+      "dev_workspace_id": "abc-123-workspace-guid",
+      "feature_workspaces": {
+        "ABC-123": "def-456-workspace-guid"
+      },
+      "git": {
+        "repository": "usf-fabric-cicd",
+        "organization": "your-github-org",
+        "directory": "data_products/sample_data_product",
+        "default_branch": "main"
+      }
+    }
+  ]
+}
+```
+
+#### Audit Log
+File: `.onboarding_logs/20251018T143045Z_sample_data_product.json`
+
+```json
+{
+  "timestamp": "20251018T143045Z",
+  "product": {
+    "name": "Sample Data Product",
+    "slug": "sample_data_product"
+  },
+  "dev_workspace": {
+    "id": "abc-123-workspace-guid",
+    "displayName": "Sample Data Product [DEV]"
+  },
+  "feature_workspace": {
+    "id": "def-456-workspace-guid",
+    "displayName": "Sample Data Product [Feature ABC-123]"
+  },
+  "git_branch": "sample_data_product/feature/ABC-123",
+  "git_branch_created": true,
+  "scaffold_path": "data_products/sample_data_product",
+  "registry_updated": true
+}
+```
+
+---
+
+## End Result in Microsoft Fabric Portal
+
+### Workspaces Tab
+Navigate to: https://app.fabric.microsoft.com/workspaces
+
+You will see:
+1. **Sample Data Product [DEV]**
+   - Type: Workspace
+   - Capacity: Trial (or specified)
+   - Items: 0 (empty, ready for development)
+   - Git: Not connected
+
+2. **Sample Data Product [Feature ABC-123]** (if `--feature` used)
+   - Type: Workspace
+   - Capacity: Trial (or specified)
+   - Items: 0 (empty)
+   - Git: ✓ Connected to `sample_data_product/feature/ABC-123`
+
+### Git Integration Panel (Feature Workspace)
+- **Branch**: `sample_data_product/feature/ABC-123`
+- **Directory**: `data_products/sample_data_product`
+- **Status**: Connected, ready to sync
+- **Actions**:
+  - Commit workspace changes to branch
+  - Pull branch changes to workspace
+  - View sync history
+
+### Local Repository State
+```bash
+# New files/directories
+data_products/sample_data_product/
+  ├── README.md
+  ├── workspace/
+  ├── pipelines/
+  ├── notebooks/
+  ├── datasets/
+  └── docs/
+
+# Updated files
+data_products/registry.json
+.onboarding_logs/20251018T143045Z_sample_data_product.json
+
+# Git branches
+* main
+  sample_data_product/feature/ABC-123
+```
+
+---
+
+## Prerequisites
+
+### Azure/Fabric Permissions Required
+
+#### Service Principal Permissions
+Your `AZURE_CLIENT_ID` service principal needs:
+- **Fabric API**: `Workspace.ReadWrite.All`
+- **Azure AD**: Application permissions registered in Azure Portal
+- **Capacity Access**: Contributor or Admin role on target capacity (if using Premium/Fabric)
+
+#### Git Provider Permissions
+For GitHub integration:
+- **Repository**: Write access to target repo
+- **PAT/OAuth**: Configured in Fabric tenant settings
+- **App Registration**: GitHub App installed with appropriate scopes
+
+### Capacity Requirements
+
+#### Trial Capacity
+- **Limits**: ~10 workspaces, auto-expires after 60 days
+- **Cost**: Free
+- **Performance**: Limited compute resources
+- **Use Case**: Development, testing, proof-of-concept
+
+#### Premium/Fabric Capacity
+- **Limits**: Based on SKU (P1-P5, F2-F64)
+- **Cost**: Billed per hour when active
+- **Performance**: Production-grade compute
+- **Use Case**: Production deployments
+
+Specify in descriptor:
+```yaml
+environments:
+  dev:
+    capacity_type: premium_p1  # or fabric_f8, fabric_f64, etc.
+    capacity_id: "your-capacity-guid"  # required for non-trial
+```
+
+---
+
+## API Rate Limits & Retry Logic
+
+### Fabric API Limits
+- **Rate**: ~100 requests per minute per tenant
+- **Throttling**: 429 response with `Retry-After` header
+
+### Built-in Retry Strategy
+```python
+# Implemented in WorkspaceManager._make_request()
+retry_count = 3
+for attempt in range(retry_count):
+    response = requests.request(...)
+    
+    if response.status_code == 429:
+        retry_after = int(response.headers.get('Retry-After', 60))
+        time.sleep(retry_after)
+        continue
+    
+    if response.status_code in [500, 502, 503]:
+        wait_time = 2 ** attempt  # Exponential backoff
+        time.sleep(wait_time)
+        continue
+```
+
+### Console Output
+```
+⚠️ Rate limited. Retrying after 60 seconds...
+⚠️ Transient error 502. Retrying in 2s...
+⚠️ Transient error 502. Retrying in 4s...
+```
+
+---
+
+## Cleanup & Resource Management
+
+### Deleting Workspaces
+
+#### Option 1: Bulk Delete Script
+```bash
+# Create list of workspaces to delete
+cat > demo_workspaces.txt <<EOF
+Sample Data Product [DEV]
+Sample Data Product [Feature ABC-123]
+EOF
+
+# Run bulk delete
+python bulk_delete_workspaces.py --input demo_workspaces.txt
+```
+
+#### Option 2: Manual via CLI
+```bash
+# Using manage_workspaces.py
+python ops/scripts/manage_workspaces.py delete \
+  --workspace-name "Sample Data Product [DEV]" \
+  --force
+```
+
+#### Option 3: Fabric Portal
+1. Navigate to workspace
+2. Workspace settings → Delete workspace
+3. Confirm deletion
+
+### Registry Cleanup
+Manually remove product entry from `data_products/registry.json` after workspace deletion.
+
+### Git Cleanup
+```bash
+# Delete feature branch (local + remote)
+git branch -D sample_data_product/feature/ABC-123
+git push origin --delete sample_data_product/feature/ABC-123
+
+# Remove scaffold (optional - keep if merging to main)
+git rm -r data_products/sample_data_product
+git commit -m "chore: remove sample product scaffold after cleanup"
+```
+
+---
+
+## Safe Testing Strategy
+
+### Phase 1: Dry-Run Validation
+```bash
+python ops/scripts/onboard_data_product.py \
+  data_products/onboarding/sample_product.yaml \
+  --feature ABC-123 \
+  --dry-run
+```
+**Validates**: Descriptor parsing, naming, config loading  
+**Creates**: Nothing (preview only)
+
+### Phase 2: Scaffold Only
+```bash
+python ops/scripts/onboard_data_product.py \
+  data_products/onboarding/sample_product.yaml \
+  --skip-workspaces \
+  --skip-git
+```
+**Validates**: Template copy, registry updates, audit logging  
+**Creates**: Local files only (no Fabric resources)
+
+### Phase 3: DEV Workspace Only
+```bash
+python ops/scripts/onboard_data_product.py \
+  data_products/onboarding/sample_product.yaml \
+  --skip-git
+```
+**Validates**: Fabric authentication, workspace creation  
+**Creates**: DEV workspace in Fabric (no Git integration)
+
+### Phase 4: Full Run (Sandbox Tenant)
+```bash
+python ops/scripts/onboard_data_product.py \
+  data_products/onboarding/sample_product.yaml \
+  --feature ABC-123
+```
+**Validates**: Complete end-to-end workflow  
+**Creates**: DEV + Feature workspaces, Git branch, Git integration
+
+### Phase 5: Production Run
+Same as Phase 4, but:
+- Use production descriptor
+- Target production capacity
+- Follow change management procedures
+- Monitor Fabric portal during execution
+
+---
+
+## Monitoring & Troubleshooting
+
+### Real-Time Console Output
+```
+ℹ️ Starting onboarding for product 'Sample Data Product' (slug: sample_data_product)
+ℹ️ Loaded 1 environment variables from .env
+ℹ️ Creating Fabric workspace: Sample Data Product [DEV]
+✅ Created workspace 'Sample Data Product [DEV]' (ID: abc-123-workspace-guid)
+ℹ️ Creating feature workspace: Sample Data Product [Feature ABC-123]
+✅ Created feature workspace 'Sample Data Product [Feature ABC-123]'
+ℹ️ Seeded scaffold for sample_data_product from template
+ℹ️ Creating git branch sample_data_product/feature/ABC-123 from main
+✅ Committed scaffold on branch sample_data_product/feature/ABC-123
+✅ Linked workspace 'Sample Data Product [Feature ABC-123]' to org/repo#branch
+✅ Updated onboarding registry at data_products/registry.json
+✅ Audit log written to .onboarding_logs/20251018T143045Z_sample_data_product.json
+✅ Onboarding workflow complete
+```
+
+### Common Issues
+
+#### ❌ Authentication Failed
+```
+Error: Failed to acquire access token: AADSTS700016: Application not found
+```
+**Solution**: Verify `AZURE_CLIENT_ID` matches registered app in Azure Portal
+
+#### ❌ Insufficient Permissions
+```
+Error: 403 Forbidden - Workspace.ReadWrite.All permission required
+```
+**Solution**: Grant Fabric API permissions in Azure AD app registration
+
+#### ❌ Capacity Not Found
+```
+Error: Capacity ID 'xyz' not found or not accessible
+```
+**Solution**: Verify capacity exists and service principal has access
+
+#### ❌ Git Connection Failed
+```
+Error: Unable to connect workspace to Git: Repository not found
+```
+**Solution**: Check GitHub org/repo names, verify PAT/OAuth configuration
+
+#### ❌ Branch Already Exists
+```
+⚠️ Git branch already exists: sample_data_product/feature/ABC-123
+ℹ️ Updating scaffold commit on existing branch
+```
+**Status**: Normal behavior - script updates existing branch instead of failing
+
+---
+
+## Cost & Resource Impact
+
+### Trial Capacity
+- **Cost**: Free
+- **Workspace Limit**: ~10 active workspaces
+- **Expiration**: 60 days (automatic cleanup)
+- **Storage**: Limited to trial capacity limits
+
+### Premium Capacity (P1-P5)
+- **Cost**: Billed per hour when active (~$5-50/hour depending on SKU)
+- **Workspace Limit**: Based on capacity size
+- **Best Practice**: Pause capacity when not in use
+
+### Fabric Capacity (F2-F64)
+- **Cost**: Consumption-based billing
+- **Workspace Limit**: Based on capacity reservation
+- **Best Practice**: Monitor Fabric Capacity Metrics
+
+### Empty Workspace Impact
+- **Storage Cost**: Negligible (no data/items)
+- **Compute Cost**: $0 (no active queries/refreshes)
+- **Recommendation**: Safe to leave empty workspaces for development
+
+---
+
+## Pre-Flight Checklist
+
+Before running against live Fabric:
+
+- [ ] Conda environment activated: `conda activate fabric-cicd`
+- [ ] Environment variables set in `.env`:
+  - [ ] `AZURE_TENANT_ID`
+  - [ ] `AZURE_CLIENT_ID`
+  - [ ] `AZURE_CLIENT_SECRET`
+  - [ ] `GITHUB_ORG`
+  - [ ] `GITHUB_REPO`
+- [ ] Descriptor YAML reviewed and validated
+- [ ] Service principal permissions verified
+- [ ] Target capacity identified (or using Trial)
+- [ ] Git repository accessible
+- [ ] Dry-run executed successfully
+- [ ] Backup/snapshot taken (if modifying existing setup)
+- [ ] Team notified (if creating shared resources)
+
+---
+
+## JSON Output Mode
+
+For CI/CD integration:
+
+```bash
+python ops/scripts/onboard_data_product.py \
+  data_products/onboarding/sample_product.yaml \
+  --feature ABC-123 \
+  --json > onboarding_result.json
+```
+
+**Output**:
+```json
+{
+  "product": {
+    "name": "Sample Data Product",
+    "slug": "sample_data_product"
+  },
+  "dev_workspace": {
+    "id": "abc-123-workspace-guid",
+    "displayName": "Sample Data Product [DEV]"
+  },
+  "feature_workspace": {
+    "id": "def-456-workspace-guid",
+    "displayName": "Sample Data Product [Feature ABC-123]"
+  },
+  "git_branch": "sample_data_product/feature/ABC-123",
+  "scaffold_path": "data_products/sample_data_product",
+  "registry_updated": true,
+  "audit_log": ".onboarding_logs/20251018T143045Z_sample_data_product.json"
+}
+```
+
+Use in CI/CD:
+```yaml
+# GitHub Actions example
+- name: Onboard Data Product
+  run: |
+    python ops/scripts/onboard_data_product.py \
+      data_products/onboarding/${{ matrix.product }}.yaml \
+      --feature ${{ github.event.pull_request.number }} \
+      --json > result.json
+    
+- name: Extract Workspace IDs
+  run: |
+    DEV_WORKSPACE=$(jq -r '.dev_workspace.id' result.json)
+    echo "DEV_WORKSPACE_ID=${DEV_WORKSPACE}" >> $GITHUB_ENV
+```
+
+---
+
+## Related Documentation
+
+- [Workspace Templating Guide](WORKSPACE_TEMPLATING_GUIDE.md) - Complete usage guide
+- [Deployment Package Guide](../DEPLOYMENT_PACKAGE_GUIDE.md) - CI/CD integration patterns
+- [Fabric Item CRUD Summary](../FABRIC_ITEM_CRUD_SUMMARY.md) - Managing workspace items
+- [Developer Journey Guide](../DEVELOPER_JOURNEY_GUIDE.md) - Onboarding new team members
+
+---
+
+## Support & Feedback
+
+For issues or questions:
+1. Check test coverage: `pytest ops/tests/test_onboard_data_product.py -v`
+2. Review audit logs in `.onboarding_logs/`
+3. Enable debug logging: `export LOG_LEVEL=DEBUG`
+4. Contact platform team or create GitHub issue
+
+---
+
+**End of Guide**

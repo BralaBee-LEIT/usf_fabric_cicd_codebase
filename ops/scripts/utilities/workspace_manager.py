@@ -68,6 +68,7 @@ class WorkspaceManager:
         self.base_url = FABRIC_API_BASE_URL
         self.token = None
         self.environment = environment.lower() if environment else None
+        self.max_retries = int(os.getenv('FABRIC_API_MAX_RETRIES', '3'))
         
         if not all([self.tenant_id, self.client_id, self.client_secret]):
             raise ValueError(ERROR_MISSING_CREDENTIALS)
@@ -109,7 +110,7 @@ class WorkspaceManager:
         self, 
         method: str, 
         endpoint: str, 
-        retry_count: int = 3,
+        retry_count: int = None,
         **kwargs
     ) -> requests.Response:
         """
@@ -118,12 +119,15 @@ class WorkspaceManager:
         Args:
             method: HTTP method (GET, POST, PATCH, DELETE)
             endpoint: API endpoint
-            retry_count: Number of retries for transient failures
+            retry_count: Number of retries for transient failures (defaults to FABRIC_API_MAX_RETRIES env var or 3)
             **kwargs: Additional request parameters
         
         Returns:
             Response object
         """
+        if retry_count is None:
+            retry_count = self.max_retries
+            
         headers = kwargs.get('headers', {})
         headers['Authorization'] = f"Bearer {self._get_access_token()}"
         headers['Content-Type'] = 'application/json'
