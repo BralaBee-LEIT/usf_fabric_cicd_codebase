@@ -89,6 +89,71 @@ usf-fabric-cicd/
 
 See folder READMEs for detailed usage instructions.
 
+## ⚙️ Configuration Files
+
+### `.env` - **REQUIRED**
+Azure and GitHub credentials. Required for all scenarios.
+
+```bash
+# Azure Service Principal
+AZURE_TENANT_ID=your-tenant-id
+AZURE_CLIENT_ID=your-client-id
+AZURE_CLIENT_SECRET=your-secret
+AZURE_SUBSCRIPTION_ID=your-subscription-id
+
+# GitHub (optional)
+GITHUB_TOKEN=your-github-token
+GITHUB_ORG=your-org
+GITHUB_REPO=your-repo
+```
+
+### `project.config.json` - **OPTIONAL**
+Enterprise naming patterns for config-driven workflows. 
+
+**When required:**
+- Using `scenarios/config-driven-workspace/` for enterprise naming standards
+- Managing multiple environments (dev/test/prod) with consistency
+- Need organization-wide naming governance
+
+**When NOT required:**
+- Using `scenarios/domain-workspace/` or `scenarios/leit-ricoh-setup/`
+- Simple workspace creation with explicit names
+- Quick prototyping or testing
+
+**Initialize when needed:**
+```bash
+python setup/init_project_config.py
+```
+
+This creates `project.config.json` with naming patterns like:
+```json
+{
+  "naming_patterns": {
+    "workspace": "{prefix}-{name}-{environment}"
+  }
+}
+```
+
+**See:** [scenarios/README.md](scenarios/README.md) for workflow comparison
+
+## 🔀 Two Workflow Approaches
+
+This repository supports two distinct workspace provisioning approaches:
+
+### 1. Config-Driven (Enterprise)
+- **Uses:** `project.config.json` naming patterns
+- **Example:** `--project analytics --environment dev` → `usf2-fabric-analytics-dev`
+- **Best for:** Enterprise environments, standardized naming, governance
+- **Scenario:** `scenarios/config-driven-workspace/`
+
+### 2. Direct-Name (Simple)
+- **Uses:** Explicit workspace names you provide
+- **Example:** `--workspace-name "analytics-dev"` → `analytics-dev`
+- **Best for:** Simple setups, full control, quick prototyping
+- **Scenarios:** `scenarios/domain-workspace/`, `scenarios/leit-ricoh-setup/`
+
+**See:** [scenarios/README.md](scenarios/README.md) for detailed comparison
+
 ## Notes
 - Scripts under `ops/scripts/utilities/*` are placeholders: integrate with real Fabric, Purview, and Power BI REST APIs.
 - Add your notebooks, SQL, and dataflows under `data/` and BI assets under `bi/`.

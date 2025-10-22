@@ -6,7 +6,7 @@
     "organization": "LEIT-TekSystems"
   },
   "naming_patterns": {
-    "workspace": "{prefix}-fabric-{environment}",
+    "workspace": "{prefix}-{name}-{environment}",
     "lakehouse": "{prefix_upper}_Lakehouse_{environment_title}",
     "storage_account": "{prefix_clean}data{environment}",
     "key_vault": "{prefix}-kv-{environment}",

@@ -7,10 +7,27 @@ Scripts for initial project setup, environment configuration, and workspace prov
 ### Project Initialization
 
 **`init_project_config.py`** - Interactive project configuration wizard
+
+Creates `project.config.json` for **config-driven workspace provisioning** with enterprise naming standards.
+
+**⚙️ When to use:**
+- Setting up **config-driven-workspace** scenario (standardized enterprise naming)
+- Managing multiple environments (dev/test/prod) with consistent patterns
+- Enforcing organization-wide naming governance
+- Automating workspace provisioning at scale
+
+**❌ When NOT needed:**
+- Using **domain-workspace** or **leit-ricoh** scenarios (direct-name approach)
+- Simple workspace creation with explicit names
+- Quick prototyping or one-off workspaces
+- Small teams without formal naming standards
+
+**What it does:**
 - Creates `project.config.json` with your settings
 - Collects project info (name, prefix, organization)
-- Configures Azure settings (tenant, subscriptions)
-- Sets up GitHub integration
+- Configures naming patterns: `{prefix}-{name}-{environment}`
+- Sets up Azure settings (tenant, subscriptions)
+- Configures GitHub integration
 - Generates environment variables guide
 
 **Usage:**
@@ -19,9 +36,11 @@ python setup/init_project_config.py
 ```
 
 **What it creates:**
-- `project.config.json` - Project-specific configuration
+- `project.config.json` - Naming patterns and config (for config-driven scenarios ONLY)
 - Updated `.env` template
 - Environment variables documentation
+
+**See:** [scenarios/README.md](../scenarios/README.md#two-workflow-approaches) for workflow comparison
 
 ---
 

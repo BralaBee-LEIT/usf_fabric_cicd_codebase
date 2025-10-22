@@ -7,6 +7,10 @@ This directory contains ready-to-use scenario scripts for setting up complete Mi
 ```
 scenarios/
 ├── README.md                           # This file
+├── config-driven-workspace/            # Enterprise config-driven workspace
+│   ├── config_driven_workspace.py
+│   ├── README.md
+│   └── *_setup_log.json               # Execution logs
 ├── domain-workspace/                   # Domain-based workspace with existing items
 │   ├── domain_workspace_with_existing_items.py
 │   ├── DOMAIN_WORKSPACE_GUIDE.md
@@ -29,11 +33,129 @@ scenarios/
     └── USER_ADDITION_GUIDE.md
 ```
 
-## 📋 Available Scenarios
+## � Two Workflow Approaches
 
-### 1. Domain Workspace with Existing Items
+This repository supports **two distinct approaches** to workspace provisioning. Choose based on your use case:
 
-**Location:** `domain-workspace/`
+### Approach 1: Config-Driven (Enterprise)
+
+**📐 Standardized Naming via `project.config.json`**
+
+Uses ConfigManager to generate workspace names from organizational patterns. Best for enterprise environments with governance requirements.
+
+**When to use:**
+- ✅ Enterprise deployments with naming standards
+- ✅ Multiple environments (dev/test/prod) with consistency
+- ✅ Organization-wide governance and compliance
+- ✅ Automated, repeatable infrastructure
+- ✅ Deployment at scale across teams
+
+**Example:**
+```bash
+# You provide: project + environment
+python config_driven_workspace.py --project analytics --environment dev
+
+# System generates: usf2-fabric-analytics-dev (from config pattern)
+```
+
+**Scenario:** `config-driven-workspace/`
+
+---
+
+### Approach 2: Direct-Name (Simple)
+
+**📝 Explicit Naming You Control**
+
+You specify exact workspace names. Best for simple setups where you need full control over naming.
+
+**When to use:**
+- ✅ Simple, one-off workspace creation
+- ✅ Small teams without formal naming standards
+- ✅ Need explicit control over names
+- ✅ Quick prototyping or testing
+- ✅ Non-standardized environments
+
+**Example:**
+```bash
+# You provide: exact workspace name
+python domain_workspace_with_existing_items.py --workspace-name "finance-ops"
+
+# System uses: finance-ops (exactly as provided)
+```
+
+**Scenarios:** `domain-workspace/`, `leit-ricoh-setup/`, `leit-ricoh-fresh-setup/`
+
+---
+
+### Quick Decision Matrix
+
+| Requirement | Config-Driven | Direct-Name |
+|-------------|---------------|-------------|
+| Naming standards enforced | ✅ | ❌ |
+| Simple one-off setup | ❌ | ✅ |
+| Multi-environment consistency | ✅ | ⚠️ Manual |
+| Full naming control | ❌ | ✅ |
+| Requires config file | ✅ Required | ❌ Optional |
+| Setup complexity | Medium | Low |
+| Governance/Compliance | ✅ | ⚠️ Manual |
+| Quick prototyping | ❌ | ✅ |
+
+---
+
+## �📋 Available Scenarios
+
+### 1. Config-Driven Workspace (Enterprise)
+
+**Location:** `config-driven-workspace/`  
+**Approach:** Config-Driven ⚙️
+
+Enterprise workspace provisioning with standardized naming patterns from `project.config.json`.
+
+**Features:**
+- ✅ Automated name generation from config patterns
+- ✅ Environment-aware settings (dev/test/prod)
+- ✅ Organization-wide naming governance
+- ✅ Multi-project consistency
+- ✅ Lakehouse creation (capacity permitting)
+- ✅ User/group configuration
+- ✅ Setup logging and audit trail
+
+**Prerequisites:**
+```bash
+# Initialize config (one-time)
+python setup/init_project_config.py
+```
+
+**Usage:**
+```bash
+# Create dev workspace for analytics
+python scenarios/config-driven-workspace/config_driven_workspace.py \
+  --project analytics \
+  --environment dev \
+  --skip-user-prompt
+
+# Create prod workspace for sales
+python scenarios/config-driven-workspace/config_driven_workspace.py \
+  --project sales \
+  --environment prod \
+  --principals-file config/sales_prod_principals.txt
+```
+
+**Generated Names:**
+- `--project analytics --environment dev` → `usf2-fabric-analytics-dev`
+- `--project sales --environment test` → `usf2-fabric-sales-test`
+- `--project finance --environment prod` → `usf2-fabric-finance-prod`
+
+**Documentation:**
+- [Config-Driven Workspace Guide](config-driven-workspace/README.md) - Complete setup guide
+- [Setup Guide](../setup/README.md) - Initialize `project.config.json`
+
+---
+
+### 2. Domain Workspace with Existing Items
+
+**Location:** `domain-workspace/`  
+**Approach:** Direct-Name 📝
 
 Create a domain-based workspace and attach existing lakehouses/warehouses via OneLake shortcuts.
 
@@ -65,9 +187,10 @@ python3 scenarios/domain-workspace/domain_workspace_with_existing_items.py \
 
 ---
 
-### 2. LEIT-Ricoh Domain Setup
+### 3. LEIT-Ricoh Domain Setup
 
-**Location:** `leit-ricoh-setup/`
+**Location:** `leit-ricoh-setup/`  
+**Approach:** Direct-Name 📝
 
 Complete workspace setup for the LEIT-Ricoh domain with full analytics infrastructure.
 
@@ -108,9 +231,10 @@ python3 scenarios/leit-ricoh-setup/leit_ricoh_setup.py
 
 ---
 
-### 3. LEIT-Ricoh Fresh Setup
+### 4. LEIT-Ricoh Fresh Setup
 
-**Location:** `leit-ricoh-fresh-setup/`
+**Location:** `leit-ricoh-fresh-setup/`  
+**Approach:** Direct-Name 📝
 
 Fresh variant of the LEIT-Ricoh setup with additional configurations.
 
