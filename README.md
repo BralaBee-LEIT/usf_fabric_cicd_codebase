@@ -4,7 +4,7 @@
 
 ## 🚀 Quick Start
 
-**See [QUICKSTART.md](QUICKSTART.md) for detailed setup instructions**
+**See [docs/getting-started/QUICKSTART.md](docs/getting-started/QUICKSTART.md) for detailed setup instructions**
 
 ### 5-Minute Setup
 ```bash
@@ -18,18 +18,14 @@ pip install -r ops/requirements.txt
 cp .env.example .env
 # Edit .env with your Azure/GitHub credentials
 
-# 4. Initialize project
-python init_project_config.py
+# 4. Run preflight check
+./setup/preflight_check.sh
 
-# 5. Test validation
-python ops/scripts/validate_data_contracts.py --contracts-dir governance/data_contracts
-python ops/scripts/validate_dq_rules.py --rules-dir governance/dq_rules
+# 5. Initialize project
+python setup/init_project_config.py
 
-# 5. Initialize project configuration
-python init_project_config.py
-
-# 6. Test deployment
-python ops/scripts/deploy_fabric.py --environment dev --mode standard
+# 6. Test validation
+python tests/validate_solution.py
 ```
 
 ### Alternative Setup (Python venv)
@@ -40,8 +36,58 @@ source fabric-cicd-env/bin/activate
 
 # Continue with steps 3-6 above
 cp .env.example .env
-# ... rest of setup
+./setup/preflight_check.sh
+python setup/init_project_config.py
+python tests/validate_solution.py
 ```
+
+## 📁 Project Structure
+
+```
+usf-fabric-cicd/
+├── diagnostics/          # Troubleshooting tools
+│   ├── check_graph_permissions.py
+│   ├── diagnose_fabric_permissions.py
+│   └── diagnose_workspaces.py
+├── setup/                # Setup and initialization
+│   ├── init_project_config.py
+│   ├── preflight_check.sh
+│   └── setup_etl_workspace.sh
+├── tests/                # Validation and testing
+│   ├── validate_solution.py
+│   └── test_workspace_management.sh
+├── tools/                # Operational utilities
+│   ├── fabric-cli.sh
+│   └── bulk_delete_workspaces.py
+├── scenarios/            # Workspace provisioning scenarios
+│   ├── domain-workspace/
+│   ├── leit-ricoh-setup/
+│   └── shared/
+├── ops/                  # Core operations (scripts, utilities)
+├── docs/                 # Comprehensive documentation
+├── config/               # Configuration files
+└── governance/           # Data governance rules
+```
+
+## 🛠️ Available Tools
+
+### Operational Tools
+- **[fabric-cli.sh](tools/README.md)** - User-friendly CLI wrapper
+- **[bulk_delete_workspaces.py](tools/README.md)** - Bulk workspace deletion
+
+### Diagnostics
+- **[diagnose_fabric_permissions.py](diagnostics/README.md)** - API permissions checker
+- **[diagnose_workspaces.py](diagnostics/README.md)** - Workspace visibility diagnostic
+
+### Setup & Initialization  
+- **[preflight_check.sh](setup/README.md)** - Pre-flight checklist (10 checks)
+- **[init_project_config.py](setup/README.md)** - Project configuration wizard
+
+### Testing & Validation
+- **[validate_solution.py](tests/README.md)** - Comprehensive validation
+- **[test_workspace_management.sh](tests/README.md)** - Workspace tests
+
+See folder READMEs for detailed usage instructions.
 
 ## Notes
 - Scripts under `ops/scripts/utilities/*` are placeholders: integrate with real Fabric, Purview, and Power BI REST APIs.
