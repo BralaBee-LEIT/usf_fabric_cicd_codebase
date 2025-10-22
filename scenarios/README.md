@@ -2,9 +2,72 @@
 
 This directory contains ready-to-use scenario scripts for setting up complete Microsoft Fabric workspaces with various configurations.
 
-## 📁 Available Scenarios
+## 📁 Directory Structure
 
-### 1. LEIT-Ricoh Domain Setup
+```
+scenarios/
+├── README.md                           # This file
+├── domain-workspace/                   # Domain-based workspace with existing items
+│   ├── domain_workspace_with_existing_items.py
+│   ├── DOMAIN_WORKSPACE_GUIDE.md
+│   ├── DOMAIN_WORKSPACE_QUICKREF.md
+│   └── *_setup_log.json               # Execution logs
+├── leit-ricoh-setup/                   # LEIT-Ricoh domain setup
+│   ├── leit_ricoh_setup.py
+│   └── leit_ricoh_setup.sh
+├── leit-ricoh-fresh-setup/             # LEIT-Ricoh fresh setup variant
+│   └── leit_ricoh_fresh_setup.py
+└── shared/                             # Shared documentation
+    ├── ARCHITECTURE.md
+    ├── CAPACITY_ASSIGNMENT_GUIDE.md
+    ├── CORE_BULK_ADDITION.md
+    ├── GROUP_SUPPORT_QUICKREF.md
+    ├── GROUP_SUPPORT_SUMMARY.md
+    ├── ITEM_CREATION_FIXES.md
+    ├── QUICKSTART.md
+    ├── SCENARIO_SUMMARY.md
+    └── USER_ADDITION_GUIDE.md
+```
+
+## 📋 Available Scenarios
+
+### 1. Domain Workspace with Existing Items
+
+**Location:** `domain-workspace/`
+
+Create a domain-based workspace and attach existing lakehouses/warehouses via OneLake shortcuts.
+
+**Features:**
+- ✅ Domain-based workspace organization
+- ✅ Creates new lakehouse, warehouse, and staging lakehouse
+- ✅ Automatic user/group configuration from principals file
+- ✅ Interactive mode: prompts to edit template if no principals file
+- ✅ Documents OneLake shortcuts for accessing existing items
+- ✅ Support for automation via `--skip-user-prompt`
+
+**Usage:**
+```bash
+# With existing principals file
+python3 scenarios/domain-workspace/domain_workspace_with_existing_items.py \
+  --workspace-name "finance-ops" \
+  --domain-name "finance" \
+  --principals-file "config/finance-ops_principals.txt"
+
+# Interactive mode (creates template)
+python3 scenarios/domain-workspace/domain_workspace_with_existing_items.py \
+  --workspace-name "marketing-ops" \
+  --domain-name "marketing"
+```
+
+**Documentation:**
+- [Domain Workspace Guide](domain-workspace/DOMAIN_WORKSPACE_GUIDE.md) - Comprehensive setup guide
+- [Quick Reference](domain-workspace/DOMAIN_WORKSPACE_QUICKREF.md) - Common commands and patterns
+
+---
+
+### 2. LEIT-Ricoh Domain Setup
+
+**Location:** `leit-ricoh-setup/`
 
 Complete workspace setup for the LEIT-Ricoh domain with full analytics infrastructure.
 
@@ -33,37 +96,45 @@ Complete workspace setup for the LEIT-Ricoh domain with full analytics infrastru
 
 **Total:** 8 Fabric items + 6 user roles
 
+**Usage:**
+
+```bash
+# Python version (recommended)
+python3 scenarios/leit-ricoh-setup/leit_ricoh_setup.py
+
+# Bash version
+./scenarios/leit-ricoh-setup/leit_ricoh_setup.sh
+```
+
 ---
 
-## 🚀 Usage
+### 3. LEIT-Ricoh Fresh Setup
 
-### Option 1: Python Script (Recommended)
+**Location:** `leit-ricoh-fresh-setup/`
 
+Fresh variant of the LEIT-Ricoh setup with additional configurations.
+
+**Usage:**
 ```bash
-# Run the Python setup script
-python3 scenarios/leit_ricoh_setup.py
+python3 scenarios/leit-ricoh-fresh-setup/leit_ricoh_fresh_setup.py
 ```
 
-**Features:**
-- ✅ Better error handling
-- ✅ Detailed logging
-- ✅ Progress tracking
-- ✅ JSON log file generation
-- ✅ Setup verification
-- ✅ Comprehensive summary
+---
 
-### Option 2: Bash Script
+## 🚀 Quick Start
 
+### Running a Scenario
+
+1. **Choose your scenario** from the list above
+2. **Navigate to the scenario directory**
+3. **Run the setup script**
+
+Example:
 ```bash
-# Run the bash setup script
-./scenarios/leit_ricoh_setup.sh
+# Domain workspace scenario
+cd scenarios/domain-workspace
+python3 domain_workspace_with_existing_items.py --workspace-name "my-workspace" --domain-name "my-domain"
 ```
-
-**Features:**
-- ✅ Simpler execution
-- ✅ Colored output
-- ✅ Step-by-step progress
-- ✅ Summary report
 
 ---
 
@@ -103,130 +174,57 @@ conda env create -f environment.yml
 conda activate fabric-cicd
 ```
 
----
-
 ## 🔧 Customization
 
 ### Modify Workspace Configuration
 
-Edit the scenario script to change:
+Edit the scenario script to change workspace settings:
 
 ```python
-# In leit_ricoh_setup.py
+# Example: In domain_workspace_with_existing_items.py
 
-class RicohWorkspaceSetup:
-    def __init__(self):
-        self.workspace_name = "leit-ricoh"          # Change workspace name
-        self.domain_name = "leit-ricoh-domain"      # Change domain name
-        self.environment = "dev"                    # Change environment (dev/test/prod)
-```
-
-### Add Custom Fabric Items
-
-Add items to the configuration arrays:
-
-```python
-# In step_5_create_additional_items()
-
-items = [
-    {
-        "name": "CustomItem",
-        "type": FabricItemType.LAKEHOUSE,  # Choose type
-        "description": "Custom item description"
-    },
-    # ... more items
-]
+def __init__(self, workspace_name, domain_name, ...):
+    self.workspace_name = workspace_name        # Change workspace name
+    self.domain_name = domain_name              # Change domain name
+    self.environment = "dev"                    # Change environment (dev/test/prod)
 ```
 
 ### Configure Users
 
-Update user emails in `step_6_add_users()`:
+Create or update a principals file in the `config/` directory:
 
-```python
-users = [
-    {
-        "email": "your.admin@company.com",      # Update with real email
-        "role": WorkspaceRole.ADMIN,
-        "description": "Workspace administrator"
-    },
-    # ... more users
-]
+```bash
+# config/my-workspace_principals.txt
+9117cbfa-f0a7-43b7-846f-96ba66a3c1c0,Admin,Workspace administrator,User
+a2b3c4d5-e6f7-8901-bcde-fg2345678901,Member,Data Engineer,User
 ```
 
-Then uncomment the user addition code:
-
-```python
-# Uncomment this block to actually add users
-# for user in users:
-#     self.workspace_mgr.add_workspace_user(
-#         workspace_id=self.workspace_id,
-#         email=user["email"],
-#         role=user["role"]
-#     )
+Then reference it when running the scenario:
+```bash
+python3 scenarios/domain-workspace/domain_workspace_with_existing_items.py \
+  --workspace-name "my-workspace" \
+  --principals-file "config/my-workspace_principals.txt"
 ```
 
 ---
 
-## 📊 Output
+## 📊 Documentation
 
-### Console Output
+### Scenario-Specific Guides
 
-The script provides detailed progress updates:
+Each scenario directory contains its own documentation:
+- **domain-workspace/** - Domain workspace setup guides
+- **leit-ricoh-setup/** - LEIT-Ricoh specific documentation
+- **leit-ricoh-fresh-setup/** - Fresh setup documentation
 
-```
-================================================================================
-  LEIT-Ricoh Domain - Complete Workspace Setup
-================================================================================
+### Shared Documentation
 
-Domain: leit-ricoh-domain
-Workspace: leit-ricoh
-Environment: dev
-
-This will create:
-  - 1 Workspace
-  - 1 Lakehouse
-  - 1 Warehouse
-  - 3 Notebooks
-  - 3 Additional items (Pipeline, Semantic Model, Report)
-  - 6 User role configurations
-
-================================================================================
-
-================================================================================
-  STEP 1: Creating Workspace - leit-ricoh
-================================================================================
-
-ℹ Creating workspace 'leit-ricoh' in dev environment...
-✓ Workspace 'leit-ricoh' created successfully
-  Workspace ID: abc123-def456-ghi789
-
-...
-```
-
-### Log File
-
-A detailed JSON log is saved to `.onboarding_logs/`:
-
-```json
-{
-  "timestamp": "2025-10-22T10:30:00Z",
-  "domain": "leit-ricoh-domain",
-  "workspace": "leit-ricoh",
-  "environment": "dev",
-  "workspace_id": "abc123-def456-ghi789",
-  "items": [
-    {
-      "name": "RicohDataLakehouse",
-      "type": "Lakehouse",
-      "id": "item-id-123"
-    }
-  ],
-  "users": [...],
-  "errors": []
-}
-```
-
----
+The `shared/` directory contains documentation applicable to all scenarios:
+- [ARCHITECTURE.md](shared/ARCHITECTURE.md) - Overall architecture patterns
+- [CAPACITY_ASSIGNMENT_GUIDE.md](shared/CAPACITY_ASSIGNMENT_GUIDE.md) - Capacity management
+- [USER_ADDITION_GUIDE.md](shared/USER_ADDITION_GUIDE.md) - User management best practices
+- [QUICKSTART.md](shared/QUICKSTART.md) - Quick start guide
+- [SCENARIO_SUMMARY.md](shared/SCENARIO_SUMMARY.md) - Summary of all scenarios
 
 ## 🔍 Verification
 
@@ -237,24 +235,24 @@ A detailed JSON log is saved to `.onboarding_logs/`:
 python3 ops/scripts/manage_workspaces.py list
 
 # Get specific workspace details
-python3 ops/scripts/manage_workspaces.py get --name leit-ricoh
+python3 ops/scripts/manage_workspaces.py get --name my-workspace
 ```
 
 ### Verify Items
 
 ```bash
 # List all items in workspace
-python3 ops/scripts/manage_fabric_items.py list --workspace leit-ricoh
+python3 ops/scripts/manage_fabric_items.py list --workspace my-workspace
 
 # List only specific type
-python3 ops/scripts/manage_fabric_items.py list --workspace leit-ricoh --type Notebook
+python3 ops/scripts/manage_fabric_items.py list --workspace my-workspace --type Notebook
 ```
 
 ### Verify Users
 
 ```bash
 # List workspace users
-python3 ops/scripts/manage_workspaces.py list-users --workspace leit-ricoh
+python3 ops/scripts/manage_workspaces.py list-users --workspace my-workspace
 ```
 
 ---
@@ -271,7 +269,7 @@ Solution: Verify environment variables and service principal permissions
 **Issue: Workspace Already Exists**
 ```
 Solution: Use a different workspace name or delete the existing workspace
-python3 ops/scripts/manage_workspaces.py delete --name leit-ricoh --force
+python3 ops/scripts/manage_workspaces.py delete --name my-workspace --force
 ```
 
 **Issue: Insufficient Permissions**
@@ -284,43 +282,49 @@ Solution: Ensure service principal has Fabric Admin or Workspace Admin role
 Solution: Check workspace capacity and item type support
 ```
 
-### Enable Debug Logging
-
-```bash
-# Set debug logging level
-export LOG_LEVEL=DEBUG
-
-# Run with verbose output
-python3 scenarios/leit_ricoh_setup.py 2>&1 | tee setup.log
-```
+See the [shared troubleshooting documentation](shared/) for more details.
 
 ---
 
 ## 📝 Creating Your Own Scenario
 
-### 1. Copy the Template
+### 1. Choose a Template
+
+Copy an existing scenario as a starting point:
 
 ```bash
-cp scenarios/leit_ricoh_setup.py scenarios/my_scenario_setup.py
+# Copy domain workspace scenario
+cp -r scenarios/domain-workspace scenarios/my-new-scenario
+
+# Or copy LEIT-Ricoh setup
+cp -r scenarios/leit-ricoh-setup scenarios/my-new-scenario
 ```
 
 ### 2. Modify Configuration
 
-Update workspace name, domain, and items to match your requirements.
+Update the script with your requirements:
+- Workspace name and domain
+- Fabric items to create
+- User/group assignments
+- Environment settings
 
-### 3. Test the Script
+### 3. Add Documentation
+
+Create a README in your scenario directory explaining:
+- What the scenario creates
+- How to use it
+- Any special requirements
+
+### 4. Test the Script
 
 ```bash
-# Dry run (modify script to skip actual creation)
-python3 scenarios/my_scenario_setup.py --dry-run
-
-# Full execution
-python3 scenarios/my_scenario_setup.py
+# Test in dev environment first
+python3 scenarios/my-new-scenario/my_setup.py
 ```
 
-### 4. Document Your Scenario
+### 5. Document in Main README
 
-Add a section to this README explaining your scenario.
+Add your scenario to this README's "Available Scenarios" section.
 
 ---
 
@@ -332,18 +336,20 @@ Always use different workspaces for dev/test/prod environments.
 ### 2. **Naming Conventions**
 Follow consistent naming patterns:
 - Workspace: `{domain}-{purpose}`
-- Items: `{DomainName}{ItemType}`
+- Items: `{DomainName}{ItemType}` (CamelCase for Fabric API)
 - Notebooks: `{NN}_{Purpose}` (numbered)
 
 ### 3. **User Management**
+- Store principals in `config/` directory
+- Use Azure AD Object IDs (GUIDs), NOT emails
+- Format: `principal_id,role,description,type`
 - Use security groups instead of individual users when possible
-- Follow least privilege principle for role assignments
-- Document user responsibilities
+- Follow least privilege principle
 
 ### 4. **Version Control**
 - Keep scenario scripts in version control
-- Tag stable versions
 - Document changes in commit messages
+- Tag stable versions
 
 ### 5. **Testing**
 Test scenarios in dev environment before running in prod.
@@ -352,10 +358,16 @@ Test scenarios in dev environment before running in prod.
 
 ## 📚 Additional Resources
 
+### Core Documentation
 - [Workspace Management Guide](../docs/workspace-management/WORKSPACE_MANAGEMENT_QUICKREF.md)
 - [Fabric Items CRUD Guide](../docs/fabric-items-crud/FABRIC_ITEM_CRUD_QUICKREF.md)
-- [Complete ETL Setup Guide](../docs/etl-data-platform/COMPLETE_ETL_SETUP_GUIDE.md)
 - [Developer Journey Guide](../docs/getting-started/DEVELOPER_JOURNEY_GUIDE.md)
+
+### Shared Scenario Documentation
+- [Architecture Patterns](shared/ARCHITECTURE.md)
+- [Capacity Assignment Guide](shared/CAPACITY_ASSIGNMENT_GUIDE.md)
+- [User Addition Guide](shared/USER_ADDITION_GUIDE.md)
+- [Quick Start Guide](shared/QUICKSTART.md)
 
 ---
 
@@ -363,23 +375,34 @@ Test scenarios in dev environment before running in prod.
 
 To add new scenarios:
 
-1. Create scenario script in `scenarios/` directory
-2. Follow the naming pattern: `{domain}_{purpose}_setup.py`
-3. Include both bash and Python versions (optional)
-4. Document the scenario in this README
-5. Add example output and verification steps
+1. Create a new subdirectory in `scenarios/` following the naming pattern: `{scenario-name}/`
+2. Add your scenario script(s) to the subdirectory
+3. Include scenario-specific documentation (README, guides, etc.)
+4. Add shared documentation to `shared/` if applicable to all scenarios
+5. Update this README's "Available Scenarios" section
 6. Test thoroughly before committing
+
+**Example structure:**
+```
+scenarios/
+└── my-new-scenario/
+    ├── my_setup.py              # Main setup script
+    ├── README.md                # Scenario-specific guide
+    ├── QUICKREF.md              # Quick reference (optional)
+    └── *_setup_log.json         # Execution logs
+```
 
 ---
 
 ## 📞 Support
 
 For issues or questions:
+- Check scenario-specific documentation in each subdirectory
+- Review [shared documentation](shared/) for common patterns
 - Check the [main documentation](../docs/README.md)
-- Review [troubleshooting guides](../docs/development-maintenance/)
 - Contact the platform team
 
 ---
 
 **Last Updated:** October 22, 2025  
-**Version:** 1.0.0
+**Version:** 2.0.0 (Reorganized into subdirectories)
