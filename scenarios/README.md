@@ -21,6 +21,13 @@ scenarios/
 │   └── leit_ricoh_setup.sh
 ├── leit-ricoh-fresh-setup/             # LEIT-Ricoh fresh setup variant
 │   └── leit_ricoh_fresh_setup.py
+├── feature-branch-workflow/           # NEW: Feature branch workspace workflow
+│   ├── README.md
+│   ├── FEATURE_WORKFLOW_GUIDE.md
+│   ├── QUICK_REFERENCE.md
+│   ├── WHAT_WAS_MISSING.md
+│   ├── product_descriptor.yaml
+│   └── test_feature_workflow.sh
 └── shared/                             # Shared documentation
     ├── ARCHITECTURE.md
     ├── CAPACITY_ASSIGNMENT_GUIDE.md
@@ -242,6 +249,90 @@ Fresh variant of the LEIT-Ricoh setup with additional configurations.
 ```bash
 python3 scenarios/leit-ricoh-fresh-setup/leit_ricoh_fresh_setup.py
 ```
+
+---
+
+### 5. Feature Branch Workflow ⭐ NEW
+
+**Location:** `feature-branch-workflow/`  
+**Approach:** Ticket-Based Development 🎫
+
+**THE MISSING PIECE**: Create isolated feature workspaces linked to Git branches for ticket-based development.
+
+**What's Different:**
+This is the **only scenario** that creates feature branch workspaces - all previous scenarios only created permanent DEV/TEST/PROD workspaces. This demonstrates the complete developer workflow from ticket assignment → isolated development → code review → deployment.
+
+**Features:**
+- ✅ Creates isolated workspace per ticket (e.g., `Product-feature-JIRA-123`)
+- ✅ Creates Git feature branch (e.g., `feature/product/JIRA-123`)
+- ✅ Links workspace to Git branch (bidirectional sync)
+- ✅ Enables parallel development (multiple tickets simultaneously)
+- ✅ Safe experimentation without affecting shared environments
+- ✅ Integrates with CI/CD pipeline (PR-based workflow)
+- ✅ Complete cleanup documentation
+
+**Usage:**
+```bash
+# Create isolated feature environment
+python3 ops/scripts/onboard_data_product.py \
+  scenarios/feature-branch-workflow/product_descriptor.yaml \
+  --feature JIRA-12345
+
+# Creates:
+# • Workspace: Customer Insights-feature-JIRA-12345
+# • Git Branch: feature/customer_insights/JIRA-12345
+# • Git Connection: Workspace ↔ Branch
+# • Scaffold: data_products/customer_insights/
+```
+
+**Why This Matters:**
+```
+Without Feature Branches:
+├─ Everyone works in shared DEV workspace
+├─ Changes collide and interfere
+└─ Hard to track who changed what
+
+With Feature Branches:
+├─ Developer A: Product-feature-JIRA-101
+├─ Developer B: Product-feature-JIRA-102
+├─ Developer C: Product-feature-JIRA-103
+└─ Complete isolation, safe experimentation
+```
+
+**Complete Workflow:**
+```
+1. Get Ticket       → JIRA-12345 assigned
+2. Create Feature   → onboard_data_product.py --feature JIRA-12345
+3. Develop          → Work in isolated workspace
+4. Create PR        → feature/product/JIRA-12345 → main
+5. CI/CD Validates  → Quality checks, tests, DQ gates
+6. Merge            → Approved, merge to main
+7. Auto-Deploy      → CI/CD deploys to DEV workspace
+8. Promote          → DEV → TEST → PROD (via Fabric Pipeline)
+9. Cleanup          → Delete feature workspace & branch
+```
+
+**Documentation:**
+- [README](feature-branch-workflow/README.md) - Overview & use cases
+- [Complete Guide](feature-branch-workflow/FEATURE_WORKFLOW_GUIDE.md) - Step-by-step workflow
+- [Quick Reference](feature-branch-workflow/QUICK_REFERENCE.md) - Common commands
+- [What Was Missing](feature-branch-workflow/WHAT_WAS_MISSING.md) - Comparison with previous scenarios
+
+**Test Script:**
+```bash
+# Run automated test
+cd scenarios/feature-branch-workflow
+./test_feature_workflow.sh
+```
+
+**Key Differences:**
+
+| Scenario | Creates Feature Workspace? | Creates Git Branch? | Use Case |
+|----------|---------------------------|-------------------|----------|
+| config-driven-workspace | ❌ | ❌ | Environment setup |
+| leit-ricoh-setup | ❌ | ❌ | Project initialization |
+| domain-workspace | ❌ | ❌ | Domain organization |
+| **feature-branch-workflow** | ✅ | ✅ | **Ticket-based development** |
 
 ---
 
