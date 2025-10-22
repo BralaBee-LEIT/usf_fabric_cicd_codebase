@@ -1,0 +1,52 @@
+{
+  "timestamp": "2025-10-22T12:37:57.551617",
+  "domain": "leit-ricoh-domain",
+  "workspace": "leit-ricoh-20251022_123757",
+  "environment": "dev",
+  "capacity_id": null,
+  "items": [],
+  "users": [
+    {
+      "email": "ricoh.admin@leit-teksystems.com",
+      "role": "Admin",
+      "description": "Workspace administrator"
+    },
+    {
+      "email": "ricoh.engineer1@leit-teksystems.com",
+      "role": "Member",
+      "description": "Data engineer - Senior"
+    },
+    {
+      "email": "ricoh.engineer2@leit-teksystems.com",
+      "role": "Member",
+      "description": "Data engineer - Junior"
+    },
+    {
+      "email": "ricoh.analyst@leit-teksystems.com",
+      "role": "Contributor",
+      "description": "Data analyst"
+    },
+    {
+      "email": "ricoh.business1@leit-teksystems.com",
+      "role": "Viewer",
+      "description": "Business user - Finance"
+    },
+    {
+      "email": "ricoh.business2@leit-teksystems.com",
+      "role": "Viewer",
+      "description": "Business user - Operations"
+    }
+  ],
+  "errors": [
+    "Workspace creation: Workspace 'usf2-fabric-fabric-dev' already exists",
+    "Lakehouse creation: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/None/items",
+    "Warehouse creation: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/None/items",
+    "Notebook 01_DataIngestion: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/None/items",
+    "Notebook 02_DataTransformation: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/None/items",
+    "Notebook 03_DataValidation: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/None/items",
+    "DataPipeline RicohDataPipeline: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/None/items",
+    "SemanticModel RicohSemanticModel: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/None/items",
+    "Report RicohExecutiveDashboard: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/None/items",
+    "Verification: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/None/items"
+  ]
+}

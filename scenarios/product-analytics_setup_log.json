@@ -1,0 +1,26 @@
+{
+  "timestamp": "2025-10-22T15:01:38.220509",
+  "domain": "product-analytics",
+  "workspace_name": "product-analytics-workspace",
+  "items_created": [
+    {
+      "type": "Lakehouse",
+      "name": "ProductAnalyticsLakehouse",
+      "id": "751af648-bbcd-48ea-b5dd-e06fc0d21d1f"
+    },
+    {
+      "type": "Warehouse",
+      "name": "ProductAnalyticsWarehouse",
+      "id": "06fd94fc-a1f4-48f9-a9cb-cb1c055cc83a"
+    },
+    {
+      "type": "Lakehouse",
+      "name": "ProductAnalyticsStagingLakehouse",
+      "id": "5a6906d1-53f7-4205-9eaf-49e0c8e6bd44"
+    }
+  ],
+  "items_referenced": [],
+  "errors": [],
+  "workspace_id": "ca0a5706-06e0-4662-bde4-16aa3d626f62",
+  "principals_configured": false
+}

@@ -1,0 +1,73 @@
+{
+  "timestamp": "2025-10-22T12:46:08.924916",
+  "domain": "leit-ricoh-domain",
+  "workspace": "ricoh-fresh-20251022124608",
+  "environment": null,
+  "capacity_id": null,
+  "items": [
+    {
+      "name": "RicohDataLakehouse",
+      "type": "Lakehouse",
+      "id": "649e24f2-ac84-4b5e-be26-e3633f0b1a90"
+    },
+    {
+      "name": "01_DataIngestion",
+      "type": "Notebook",
+      "id": "c3e20fea-05e1-4d15-8239-d1ea57203282"
+    },
+    {
+      "name": "02_DataTransformation",
+      "type": "Notebook",
+      "id": "79610c14-bcb3-47b1-8e61-1d7b2cdf2c8e"
+    },
+    {
+      "name": "03_DataValidation",
+      "type": "Notebook",
+      "id": "b9dc7833-a86c-4e02-a25f-27d9bbb55ff2"
+    },
+    {
+      "name": "RicohDataPipeline",
+      "type": "DataPipeline",
+      "id": "a52d7d5d-7c95-41d7-910f-28fc40710222"
+    }
+  ],
+  "users": [
+    {
+      "email": "ricoh.admin@leit-teksystems.com",
+      "role": "Admin",
+      "description": "Workspace administrator"
+    },
+    {
+      "email": "ricoh.engineer1@leit-teksystems.com",
+      "role": "Member",
+      "description": "Data engineer - Senior"
+    },
+    {
+      "email": "ricoh.engineer2@leit-teksystems.com",
+      "role": "Member",
+      "description": "Data engineer - Junior"
+    },
+    {
+      "email": "ricoh.analyst@leit-teksystems.com",
+      "role": "Contributor",
+      "description": "Data analyst"
+    },
+    {
+      "email": "ricoh.business1@leit-teksystems.com",
+      "role": "Viewer",
+      "description": "Business user - Finance"
+    },
+    {
+      "email": "ricoh.business2@leit-teksystems.com",
+      "role": "Viewer",
+      "description": "Business user - Operations"
+    }
+  ],
+  "errors": [
+    "Warehouse creation: 'NoneType' object has no attribute 'get'",
+    "SemanticModel RicohSemanticModel: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/6b86ba84-3f3e-486e-9940-8025e3dee7a9/items",
+    "Report RicohExecutiveDashboard: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/6b86ba84-3f3e-486e-9940-8025e3dee7a9/items"
+  ],
+  "workspace_id": "6b86ba84-3f3e-486e-9940-8025e3dee7a9",
+  "capacity_assigned": true
+}

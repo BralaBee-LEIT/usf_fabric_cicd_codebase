@@ -379,6 +379,87 @@ class WorkspaceManager:
         logger.info(f"✓ Updated workspace {workspace_id}")
         return response.json()
     
+    def assign_capacity(
+        self,
+        workspace_id: str,
+        capacity_id: str
+    ) -> Dict[str, Any]:
+        """
+        Assign a Fabric capacity to an existing workspace
+        
+        Args:
+            workspace_id: Workspace ID
+            capacity_id: Capacity ID (GUID) to assign to the workspace
+        
+        Returns:
+            Updated workspace details
+        
+        Example:
+            >>> manager = WorkspaceManager()
+            >>> manager.assign_capacity(
+            ...     workspace_id="06ca81b0-8135-4c89-90b4-b6a9a3bd1879",
+            ...     capacity_id="your-capacity-guid"
+            ... )
+        """
+        # First verify the workspace exists
+        workspace = self.get_workspace_details(workspace_id)
+        workspace_name = workspace.get('displayName', workspace_id)
+        
+        # Assign capacity using PATCH with capacityId
+        payload = {
+            "capacityId": capacity_id
+        }
+        
+        try:
+            response = self._make_request(
+                'PATCH',
+                f'workspaces/{workspace_id}',
+                json=payload
+            )
+            logger.info(
+                f"✓ Assigned capacity {capacity_id} to workspace '{workspace_name}' ({workspace_id})"
+            )
+            return response.json()
+            
+        except requests.exceptions.HTTPError as e:
+            error_msg = f"Failed to assign capacity to workspace '{workspace_name}': {e.response.text}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+    
+    def unassign_capacity(self, workspace_id: str) -> Dict[str, Any]:
+        """
+        Remove capacity assignment from a workspace (revert to Trial/Shared)
+        
+        Args:
+            workspace_id: Workspace ID
+        
+        Returns:
+            Updated workspace details
+        """
+        workspace = self.get_workspace_details(workspace_id)
+        workspace_name = workspace.get('displayName', workspace_id)
+        
+        # Unassign by setting capacityId to None/empty
+        payload = {
+            "capacityId": None
+        }
+        
+        try:
+            response = self._make_request(
+                'PATCH',
+                f'workspaces/{workspace_id}',
+                json=payload
+            )
+            logger.info(
+                f"✓ Removed capacity assignment from workspace '{workspace_name}' ({workspace_id})"
+            )
+            return response.json()
+            
+        except requests.exceptions.HTTPError as e:
+            error_msg = f"Failed to unassign capacity from workspace '{workspace_name}': {e.response.text}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+    
     def list_workspace_items(
         self,
         workspace_id: str,

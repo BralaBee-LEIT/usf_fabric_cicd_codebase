@@ -23,13 +23,13 @@ from ops.scripts.utilities.fabric_item_manager import (
     create_spark_job_definition
 )
 from ops.scripts.utilities.workspace_manager import WorkspaceManager
-from ops.scripts.utilities.console_utils import (
+from ops.scripts.utilities.output import (
     console_success as print_success,
     console_error as print_error,
     console_info as print_info,
     console_warning as print_warning,
-    print_table,
-    print_json
+    console_table as print_table,
+    console_json as print_json
 )
 
 

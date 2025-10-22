@@ -420,6 +420,122 @@ def cmd_add_user(args):
         return 1
 
 
+def cmd_add_users_from_file(args):
+    """Add multiple users/groups to workspace from file"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        
+        # Read and parse file
+        print_info(f"Reading principals from: {args.file}")
+        principals = []
+        
+        with open(args.file, 'r') as f:
+            for line_num, line in enumerate(f, 1):
+                line = line.strip()
+                
+                # Skip empty lines and comments
+                if not line or line.startswith('#'):
+                    continue
+                
+                # Parse CSV format: principal_id,role,description[,type]
+                parts = [p.strip() for p in line.split(',')]
+                
+                if len(parts) < 2:
+                    print_warning(f"Line {line_num}: Invalid format (need at least principal_id,role)")
+                    continue
+                
+                principal_id = parts[0]
+                role_str = parts[1]
+                description = parts[2] if len(parts) > 2 else ""
+                principal_type = parts[3] if len(parts) > 3 else "User"
+                
+                # Validate principal_type
+                if principal_type not in ['User', 'Group', 'ServicePrincipal']:
+                    print_warning(f"Line {line_num}: Invalid type '{principal_type}', defaulting to 'User'")
+                    principal_type = "User"
+                
+                # Validate role
+                try:
+                    role = WorkspaceRole(role_str)
+                except ValueError:
+                    print_warning(f"Line {line_num}: Invalid role '{role_str}', defaulting to 'Viewer'")
+                    role = WorkspaceRole.VIEWER
+                
+                principals.append({
+                    'principal_id': principal_id,
+                    'role': role,
+                    'type': principal_type,
+                    'description': description
+                })
+        
+        if not principals:
+            print_warning("No valid principals found in file")
+            return 1
+        
+        print_info(f"Found {len(principals)} principal(s) to add\n")
+        
+        # Display table
+        headers = ["Principal ID (Object ID)", "Role", "Type", "Description"]
+        rows = [[p['principal_id'], p['role'].value, p['type'], p['description']] for p in principals]
+        print_table(headers, rows)
+        
+        # Dry run check
+        if args.dry_run:
+            print_warning("\n🔍 DRY RUN MODE - No principals will be added")
+            return 0
+        
+        # Confirm
+        if not args.yes:
+            print_warning(f"\n⚠️  About to add {len(principals)} principal(s) to workspace {args.workspace_id}")
+            response = input("Continue? (y/N): ")
+            if response.lower() != 'y':
+                print_info("Cancelled")
+                return 0
+        
+        # Add principals
+        print_info("\nAdding principals...")
+        success_count = 0
+        failed_count = 0
+        
+        for principal in principals:
+            try:
+                manager.add_user(
+                    workspace_id=args.workspace_id,
+                    principal_id=principal['principal_id'],
+                    role=principal['role'],
+                    principal_type=principal['type']
+                )
+                print_success(f"✓ Added {principal['type']} {principal['principal_id']} as {principal['role'].value}")
+                success_count += 1
+                
+            except ValueError as e:
+                if "already has access" in str(e):
+                    print_warning(f"⚠️  {principal['type']} {principal['principal_id']} already has access")
+                else:
+                    print_error(f"✗ Failed to add {principal['type']} {principal['principal_id']}: {str(e)}")
+                    failed_count += 1
+                    
+            except Exception as e:
+                print_error(f"✗ Failed to add {principal['type']} {principal['principal_id']}: {str(e)}")
+                failed_count += 1
+        
+        # Summary
+        print_info(f"\n📊 Summary:")
+        print_success(f"  ✓ Successfully added: {success_count}")
+        if failed_count > 0:
+            print_error(f"  ✗ Failed: {failed_count}")
+        
+        return 0 if failed_count == 0 else 1
+        
+    except FileNotFoundError:
+        print_error(f"File not found: {args.file}")
+        return 1
+    except Exception as e:
+        print_error(f"Failed to add users from file: {e}")
+        logger.exception("Add users from file error")
+        return 1
+
+
 def cmd_remove_user(args):
     """Remove user from workspace"""
     try:
@@ -541,6 +657,81 @@ def cmd_copy_users(args):
         return 1
 
 
+def cmd_assign_capacity(args):
+    """Assign Fabric capacity to a workspace"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        
+        # Get workspace name for display
+        workspace = manager.get_workspace_details(args.workspace_id)
+        workspace_name = workspace.get('displayName', args.workspace_id)
+        
+        print_info(f"Assigning capacity to workspace: {workspace_name}")
+        print_info(f"  Workspace ID: {args.workspace_id}")
+        print_info(f"  Capacity ID:  {args.capacity_id}")
+        
+        # Assign capacity
+        updated_workspace = manager.assign_capacity(
+            workspace_id=args.workspace_id,
+            capacity_id=args.capacity_id
+        )
+        
+        print_success(f"✓ Successfully assigned capacity to workspace '{workspace_name}'")
+        print_info(f"  New Capacity ID: {updated_workspace.get('capacityId', 'N/A')}")
+        
+        if args.json:
+            print("\n" + json.dumps(updated_workspace, indent=2))
+        
+        return 0
+        
+    except Exception as e:
+        print_error(f"Failed to assign capacity: {e}")
+        logger.exception("Assign capacity error")
+        return 1
+
+
+def cmd_unassign_capacity(args):
+    """Remove capacity assignment from a workspace"""
+    try:
+        manager = WorkspaceManager(environment=args.environment)
+        
+        # Get workspace name for display
+        workspace = manager.get_workspace_details(args.workspace_id)
+        workspace_name = workspace.get('displayName', args.workspace_id)
+        current_capacity = workspace.get('capacityId', 'None')
+        
+        print_info(f"Removing capacity assignment from workspace: {workspace_name}")
+        print_info(f"  Workspace ID:     {args.workspace_id}")
+        print_info(f"  Current Capacity: {current_capacity}")
+        
+        if not current_capacity or current_capacity == 'None':
+            print_warning("Workspace has no capacity assigned")
+            return 0
+        
+        # Confirm if not forced
+        if not args.yes:
+            confirmation = input("\nThis will revert the workspace to Trial/Shared capacity. Continue? (y/N): ")
+            if confirmation.lower() != 'y':
+                print_info("Operation cancelled")
+                return 0
+        
+        # Unassign capacity
+        updated_workspace = manager.unassign_capacity(args.workspace_id)
+        
+        print_success(f"✓ Successfully removed capacity assignment from workspace '{workspace_name}'")
+        print_info(f"  Workspace reverted to Trial/Shared capacity")
+        
+        if args.json:
+            print("\n" + json.dumps(updated_workspace, indent=2))
+        
+        return 0
+        
+    except Exception as e:
+        print_error(f"Failed to unassign capacity: {e}")
+        logger.exception("Unassign capacity error")
+        return 1
+
+
 def cmd_setup_environment(args):
     """Set up complete environment with workspaces and users"""
     try:
@@ -656,6 +847,21 @@ def main():
     parser_update.add_argument('--description', help='New description')
     parser_update.set_defaults(func=cmd_update_workspace)
     
+    # Assign capacity
+    parser_assign_capacity = subparsers.add_parser('assign-capacity', 
+                                                   help='Assign Fabric capacity to workspace')
+    parser_assign_capacity.add_argument('workspace_id', help='Workspace ID')
+    parser_assign_capacity.add_argument('capacity_id', help='Fabric Capacity ID (GUID)')
+    parser_assign_capacity.set_defaults(func=cmd_assign_capacity)
+    
+    # Unassign capacity
+    parser_unassign_capacity = subparsers.add_parser('unassign-capacity',
+                                                     help='Remove capacity assignment from workspace')
+    parser_unassign_capacity.add_argument('workspace_id', help='Workspace ID')
+    parser_unassign_capacity.add_argument('-y', '--yes', action='store_true',
+                                         help='Skip confirmation prompt')
+    parser_unassign_capacity.set_defaults(func=cmd_unassign_capacity)
+    
     # Get workspace details
     parser_get = subparsers.add_parser('get', help='Get workspace details')
     group = parser_get.add_mutually_exclusive_group(required=True)
@@ -680,6 +886,17 @@ def main():
                                 choices=['User', 'Group', 'ServicePrincipal'],
                                 help='Principal type (default: User)')
     parser_add_user.set_defaults(func=cmd_add_user)
+    
+    # Add users from file (bulk)
+    parser_add_users_file = subparsers.add_parser('add-users-from-file', 
+                                                   help='Add multiple users/groups from file')
+    parser_add_users_file.add_argument('workspace_id', help='Workspace ID')
+    parser_add_users_file.add_argument('file', help='Path to CSV file (principal_id,role,description,type)')
+    parser_add_users_file.add_argument('--dry-run', action='store_true',
+                                      help='Preview without making changes')
+    parser_add_users_file.add_argument('-y', '--yes', action='store_true',
+                                      help='Skip confirmation prompt')
+    parser_add_users_file.set_defaults(func=cmd_add_users_from_file)
     
     # Remove user
     parser_remove_user = subparsers.add_parser('remove-user', help='Remove user from workspace')

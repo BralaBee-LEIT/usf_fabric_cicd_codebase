@@ -1,0 +1,27 @@
+{
+  "timestamp": "2025-10-22T15:18:24.521398",
+  "domain": "supply-chain",
+  "workspace_name": "supply-chain-workspace",
+  "items_created": [
+    {
+      "type": "Lakehouse",
+      "name": "SupplyChainLakehouse",
+      "id": "3dd656a0-28ee-4755-82a4-708b71f30111"
+    },
+    {
+      "type": "Warehouse",
+      "name": "SupplyChainWarehouse",
+      "id": "41a80409-9afd-49d6-ae29-04b4429df53a"
+    },
+    {
+      "type": "Lakehouse",
+      "name": "SupplyChainStagingLakehouse",
+      "id": "38159d74-0686-4316-9cef-e7cd8290c4be"
+    }
+  ],
+  "items_referenced": [],
+  "errors": [],
+  "workspace_id": "9347effb-0b89-4790-8bfa-a8de54720b4d",
+  "principals_configured": false,
+  "principals_file_created": "/home/sanmi/Documents/J'TOYE_DIGITAL/LEIT_TEKSYSTEMS/1_Project_Rhico/usf-fabric-cicd/config/supply-chain_principals.txt"
+}

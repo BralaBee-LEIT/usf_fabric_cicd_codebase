@@ -1,0 +1,27 @@
+{
+  "timestamp": "2025-10-22T15:28:00.335098",
+  "domain": "logistics",
+  "workspace_name": "logistics-workspace",
+  "items_created": [
+    {
+      "type": "Lakehouse",
+      "name": "LogisticsLakehouse",
+      "id": "fe30b949-6ca0-4a73-8584-c6d7374e5397"
+    },
+    {
+      "type": "Warehouse",
+      "name": "LogisticsWarehouse",
+      "id": "faf79957-f2cc-45dc-bd22-5963a3235f4c"
+    },
+    {
+      "type": "Lakehouse",
+      "name": "LogisticsStagingLakehouse",
+      "id": "6dc6c790-5acb-449b-8bfe-61c93e9463a9"
+    }
+  ],
+  "items_referenced": [],
+  "errors": [],
+  "workspace_id": "b348176a-d3c8-42c4-b747-e9f1d7c48322",
+  "principals_configured": false,
+  "principals_file_created": "/home/sanmi/Documents/J'TOYE_DIGITAL/LEIT_TEKSYSTEMS/1_Project_Rhico/usf-fabric-cicd/config/logistics_principals.txt"
+}

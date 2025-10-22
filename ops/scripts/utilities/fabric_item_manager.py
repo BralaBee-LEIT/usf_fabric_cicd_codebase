@@ -116,14 +116,22 @@ class FabricItem:
     @classmethod
     def from_api_response(cls, data: Dict[str, Any]) -> 'FabricItem':
         """Create FabricItem from API response"""
+        created_date = None
+        if data.get('createdDate'):
+            created_date = datetime.fromisoformat(data['createdDate'].replace('Z', '+00:00'))
+        
+        modified_date = None
+        if data.get('modifiedDate'):
+            modified_date = datetime.fromisoformat(data['modifiedDate'].replace('Z', '+00:00'))
+        
         return cls(
             id=data.get('id'),
             display_name=data.get('displayName', ''),
             type=FabricItemType(data.get('type')) if data.get('type') else None,
             description=data.get('description'),
             workspace_id=data.get('workspaceId'),
-            created_date=datetime.fromisoformat(data['createdDate'].replace('Z', '+00:00')) if data.get('createdDate') else None,
-            modified_date=datetime.fromisoformat(data['modifiedDate'].replace('Z', '+00:00')) if data.get('modifiedDate') else None,
+            created_date=created_date,
+            modified_date=modified_date,
         )
     
     def to_dict(self) -> Dict[str, Any]:
@@ -195,7 +203,35 @@ class FabricItemManager:
                 json=payload
             )
             
-            result = response.json()
+            # Try to parse JSON response
+            try:
+                result = response.json() if response.text and response.text.strip() else None
+            except:
+                result = None
+            
+            # If no valid JSON response, fetch item details from list
+            if not result:
+                # Some items (like Warehouse, SemanticModel, Report) may return empty response on success
+                # In this case, we need to list items to get the details
+                logger.warning(f"Empty or invalid JSON response for {item_type.value}, fetching item details...")
+                import time
+                time.sleep(3)  # Wait for item to be fully created and indexed
+                
+                # Try multiple times in case of propagation delay
+                for attempt in range(5):
+                    items = self.list_items(workspace_id)  # Get ALL items, not filtered by type
+                    matching_items = [item for item in items if item.display_name == display_name]
+                    if matching_items:
+                        created_item = matching_items[0]
+                        logger.info(f"Successfully created {item_type.value} '{display_name}' with ID: {created_item.id}")
+                        return created_item
+                    if attempt < 4:
+                        logger.warning(f"Item not found yet, retrying in 3 seconds... (attempt {attempt + 1}/5)")
+                        time.sleep(3)
+                
+                # If still not found after retries, raise error
+                raise ValueError(f"Item '{display_name}' was created but could not be found in workspace after multiple attempts")
+            
             created_item = FabricItem.from_api_response(result)
             
             logger.info(f"Successfully created {item_type.value} '{display_name}' with ID: {created_item.id}")

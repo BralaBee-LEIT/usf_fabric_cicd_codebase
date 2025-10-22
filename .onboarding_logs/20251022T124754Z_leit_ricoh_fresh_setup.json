@@ -1,0 +1,73 @@
+{
+  "timestamp": "2025-10-22T12:47:30.995282",
+  "domain": "leit-ricoh-domain",
+  "workspace": "ricoh-fresh-20251022124730",
+  "environment": null,
+  "capacity_id": null,
+  "items": [
+    {
+      "name": "RicohDataLakehouse",
+      "type": "Lakehouse",
+      "id": "68cf4d6b-53b8-4959-9909-9dec6516e393"
+    },
+    {
+      "name": "01_DataIngestion",
+      "type": "Notebook",
+      "id": "199c419c-0ff4-4702-a623-67b1b75622a0"
+    },
+    {
+      "name": "02_DataTransformation",
+      "type": "Notebook",
+      "id": "2d109307-d5c7-4788-a8ce-03b6aa9428a3"
+    },
+    {
+      "name": "03_DataValidation",
+      "type": "Notebook",
+      "id": "702a617b-573b-4df1-9afa-0e4a4114bd0e"
+    },
+    {
+      "name": "RicohDataPipeline",
+      "type": "DataPipeline",
+      "id": "ca013660-67f7-43e9-bf63-db0b4b6dbd71"
+    }
+  ],
+  "users": [
+    {
+      "email": "ricoh.admin@leit-teksystems.com",
+      "role": "Admin",
+      "description": "Workspace administrator"
+    },
+    {
+      "email": "ricoh.engineer1@leit-teksystems.com",
+      "role": "Member",
+      "description": "Data engineer - Senior"
+    },
+    {
+      "email": "ricoh.engineer2@leit-teksystems.com",
+      "role": "Member",
+      "description": "Data engineer - Junior"
+    },
+    {
+      "email": "ricoh.analyst@leit-teksystems.com",
+      "role": "Contributor",
+      "description": "Data analyst"
+    },
+    {
+      "email": "ricoh.business1@leit-teksystems.com",
+      "role": "Viewer",
+      "description": "Business user - Finance"
+    },
+    {
+      "email": "ricoh.business2@leit-teksystems.com",
+      "role": "Viewer",
+      "description": "Business user - Operations"
+    }
+  ],
+  "errors": [
+    "Warehouse creation: 'NoneType' object has no attribute 'get'",
+    "SemanticModel RicohSemanticModel: 'NoneType' object has no attribute 'get'",
+    "Report RicohExecutiveDashboard: 'NoneType' object has no attribute 'get'"
+  ],
+  "workspace_id": "338c82e0-8a3b-4df7-8a4b-df816d8b6f19",
+  "capacity_assigned": true
+}

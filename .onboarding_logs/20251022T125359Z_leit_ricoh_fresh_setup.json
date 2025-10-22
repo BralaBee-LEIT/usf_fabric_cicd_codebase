@@ -1,0 +1,71 @@
+{
+  "timestamp": "2025-10-22T12:53:31.375742",
+  "domain": "leit-ricoh-domain",
+  "workspace": "ricoh-fresh-20251022125331",
+  "environment": null,
+  "capacity_id": null,
+  "items": [
+    {
+      "name": "RicohDataLakehouse",
+      "type": "Lakehouse",
+      "id": "7f737f51-d7b9-4f05-b4ea-bc3c8183a290"
+    },
+    {
+      "name": "01_DataIngestion",
+      "type": "Notebook",
+      "id": "1e5bc519-2d7b-447b-8a41-ab74b1df23d4"
+    },
+    {
+      "name": "02_DataTransformation",
+      "type": "Notebook",
+      "id": "e3d08898-3580-44d0-a50c-cc9d4ae629ca"
+    },
+    {
+      "name": "03_DataValidation",
+      "type": "Notebook",
+      "id": "68b33163-56da-4a05-b516-6880c9e25c17"
+    },
+    {
+      "name": "RicohDataPipeline",
+      "type": "DataPipeline",
+      "id": "3fa66469-e63c-4311-b6fe-f1e0968ada84"
+    }
+  ],
+  "users": [
+    {
+      "email": "ricoh.admin@leit-teksystems.com",
+      "role": "Admin",
+      "description": "Workspace administrator"
+    },
+    {
+      "email": "ricoh.engineer1@leit-teksystems.com",
+      "role": "Member",
+      "description": "Data engineer - Senior"
+    },
+    {
+      "email": "ricoh.engineer2@leit-teksystems.com",
+      "role": "Member",
+      "description": "Data engineer - Junior"
+    },
+    {
+      "email": "ricoh.analyst@leit-teksystems.com",
+      "role": "Contributor",
+      "description": "Data analyst"
+    },
+    {
+      "email": "ricoh.business1@leit-teksystems.com",
+      "role": "Viewer",
+      "description": "Business user - Finance"
+    },
+    {
+      "email": "ricoh.business2@leit-teksystems.com",
+      "role": "Viewer",
+      "description": "Business user - Operations"
+    }
+  ],
+  "errors": [
+    "Warehouse creation: Item 'RicohAnalyticsWarehouse' was created but could not be found in workspace after multiple attempts"
+  ],
+  "workspace_id": "8a324e1c-d309-4c77-a047-cc7a8c065456",
+  "capacity_assigned": true
+}

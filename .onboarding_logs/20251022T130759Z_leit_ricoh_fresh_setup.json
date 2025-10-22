@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-10-22T13:07:21.917412",
+  "domain": "leit-ricoh-domain",
+  "workspace": "ricoh-fresh-20251022130721",
+  "environment": null,
+  "capacity_id": null,
+  "items": [
+    {
+      "name": "RicohDataLakehouse",
+      "type": "Lakehouse",
+      "id": "dd3aa705-70ee-4da2-9aca-f52a85b80977"
+    },
+    {
+      "name": "01_DataIngestion",
+      "type": "Notebook",
+      "id": "309bcda6-0a1c-4da1-a289-cd1ef9fff553"
+    },
+    {
+      "name": "02_DataTransformation",
+      "type": "Notebook",
+      "id": "c3b34be8-52f8-4052-b27f-c21d552ef459"
+    },
+    {
+      "name": "03_DataValidation",
+      "type": "Notebook",
+      "id": "557c40b1-f5be-4a5b-8da1-b8037ec90f8e"
+    },
+    {
+      "name": "RicohDataPipeline",
+      "type": "DataPipeline",
+      "id": "28074c81-9bf0-453f-b518-d818bdf91e8f"
+    }
+  ],
+  "users": [],
+  "errors": [
+    "Warehouse creation: Item 'RicohAnalyticsWarehouse' was created but could not be found in workspace after multiple attempts",
+    "User sanmi@jtoyedigitalgmail.onmicrosoft.com: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/6e6ac42a-394e-4a9c-b033-cb45b05a269f/roleAssignments"
+  ],
+  "workspace_id": "6e6ac42a-394e-4a9c-b033-cb45b05a269f",
+  "capacity_assigned": true
+}
