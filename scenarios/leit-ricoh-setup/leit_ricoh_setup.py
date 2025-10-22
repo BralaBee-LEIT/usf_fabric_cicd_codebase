@@ -19,13 +19,12 @@ import json
 from pathlib import Path
 from datetime import datetime
 
-# Add parent directories to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-sys.path.insert(0, str(Path(__file__).parent.parent / "ops" / "scripts"))
+# Add ops/scripts to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "ops" / "scripts"))
 
-from ops.scripts.utilities.workspace_manager import WorkspaceManager, WorkspaceRole
-from ops.scripts.utilities.fabric_item_manager import FabricItemManager, FabricItemType
-from ops.scripts.utilities.output import (
+from utilities.workspace_manager import WorkspaceManager, WorkspaceRole
+from utilities.fabric_item_manager import FabricItemManager, FabricItemType
+from utilities.output import (
     console_success as print_success,
     console_error as print_error,
     console_warning as print_warning,
@@ -37,11 +36,12 @@ from ops.scripts.utilities.output import (
 class RicohWorkspaceSetup:
     """Setup manager for LEIT-Ricoh workspace"""
     
-    def __init__(self):
+    def __init__(self, capacity_id=None):
         self.workspace_name = "leit-ricoh"
         self.domain_name = "leit-ricoh-domain"
         self.environment = "dev"
         self.workspace_id = None
+        self.capacity_id = capacity_id
         
         self.workspace_mgr = WorkspaceManager(environment=self.environment)
         self.item_mgr = FabricItemManager()
@@ -52,6 +52,7 @@ class RicohWorkspaceSetup:
             "domain": self.domain_name,
             "workspace": self.workspace_name,
             "environment": self.environment,
+            "capacity_id": capacity_id,
             "items": [],
             "users": [],
             "errors": []
@@ -69,10 +70,15 @@ class RicohWorkspaceSetup:
         
         try:
             print_info(f"Creating workspace '{self.workspace_name}' in {self.environment} environment...")
+            if self.capacity_id:
+                print_info(f"  Using capacity ID: {self.capacity_id}")
+            else:
+                print_warning("  No capacity ID - workspace will be Trial (item creation will fail)")
             
             workspace = self.workspace_mgr.create_workspace(
                 name=self.workspace_name,
-                description="LEIT-Ricoh domain workspace for data analytics and reporting"
+                description="LEIT-Ricoh domain workspace for data analytics and reporting",
+                capacity_id=self.capacity_id
             )
             
             self.workspace_id = workspace.get('id')
@@ -473,8 +479,21 @@ class RicohWorkspaceSetup:
 
 def main():
     """Main entry point"""
+    import argparse
+    
+    parser = argparse.ArgumentParser(
+        description="LEIT-Ricoh Domain - Complete Workspace Setup"
+    )
+    parser.add_argument(
+        "--capacity-id",
+        help="Fabric capacity ID (required for item creation)",
+        default=os.getenv("FABRIC_CAPACITY_ID")
+    )
+    
+    args = parser.parse_args()
+    
     try:
-        setup = RicohWorkspaceSetup()
+        setup = RicohWorkspaceSetup(capacity_id=args.capacity_id)
         success = setup.run()
         
         return 0 if success else 1
