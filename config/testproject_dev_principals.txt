@@ -1,0 +1,7 @@
+# Principals file for testproject-dev workspace
+# Format: principal_id,role,description,type
+# Types: User, Group, ServicePrincipal
+# Roles: Admin, Member, Contributor, Viewer
+
+# Admin user
+9117cbfa-f0a7-43b7-846f-96ba66a3c1c0,Admin,Workspace administrator,User

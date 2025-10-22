@@ -210,12 +210,16 @@ class ConfigDrivenWorkspace:
             if not principals_file.exists():
                 print(f"❌ Principals file not found: {self.principals_file}")
                 return
+            print(f"Using provided principals file: {principals_file.name}")
         else:
             # Create or use existing principals file
             principals_filename = f"{self.project_name}_{self.environment}_principals.txt"
             principals_file = config_dir / principals_filename
             
-            if not principals_file.exists():
+            # Check if file already exists with users
+            if principals_file.exists():
+                print(f"Found existing principals file: {principals_file.name}")
+            else:
                 # Create template
                 print(f"📝 Creating principals template: {principals_file}")
                 template_source = config_dir / "workspace_principals.template.txt"
@@ -233,6 +237,7 @@ class ConfigDrivenWorkspace:
                     )
                     print(f"  ✓ Basic template created\n")
                 
+                # Prompt user to edit (unless automation mode)
                 if not self.skip_user_prompt:
                     print(f"✏️  Please edit the principals file:")
                     print(f"   {principals_file}\n")
@@ -243,19 +248,42 @@ class ConfigDrivenWorkspace:
                         print("   ⏩ Skipping user addition\n")
                         return
                 else:
-                    print("   ⏩ Skipping user prompt (automation mode)\n")
-                    return
+                    print("   ⏩ Skipping user prompt (automation mode)")
+                    print("   If file has valid users, they will be added automatically\n")
         
         # Check if file has valid users (not just comments)
-        content = principals_file.read_text()
-        lines = [line.strip() for line in content.split('\n') if line.strip() and not line.startswith('#')]
-        
-        if not lines:
-            print("⚠️ No users found in principals file")
+        try:
+            content = principals_file.read_text()
+            lines = [line.strip() for line in content.split('\n') 
+                     if line.strip() and not line.startswith('#')]
+            
+            if not lines:
+                print("⚠️  No valid users found in principals file")
+                print(f"   Template created at: {principals_file}")
+                print(f"   Edit it and add users, then run:")
+                print(f"   python ops/scripts/manage_workspaces.py add-users-from-file {self.workspace_id} {principals_file} --yes\n")
+                return
+            
+            # Validate at least one line looks like a GUID
+            has_valid_format = False
+            for line in lines:
+                parts = line.split(',')
+                if len(parts) >= 4 and '-' in parts[0] and len(parts[0]) > 30:
+                    has_valid_format = True
+                    break
+            
+            if not has_valid_format:
+                print("⚠️  No valid user entries found (lines don't match expected format)")
+                print(f"   Expected format: principal_id,role,description,type")
+                print(f"   Example: abc123-def456-...,Admin,Administrator,User\n")
+                return
+                
+        except Exception as e:
+            print(f"⚠️  Could not read principals file: {e}\n")
             return
         
         # Add users via core CLI
-        print(f"Adding users from: {principals_file}")
+        print(f"📤 Adding {len(lines)} principal(s) from: {principals_file.name}")
         cli_script = Path(__file__).parent.parent.parent / "ops" / "scripts" / "manage_workspaces.py"
         python = sys.executable
         
@@ -265,12 +293,24 @@ class ConfigDrivenWorkspace:
                  self.workspace_id, str(principals_file), "--yes"],
                 capture_output=True,
                 text=True,
-                check=True
+                check=False
             )
-            print(result.stdout)
-            print(f"✓ Users added successfully\n")
-        except subprocess.CalledProcessError as e:
-            print(f"❌ Failed to add users: {e.stderr}\n")
+            
+            # Show output (filter out INFO logs)
+            if result.stdout:
+                for line in result.stdout.split('\n'):
+                    if line.strip() and not line.startswith('INFO:'):
+                        print(line)
+            
+            if result.returncode == 0:
+                print(f"✓ Principals configured successfully\n")
+            else:
+                print(f"⚠️  Some principals may have failed to add")
+                if result.stderr:
+                    print(f"   Error details: {result.stderr}\n")
+                    
+        except Exception as e:
+            print(f"❌ Failed to add principals: {e}\n")
     
     def step_4_save_log(self):
         """Save setup log"""
