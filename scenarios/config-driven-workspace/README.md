@@ -79,19 +79,32 @@ The generated name is used to create the workspace with environment-specific set
    AZURE_CLIENT_SECRET=your-secret
    ```
 
+3. **Fabric Capacity ID** (required for lakehouse/warehouse creation):
+   - Get your capacity GUID from Fabric portal
+   - Without capacity ID, workspace uses Trial (items cannot be created via API)
+   - See "Getting Your Capacity ID" section below
+
 ### Basic Usage
 
 ```bash
-# Create dev workspace for analytics project
+# Create dev workspace with capacity (enables lakehouse creation)
+python scenarios/config-driven-workspace/config_driven_workspace.py \
+  --project analytics \
+  --environment dev \
+  --capacity-id <your-capacity-guid> \
+  --skip-user-prompt
+
+# Create without capacity (workspace only, no items)
 python scenarios/config-driven-workspace/config_driven_workspace.py \
   --project analytics \
   --environment dev \
   --skip-user-prompt
 
-# Create test workspace for sales project
+# Create test workspace for sales project with capacity
 python scenarios/config-driven-workspace/config_driven_workspace.py \
   --project sales \
-  --environment test
+  --environment test \
+  --capacity-id <your-capacity-guid>
 ```
 
 ### With Principals File
@@ -101,6 +114,7 @@ python scenarios/config-driven-workspace/config_driven_workspace.py \
 python scenarios/config-driven-workspace/config_driven_workspace.py \
   --project finance \
   --environment prod \
+  --capacity-id <your-capacity-guid> \
   --principals-file config/finance_prod_principals.txt
 ```
 
@@ -110,8 +124,11 @@ python scenarios/config-driven-workspace/config_driven_workspace.py \
 |----------|----------|-------------|---------|
 | `--project` | Yes | Project/domain name | `analytics`, `sales`, `finance` |
 | `--environment` | Yes | Target environment | `dev`, `test`, `prod` |
+| `--capacity-id` | No* | Fabric capacity GUID | `abc-123-def-456` |
 | `--principals-file` | No | Path to principals file | `config/custom_principals.txt` |
 | `--skip-user-prompt` | No | Skip interactive prompts | Flag only |
+
+\* Required if you want to create lakehouses/warehouses. Without it, only workspace is created.
 
 ## Generated Names
 
@@ -250,6 +267,33 @@ STEP 4: Saving Setup Log
 ======================================================================
 ```
 
+## Getting Your Capacity ID
+
+### Option 1: From Fabric Portal
+1. Go to https://app.fabric.microsoft.com
+2. Click ⚙️ Settings → Admin portal
+3. Navigate to **Capacity settings**
+4. Select your capacity
+5. Copy the **Capacity ID** (GUID format)
+
+### Option 2: Via Azure CLI
+```bash
+# List all Fabric capacities
+az fabric capacity list --resource-group <your-rg>
+
+# Get specific capacity
+az fabric capacity show --name <capacity-name> --resource-group <your-rg>
+```
+
+### Option 3: Using Existing Workspace
+If you have a working workspace with lakehouses:
+```bash
+# Get workspace details (includes capacityId)
+python ops/scripts/manage_workspaces.py get --name "existing-workspace"
+```
+
+The capacity ID looks like: `abc12345-def6-7890-ghij-klmnopqrstuv`
+
 ## Troubleshooting
 
 ### "project.config.json not found"
@@ -264,8 +308,20 @@ The workspace with generated name already exists. Either:
 - Use a different environment
 - Delete the existing workspace first
 
-### "FeatureNotAvailable" (Lakehouse creation)
-Lakehouse/Warehouse creation requires Fabric capacity or premium workspace. The scenario handles this gracefully and continues with workspace creation.
+### "FeatureNotAvailable" or "403 Forbidden" (Lakehouse creation)
+**Cause:** Workspace is using Trial capacity or capacity ID is missing/invalid
+
+**Solution:**
+1. **Get your capacity ID** (see "Getting Your Capacity ID" above)
+2. **Rerun with --capacity-id**:
+   ```bash
+   python config_driven_workspace.py --project myproject --environment dev \
+     --capacity-id <your-capacity-guid>
+   ```
+3. **Verify service principal has permissions** on the capacity
+4. **Check capacity is active** and not paused
+
+Without --capacity-id, only the workspace is created (no lakehouses/warehouses).
 
 ### "Invalid choice for environment"
 Only `dev`, `test`, `prod` are configured by default. To add more environments, edit `project.config.json`:

@@ -48,6 +48,7 @@ class ConfigDrivenWorkspace:
         self,
         project_name: str,
         environment: str,
+        capacity_id: Optional[str] = None,
         principals_file: Optional[str] = None,
         skip_user_prompt: bool = False
     ):
@@ -57,11 +58,13 @@ class ConfigDrivenWorkspace:
         Args:
             project_name: Project name (e.g., "analytics", "finance")
             environment: Environment (dev, test, prod)
+            capacity_id: Optional Fabric capacity ID (required for lakehouse/warehouse creation)
             principals_file: Optional path to principals file
             skip_user_prompt: Skip user addition prompt for automation
         """
         self.project_name = project_name
         self.environment = environment
+        self.capacity_id = capacity_id
         self.principals_file = principals_file
         self.skip_user_prompt = skip_user_prompt
         
@@ -107,12 +110,18 @@ class ConfigDrivenWorkspace:
         print(f"ℹ Creating workspace '{self.workspace_name}'...")
         print(f"   Description: {description}")
         print(f"   Auto-deploy: {env_config.get('auto_deploy', False)}")
-        print(f"   Requires approval: {env_config.get('requires_approval', False)}\n")
+        print(f"   Requires approval: {env_config.get('requires_approval', False)}")
+        if self.capacity_id:
+            print(f"   Capacity ID: {self.capacity_id}")
+        else:
+            print(f"   ⚠️  No capacity ID - using Trial (lakehouse creation will fail)")
+        print()
         
         try:
             result = self.workspace_mgr.create_workspace(
                 name=self.project_name,  # Base name - will be expanded by config
-                description=description
+                description=description,
+                capacity_id=self.capacity_id
             )
             
             self.workspace_id = result['id']
@@ -132,6 +141,13 @@ class ConfigDrivenWorkspace:
         print("=" * 70)
         print()
         
+        if not self.capacity_id:
+            print("⚠️  No capacity ID provided - Skipping item creation")
+            print("   Trial workspaces cannot create lakehouses/warehouses via API")
+            print("   Rerun with --capacity-id <guid> to create items")
+            print()
+            return
+        
         # Initialize item manager
         item_mgr = FabricItemManager()
         
@@ -148,9 +164,14 @@ class ConfigDrivenWorkspace:
             print(f"✓ Created lakehouse: {lakehouse.display_name} (ID: {lakehouse.id})")
         except Exception as e:
             if "403" in str(e) or "FeatureNotAvailable" in str(e):
-                print("⚠️ Lakehouse creation skipped (requires Fabric capacity/premium workspace)")
+                print("❌ Lakehouse creation failed: 403 Forbidden")
+                print("   This usually means:")
+                print("   1. The capacity ID is invalid or inaccessible")
+                print("   2. The service principal lacks permissions on the capacity")
+                print("   3. The workspace isn't properly assigned to the capacity")
             else:
-                print(f"⚠️ Failed to create lakehouse: {e}")
+                print(f"❌ Failed to create lakehouse: {e}")
+                raise
         
         # Create Warehouse (optional - uncomment if needed)
         # warehouse_name = f"{self.project_name.capitalize()}Warehouse{self.environment.capitalize()}"
@@ -165,9 +186,10 @@ class ConfigDrivenWorkspace:
         #     print(f"✓ Created warehouse: {warehouse.display_name} (ID: {warehouse.id})")
         # except Exception as e:
         #     if "403" in str(e):
-        #         print("⚠️ Warehouse creation skipped (requires Fabric capacity/premium workspace)")
+        #         print("❌ Warehouse creation failed: 403 Forbidden (see lakehouse error above)")
         #     else:
-        #         print(f"⚠️ Failed to create warehouse: {e}")
+        #         print(f"❌ Failed to create warehouse: {e}")
+        #         raise
     
     def step_3_configure_principals(self):
         """Configure workspace principals (users/groups)"""
@@ -301,15 +323,23 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Create dev environment for analytics project
+  # Create dev environment for analytics project (Trial workspace)
   python config_driven_workspace.py --project analytics --environment dev
   
-  # Create prod environment with existing principals file
+  # Create with capacity for lakehouse/warehouse creation
+  python config_driven_workspace.py --project analytics --environment dev \\
+    --capacity-id <your-capacity-guid>
+  
+  # Create prod environment with capacity and principals file
   python config_driven_workspace.py --project finance --environment prod \\
+    --capacity-id <your-capacity-guid> \\
     --principals-file ../../config/finance_prod_principals.txt
   
   # Automation mode (skip prompts)
-  python config_driven_workspace.py --project sales --environment test --skip-user-prompt
+  python config_driven_workspace.py --project sales --environment test \\
+    --capacity-id <your-capacity-guid> --skip-user-prompt
+
+Note: Without --capacity-id, workspace uses Trial capacity (lakehouse creation will fail)
 
 Generated Workspace Names (from project.config.json):
   analytics + dev  → usf2-fabric-analytics-dev
@@ -329,6 +359,11 @@ Generated Workspace Names (from project.config.json):
         required=True,
         choices=["dev", "test", "prod"],
         help="Target environment"
+    )
+    
+    parser.add_argument(
+        "--capacity-id",
+        help="Fabric capacity ID (required for creating lakehouses/warehouses)"
     )
     
     parser.add_argument(
@@ -357,6 +392,7 @@ Generated Workspace Names (from project.config.json):
     scenario = ConfigDrivenWorkspace(
         project_name=args.project,
         environment=args.environment,
+        capacity_id=args.capacity_id,
         principals_file=args.principals_file,
         skip_user_prompt=args.skip_user_prompt
     )
