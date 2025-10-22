@@ -83,8 +83,10 @@ class ConfigDrivenWorkspace:
         self.workspace_id = None
         self.created_items = []
         
-        # Setup log directory
-        self.log_dir = Path(__file__).parent
+        # Setup log directory - use config/setup-logs/
+        config_base = Path(__file__).parent.parent.parent / "config"
+        self.log_dir = config_base / "setup-logs"
+        self.log_dir.mkdir(parents=True, exist_ok=True)
         self.log_file = self.log_dir / f"{self.project_name}_{self.environment}_setup_log.json"
         
         print(f"\n{'='*70}")
@@ -201,8 +203,10 @@ class ConfigDrivenWorkspace:
             print("⚠️ No workspace ID available")
             return
         
+        # Use config/principals/ subdirectory
         config_dir = Path(__file__).parent.parent.parent / "config"
-        config_dir.mkdir(exist_ok=True)
+        principals_dir = config_dir / "principals"
+        principals_dir.mkdir(parents=True, exist_ok=True)
         
         # Check if principals file provided
         if self.principals_file:
@@ -212,9 +216,9 @@ class ConfigDrivenWorkspace:
                 return
             print(f"Using provided principals file: {principals_file.name}")
         else:
-            # Create or use existing principals file
+            # Create or use existing principals file in config/principals/
             principals_filename = f"{self.project_name}_{self.environment}_principals.txt"
-            principals_file = config_dir / principals_filename
+            principals_file = principals_dir / principals_filename
             
             # Check if file already exists with users
             if principals_file.exists():
@@ -222,7 +226,7 @@ class ConfigDrivenWorkspace:
             else:
                 # Create template
                 print(f"📝 Creating principals template: {principals_file}")
-                template_source = config_dir / "workspace_principals.template.txt"
+                template_source = principals_dir / "workspace_principals.template.txt"
                 
                 if template_source.exists():
                     import shutil

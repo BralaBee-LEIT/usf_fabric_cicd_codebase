@@ -1,0 +1,11 @@
+{
+  "timestamp": "2025-10-22T17:02:23.893039Z",
+  "project_name": "testproject",
+  "environment": "dev",
+  "workspace_name": "usf2-fabric-testproject-dev",
+  "workspace_id": "9830e42d-e6a1-4d11-b76e-4904f1321bdd",
+  "config_pattern": "{prefix}-{name}-{environment}",
+  "config_prefix": "usf2-fabric",
+  "created_items": [],
+  "principals_file": null
+}

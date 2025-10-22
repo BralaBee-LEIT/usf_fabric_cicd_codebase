@@ -115,7 +115,7 @@ python scenarios/config-driven-workspace/config_driven_workspace.py \
   --project finance \
   --environment prod \
   --capacity-id <your-capacity-guid> \
-  --principals-file config/finance_prod_principals.txt
+  --principals-file config/principals/finance_prod_principals.txt
 ```
 
 ## Command-Line Arguments
@@ -125,7 +125,7 @@ python scenarios/config-driven-workspace/config_driven_workspace.py \
 | `--project` | Yes | Project/domain name | `analytics`, `sales`, `finance` |
 | `--environment` | Yes | Target environment | `dev`, `test`, `prod` |
 | `--capacity-id` | No* | Fabric capacity GUID | `abc-123-def-456` |
-| `--principals-file` | No | Path to principals file | `config/custom_principals.txt` |
+| `--principals-file` | No | Path to principals file | `config/principals/custom_principals.txt` |
 | `--skip-user-prompt` | No | Skip interactive prompts | Flag only |
 
 \* Required if you want to create lakehouses/warehouses. Without it, only workspace is created.
@@ -153,8 +153,8 @@ Lakehouse names follow the pattern in config (CamelCase with underscores):
 
 1. **Workspace** - Generated name with environment settings
 2. **Lakehouse** - Config-driven name (if capacity available)
-3. **Principals Template** - `{project}_{environment}_principals.txt`
-4. **Setup Log** - `{project}_{environment}_setup_log.json`
+3. **Principals Template** - `config/principals/{project}_{environment}_principals.txt`
+4. **Setup Log** - `config/setup-logs/{project}_{environment}_setup_log.json`
 
 ## Comparison: Config-Driven vs Direct-Name
 
@@ -224,10 +224,10 @@ The scenario executes 4 automated steps:
 
 ```
 config/
-├── {project}_{environment}_principals.txt   # Principal assignments template
-
-scenarios/config-driven-workspace/
-└── {project}_{environment}_setup_log.json   # Execution log with details
+├── principals/
+│   └── {project}_{environment}_principals.txt   # Principal assignments template
+└── setup-logs/
+    └── {project}_{environment}_setup_log.json   # Execution log with details
 ```
 
 ## Example Output
@@ -260,7 +260,7 @@ STEP 3: Configuring Workspace Principals
 ⏩ Skipping user prompt (automation mode)
 
 STEP 4: Saving Setup Log
-✓ Log saved to: analytics_dev_setup_log.json
+✓ Log saved to: config/setup-logs/analytics_dev_setup_log.json
 
 ======================================================================
   ✅ Setup Complete!

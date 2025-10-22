@@ -1,0 +1,11 @@
+{
+  "timestamp": "2025-10-22T16:56:17.311999Z",
+  "project_name": "dataplatform",
+  "environment": "dev",
+  "workspace_name": "usf2-fabric-dataplatform-dev",
+  "workspace_id": "cbc3c80b-598e-4787-9e62-7a1dff245dfd",
+  "config_pattern": "{prefix}-{name}-{environment}",
+  "config_prefix": "usf2-fabric",
+  "created_items": [],
+  "principals_file": null
+}
