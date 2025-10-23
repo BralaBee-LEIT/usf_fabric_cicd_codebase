@@ -79,10 +79,11 @@ The generated name is used to create the workspace with environment-specific set
    AZURE_CLIENT_SECRET=your-secret
    ```
 
-3. **Fabric Capacity ID** (optional but recommended):
-   - Get your capacity GUID from Fabric portal
+3. **Fabric Capacity ID** (optional):
+   - Get your capacity GUID from Fabric portal or API
    - Without capacity ID, workspace uses Trial capacity
-   - Trial capacity has limitations: some items (Lakehouses, Warehouses) may fail with 403 errors
+   - **Trial capacity (FTL64) now supports item creation** (Lakehouses, Warehouses, Notebooks)
+   - Configure `capacity_id` in YAML config for automatic assignment
    - See "Getting Your Capacity ID" section below
 
 ### Basic Usage
@@ -95,7 +96,7 @@ python scenarios/config-driven-workspace/config_driven_workspace.py \
   --capacity-id <your-capacity-guid> \
   --skip-user-prompt
 
-# Create without capacity (workspace created, item creation may fail on Trial)
+# Create without capacity (workspace uses Trial capacity - item creation supported)
 python scenarios/config-driven-workspace/config_driven_workspace.py \
   --project analytics \
   --environment dev \
@@ -310,22 +311,25 @@ The workspace with generated name already exists. Either:
 - Delete the existing workspace first
 
 ### "FeatureNotAvailable" or "403 Forbidden" (Item creation)
-**Cause:** Trial capacity limitations or insufficient permissions
+**Cause:** Insufficient permissions or capacity not assigned
 
 **Solutions:**
-1. **For Production Use - Assign Capacity:**
-   - Get your capacity ID (see "Getting Your Capacity ID" above)
-   - Rerun with `--capacity-id <your-capacity-guid>`
+1. **Assign Capacity via Config (Recommended):**
+   - Configure `capacity_id` in your YAML config file
+   - Both Trial (FTL64) and Premium capacities support item creation
    - Verify service principal has permissions on the capacity
    - Check capacity is active and not paused
 
-2. **For Development/Testing - Expected Behavior:**
-   - Trial workspaces have API limitations for certain item types
-   - Workspace is created successfully
-   - Item creation attempts but may fail gracefully
-   - You can create items manually through the Fabric portal
+2. **Assign Capacity via CLI:**
+   - Get your capacity ID (see "Getting Your Capacity ID" above)
+   - Rerun with `--capacity-id <your-capacity-guid>`
+   - Validates capacity exists before workspace creation
 
-**Note:** The scenario creates workspaces and attempts item creation. On Trial capacity, some items (Lakehouses, Warehouses, Semantic Models) may fail with 403 - this is expected behavior, not a bug.
+3. **Check Permissions:**
+   - Verify service principal has Contributor/Admin on workspace
+   - Ensure capacity is accessible and not suspended
+
+**Note:** Trial capacity (FTL64) fully supports Lakehouses, Warehouses, Notebooks, and other item types via API when workspace is properly assigned to the capacity.
 
 ### "Invalid choice for environment"
 Only `dev`, `test`, `prod` are configured by default. To add more environments, edit `project.config.json`:

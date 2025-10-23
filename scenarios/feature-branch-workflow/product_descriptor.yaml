@@ -11,6 +11,7 @@ environments:
   dev:
     enabled: true
     capacity_type: "trial"
+    capacity_id: "0749b635-c51b-46c6-948a-02f05d7fe177"  # Trial FTL64
     description: "Development workspace for Customer Insights"
 
 git:

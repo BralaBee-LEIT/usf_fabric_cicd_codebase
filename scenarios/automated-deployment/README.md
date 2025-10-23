@@ -52,10 +52,15 @@ This scenario showcases the **complete automation capabilities** of the Fabric C
    ```
 
 3. **Fabric Capacity**
-   - **Note**: Item creation (Lakehouses, Notebooks) requires Fabric Premium capacity
-   - Trial/F2 capacity will result in 403 errors for item creation
+   - **Trial Capacity (FTL64)** or **Premium (F64+)** required for item creation
+   - Configure capacity in `product_config.yaml`:
+     ```yaml
+     environments:
+       dev:
+         capacity_id: "your-capacity-id"  # Get from Fabric Portal or API
+     ```
+   - Without capacity assignment: workspace creation works, item creation gets 403
    - **The scenario handles this gracefully** - workspace and other steps still succeed
-   - For full end-to-end testing, use Premium capacity workspace
 
 ### Run the Scenario
 
@@ -78,14 +83,27 @@ python scenarios/automated-deployment/run_automated_deployment.py --config my_pr
 - Audit logging (JSONL format)
 - Error handling and graceful degradation
 
-⚠️ **Requires Premium Capacity**:
+✅ **Works with Trial (FTL64) or Premium (F64+)**:
 - Lakehouse creation via API
 - Notebook creation via API
-- Git integration (workspace must support Git)
+- All Fabric item types
 
-⚠️ **Requires Azure AD Configuration**:
+⚠️ **Requires Manual Setup**:
+- Git integration (workspace must be connected via Portal first)
 - User addition (needs Object IDs, not emails)
-- Currently documented as manual step
+
+**To List Available Capacities:**
+```bash
+python -c "
+import sys; sys.path.insert(0, 'ops/scripts')
+from dotenv import load_dotenv; load_dotenv()
+from utilities.fabric_api import FabricClient
+client = FabricClient()
+response = client._make_request('GET', 'capacities')
+for cap in response.json().get('value', []):
+    print(f\"{cap['displayName']}: {cap['id']} (SKU: {cap['sku']})\")
+"
+```
 
 ### Expected Output
 
@@ -209,6 +227,8 @@ environments:
   dev:
     enabled: true
     capacity_type: "trial"
+    capacity_id: "0749b635-c51b-46c6-948a-02f05d7fe177"  # Your Trial/Premium capacity ID
+    description: "Development environment for Sales Analytics"
     auto_deploy: true
     
 git:
@@ -262,7 +282,8 @@ All environment variables come from `.env`:
 - `AZURE_CLIENT_ID` - Azure authentication
 - `AZURE_CLIENT_SECRET` - Azure authentication
 - `AZURE_TENANT_ID` - Azure authentication
-- `FABRIC_CAPACITY_ID` - Fabric capacity
+
+**Note**: Capacity ID is configured in `product_config.yaml`, not as an environment variable.
 
 ### Workspace Naming
 
@@ -288,6 +309,7 @@ Where `{prefix}` comes from your `project.config.json`.
 ### 2. Workspace Management
 - ✅ Creates workspace with config-driven name
 - ✅ Applies description from config
+- ✅ Assigns to capacity (from product_config.yaml)
 - ✅ Uses correct capacity settings
 
 ### 3. Git Integration
@@ -298,8 +320,9 @@ Where `{prefix}` comes from your `project.config.json`.
 
 ### 4. Item Creation
 - ✅ Creates multiple item types
-- ✅ Handles Fabric API limitations (Trial capacity)
+- ✅ Works with Trial (FTL64) or Premium capacity
 - ✅ Applies descriptions
+- ✅ Handles API errors gracefully
 - ✅ Reports success/failures
 
 ### 5. Naming Validation

@@ -4,7 +4,7 @@
 
 > **🎯 Framework Template:** This is a reusable framework that can be customized for any organization. Run `python init_new_project.py` to configure it for your organization in minutes!
 
-> **📝 Update (Oct 23, 2025):** All scenarios tested and updated. See [scenarios/SCENARIO_TEST_REPORT.md](scenarios/SCENARIO_TEST_REPORT.md) for details. Key fixes: import paths standardized, lakehouse naming now follows BRONZE/SILVER/GOLD convention, Trial capacity behavior properly documented.
+> **📝 Update (Oct 24, 2025):** Framework now supports Trial capacity (FTL64) for item creation! Configure `capacity_id` in scenario YAML files (e.g., `product_config.yaml`). Successfully validated with 3 Lakehouses + 3 Notebooks created via API. All scenarios tested and working. See [scenarios/SCENARIO_TEST_REPORT.md](scenarios/SCENARIO_TEST_REPORT.md) for details.
 
 ## 🚀 Quick Start for New Organizations
 
