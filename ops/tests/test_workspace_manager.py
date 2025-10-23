@@ -224,7 +224,7 @@ class TestWorkspaceOperations:
         result = workspace_manager.delete_workspace("workspace-123")
 
         assert result is True
-        mock_request.assert_called_once_with("DELETE", "v1/workspaces/workspace-123")
+        mock_request.assert_called_once_with("DELETE", "workspaces/workspace-123")
 
     @patch(
         "ops.scripts.utilities.workspace_manager.WorkspaceManager.get_workspace_details"
