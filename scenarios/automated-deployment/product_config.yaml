@@ -12,6 +12,7 @@ environments:
   dev:
     enabled: true
     capacity_type: "trial"
+    capacity_id: "0749b635-c51b-46c6-948a-02f05d7fe177"  # FTL64 Trial capacity
     description: "Development environment for Sales Analytics"
     auto_deploy: true
     

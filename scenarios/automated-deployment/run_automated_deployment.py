@@ -179,13 +179,20 @@ def create_workspace(product_config: Dict, config_manager: ConfigManager, dry_ru
             print_warning(f"Workspace already exists: {workspace_name}")
             workspace_id = existing['id']
         else:
+            # Get capacity ID from config (optional)
+            capacity_id = env_config.get('capacity_id')
+            
             # Create workspace
             result = workspace_manager.create_workspace(
                 name=workspace_name,
-                description=env_config['description']
+                description=env_config['description'],
+                capacity_id=capacity_id
             )
             workspace_id = result['id']
             print_success(f"Created workspace: {workspace_name}")
+            
+            if capacity_id:
+                print_info(f"Assigned to capacity: {capacity_id}")
         
         print_info(f"Workspace ID: {workspace_id}")
         return workspace_id
