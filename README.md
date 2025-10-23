@@ -1,8 +1,43 @@
 # Microsoft Fabric CI/CD Enterprise Solution
 
-**The most robust CI/CD setup for Microsoft Fabric with GitHub** - A production-ready, configurable, and reusable CI/CD framework for Microsoft Fabric with comprehensive data governance, quality validation, and multi-environment deployment capabilities.
+**A production-ready, reusable CI/CD framework for Microsoft Fabric** - Complete with data governance, quality validation, and multi-environment deployment capabilities.
+
+> **🎯 Framework Template:** This is a reusable framework that can be customized for any organization. Run `python init_new_project.py` to configure it for your organization in minutes!
 
 > **📝 Update (Oct 23, 2025):** All scenarios tested and updated. See [scenarios/SCENARIO_TEST_REPORT.md](scenarios/SCENARIO_TEST_REPORT.md) for details. Key fixes: import paths standardized, lakehouse naming now follows BRONZE/SILVER/GOLD convention, Trial capacity behavior properly documented.
+
+## 🚀 Quick Start for New Organizations
+
+### Option 1: Interactive Setup (Recommended)
+```bash
+# Clone this repository
+git clone https://github.com/YOUR-ORG/YOUR-REPO.git
+cd YOUR-REPO
+
+# Run initialization wizard
+python init_new_project.py
+```
+
+The wizard will:
+- ✅ Collect your organization details
+- ✅ Generate `project.config.json` from template
+- ✅ Create customized `.env` file
+- ✅ Validate setup
+
+### Option 2: Manual Setup
+```bash
+# 1. Copy template files
+cp project.config.template.json project.config.json
+cp .env.example .env
+
+# 2. Edit project.config.json with your organization details
+# 3. Edit .env with your Azure credentials
+
+# 4. Validate configuration
+python setup/init_project_config.py --validate
+```
+
+See [docs/getting-started/NEW_PROJECT_SETUP.md](docs/getting-started/NEW_PROJECT_SETUP.md) for detailed instructions.
 
 ## ✨ New Features (v2.0)
 
@@ -208,7 +243,11 @@ This repository supports two distinct workspace provisioning approaches:
 
 ### 1. Config-Driven (Enterprise)
 - **Uses:** `project.config.json` naming patterns
-- **Example:** `--project analytics --environment dev` → `usf2-fabric-analytics-dev`
+### Naming Pattern Examples
+
+- **Pattern:** `{prefix}-{project}-{environment}`
+- **Example:** `--project analytics --environment dev` → `{your-prefix}-analytics-dev`
+- **Configured in:** `project.config.json` (naming_patterns section)
 - **Best for:** Enterprise environments, standardized naming, governance
 - **Scenario:** `scenarios/config-driven-workspace/`
 

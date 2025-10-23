@@ -1,0 +1,94 @@
+{
+  "_comment": "TEMPLATE FILE - Copy this to project.config.json and customize for your organization",
+  "project": {
+    "name": "your-project-name",
+    "prefix": "your-org-prefix",
+    "description": "Microsoft Fabric CI/CD Implementation",
+    "organization": "Your-Organization-Name"
+  },
+  "naming_patterns": {
+    "workspace": "{prefix}-{name}-{environment}",
+    "lakehouse": "{prefix_upper}_Lakehouse_{environment_title}",
+    "storage_account": "{prefix_clean}data{environment}",
+    "key_vault": "{prefix}-kv-{environment}",
+    "data_gateway": "{prefix}-gateway-{environment}",
+    "sql_server": "{prefix}-sql-{environment}.database.windows.net",
+    "cosmos_db": "https://{prefix}-cosmos-{environment}.documents.azure.com:443/",
+    "event_hub": "sb://{prefix}-eventhub-{environment}.servicebus.windows.net/",
+    "service_bus": "sb://{prefix}-servicebus-{environment}.servicebus.windows.net/",
+    "disaster_recovery_storage": "{prefix_clean}datadr"
+  },
+  "azure": {
+    "tenant_id": "${AZURE_TENANT_ID}",
+    "subscription_id": "${AZURE_SUBSCRIPTION_ID}",
+    "client_id": "${AZURE_CLIENT_ID}",
+    "resource_group_pattern": "{prefix}-fabric-{environment}-rg"
+  },
+  "environments": {
+    "dev": {
+      "description": "Development environment",
+      "requires_approval": false,
+      "auto_deploy": true
+    },
+    "test": {
+      "description": "Test/QA environment", 
+      "requires_approval": true,
+      "auto_deploy": false
+    },
+    "prod": {
+      "description": "Production environment",
+      "requires_approval": true,
+      "auto_deploy": false,
+      "additional_validations": true
+    }
+  },
+  "github": {
+    "organization": "${GITHUB_ORG}",
+    "repository": "${GITHUB_REPO}",
+    "teams": {
+      "data": "{organization}/data-team",
+      "bi": "{organization}/bi-team", 
+      "governance": "{organization}/governance-team",
+      "integration": "{organization}/integration-team",
+      "platform": "{organization}/platform-team",
+      "devops": "{organization}/devops-team"
+    }
+  },
+  "git_integration": {
+    "enabled": true,
+    "provider": "GitHub",
+    "organization": "${GIT_ORGANIZATION}",
+    "project": "${GIT_PROJECT}",
+    "repository": "${GIT_REPOSITORY}",
+    "auto_connect_workspaces": true,
+    "auto_commit_on_creation": false,
+    "default_branch": "main",
+    "feature_branch_pattern": "feature/{product_id}/{ticket_id}",
+    "workspace_directory_pattern": "/data_products/{product_id}",
+    "commit_message_template": "{action} - {product_name} [{environment}]",
+    "sync_settings": {
+      "bidirectional_sync": true,
+      "conflict_resolution": "Workspace",
+      "pull_before_commit": true
+    }
+  },
+  "contacts": {
+    "data_owner": "${DATA_OWNER_EMAIL}",
+    "technical_lead": "${TECHNICAL_LEAD_EMAIL}",
+    "devops_lead": "${DEVOPS_LEAD_EMAIL}"
+  },
+  "purview": {
+    "collections": {
+      "dev": "{prefix}-dev",
+      "test": "{prefix}-qa",
+      "prod": "{prefix}-prod"
+    }
+  },
+  "products": [],
+  "metadata": {
+    "created_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+    "version": "1.0.0",
+    "fabric_cicd_version": "2.0.0",
+    "_instructions": "This file was generated from project.config.template.json - DO NOT commit to version control"
+  }
+}
