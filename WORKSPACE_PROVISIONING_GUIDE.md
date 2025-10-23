@@ -198,9 +198,9 @@ If missing, initialize it:
 python setup/init_project_config.py
 ```
 
-### Basic Usage (Trial Workspace)
+### Basic Usage (Trial Capacity)
 
-Creates a Trial workspace without lakehouses/warehouses:
+Creates a workspace on Trial capacity (item creation may fail for certain types):
 
 ```bash
 python scenarios/config-driven-workspace/config_driven_workspace.py \
@@ -212,7 +212,7 @@ python scenarios/config-driven-workspace/config_driven_workspace.py \
 - ✅ Workspace: `usf2-fabric-analytics-dev`
 - ✅ Principals template: `config/principals/analytics_dev_principals.txt`
 - ✅ Setup log: `config/setup-logs/analytics_dev_setup_log.json`
-- ⚠️ No lakehouses (Trial limitation)
+- ⚠️ Item creation attempted (may fail with 403 on Trial capacity - expected)
 
 **Console Output:**
 ```
@@ -237,7 +237,7 @@ python scenarios/config-driven-workspace/config_driven_workspace.py \
    Description: Analytics workspace - Development environment
    Auto-deploy: True
    Requires approval: False
-   ⚠️  No capacity ID - using Trial (lakehouse creation will fail)
+   ⚠️  No capacity ID - using Trial capacity (item creation may fail)
 
 ✓ Workspace created successfully
   Workspace ID: abc123-def456-...
@@ -245,9 +245,9 @@ python scenarios/config-driven-workspace/config_driven_workspace.py \
   Type: Workspace
 ```
 
-### Full Usage (With Capacity)
+### Full Usage (With Capacity - Recommended)
 
-Creates workspace with lakehouses and warehouses:
+Creates workspace with full item creation support:
 
 ```bash
 python scenarios/config-driven-workspace/config_driven_workspace.py \
@@ -897,7 +897,7 @@ ModuleNotFoundError: No module named 'msal'
 pip install -r requirements.txt
 ```
 
-### Issue: 403 Forbidden (Lakehouse Creation)
+### Issue: 403 Forbidden (Item Creation)
 
 **Symptom:**
 ```
@@ -905,7 +905,7 @@ pip install -r requirements.txt
 ```
 
 **Causes:**
-1. No capacity ID provided (using Trial workspace)
+1. Using Trial capacity (expected for certain item types like warehouses)
 2. Invalid or inaccessible capacity ID
 3. Service principal lacks permissions on capacity
 
@@ -914,7 +914,10 @@ pip install -r requirements.txt
 # Verify capacity ID is set
 echo $FABRIC_CAPACITY_ID
 
-# If empty, add to .env
+# If empty and using Trial capacity - this is expected behavior
+# Items like notebooks/pipelines may succeed, warehouses/models may fail with 403
+
+# To enable full item creation, add capacity ID to .env
 nano .env
 # Add: FABRIC_CAPACITY_ID=your-capacity-guid-here
 

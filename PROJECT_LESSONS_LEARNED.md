@@ -118,27 +118,27 @@ Licensing limitations on Trial workspaces preventing API-based item creation.
 Comparative testing revealed that an alternative implementation successfully created items, contradicting the licensing hypothesis.
 
 **Root Cause Identified:**
-Missing `capacity_id` parameter during workspace creation. Trial workspaces cannot create Fabric items via REST API, regardless of licensing tier.
+Missing `capacity_id` parameter during workspace creation. Trial workspaces CAN attempt item creation via REST API, but certain item types (warehouses, semantic models) fail with 403 due to capacity limitations.
 
 **Solution Implemented:**
 ```python
 workspace = workspace_mgr.create_workspace(
     name=workspace_name,
     description=description,
-    capacity_id=capacity_id  # CRITICAL: Required for item creation
+    capacity_id=capacity_id  # RECOMMENDED: Enables full item creation
 )
 ```
 
 **Critical Learning:**
-This was the most significant technical discovery of the project. The requirement for capacity assignment is not prominently documented in Microsoft's official API documentation, leading to potential misdiagnosis.
+This was the most significant technical discovery of the project. While Trial workspaces CAN create some items (notebooks, pipelines), others require paid capacity. The distinction between "cannot attempt" vs "attempts but fails" is crucial for error handling.
 
 **Business Impact:**
 - Prevented deployment delays by identifying the actual technical constraint
-- Established capacity-id as a mandatory parameter for all production deployments
-- Documented this requirement clearly to prevent future implementation errors
+- Established capacity-id as a recommended parameter for production deployments
+- Documented expected 403 errors on Trial capacity to prevent misdiagnosis
 
 **Recommendation:**
-All production workspace provisioning scripts MUST include capacity-id assignment. Trial workspaces should only be used for UI-based development, not automated deployments.
+All production workspace provisioning scripts SHOULD include capacity-id assignment for full item support. Trial workspaces can be used for development with the understanding that certain item types will fail with 403 errors.
 
 ---
 
@@ -235,14 +235,15 @@ When refactoring shared infrastructure, ALL consuming code must be validated and
 
 ### 2.1 Microsoft Fabric API Constraints
 
-**Discovery:** Trial workspaces cannot create items via REST API
+**Discovery:** Trial workspaces CAN attempt item creation via REST API, but certain item types fail with 403 errors
 
-**Impact:** All automated provisioning requires capacity assignment
+**Impact:** Automated provisioning on Trial capacity will succeed for some items (notebooks, pipelines) but fail for others (warehouses, semantic models)
 
 **Mitigation:**
-- Make capacity-id a required parameter in all deployment scripts
-- Provide clear error messaging when capacity is missing
-- Document this limitation prominently in setup guides
+- Make capacity-id a recommended parameter for production deployments
+- Implement graceful error handling for 403 responses on Trial
+- Document expected failures to prevent misdiagnosis as bugs
+- Provide clear error messaging explaining Trial capacity limitations
 
 ---
 
@@ -356,10 +357,11 @@ New team members can deploy their first workspace within 1 hour of access, compa
 
 ### 4.1 Technical Lessons
 
-1. **Capacity Assignment is Mandatory**
-   - Trial workspaces cannot create items via API
-   - Always validate capacity-id before attempting item creation
-   - Document this requirement prominently
+1. **Capacity Assignment is Recommended for Full Support**
+   - Trial workspaces CAN attempt item creation but certain types fail with 403
+   - Paid capacity enables full item support (warehouses, semantic models, etc.)
+   - Document expected Trial limitations to prevent misdiagnosis
+   - Validate capacity availability before creating capacity-dependent items
 
 2. **Object IDs vs. Email Addresses**
    - Microsoft Fabric uses Azure AD Object IDs for user management
