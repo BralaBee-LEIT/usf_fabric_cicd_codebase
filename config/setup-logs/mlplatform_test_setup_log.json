@@ -1,0 +1,11 @@
+{
+  "timestamp": "2025-10-22T16:57:14.084558Z",
+  "project_name": "mlplatform",
+  "environment": "test",
+  "workspace_name": "usf2-fabric-mlplatform-test",
+  "workspace_id": "5c88e291-7735-430f-8244-91babec2c5df",
+  "config_pattern": "{prefix}-{name}-{environment}",
+  "config_prefix": "usf2-fabric",
+  "created_items": [],
+  "principals_file": null
+}

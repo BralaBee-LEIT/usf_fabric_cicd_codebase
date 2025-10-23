@@ -1,12 +1,12 @@
 {
   "project": {
-    "name": "fabric-cicd",
-    "prefix": "your-project",
+    "name": "usf2-fabric-cicd",
+    "prefix": "usf2-fabric",
     "description": "Microsoft Fabric CI/CD Implementation",
-    "organization": "your-org"
+    "organization": "LEIT-TekSystems"
   },
   "naming_patterns": {
-    "workspace": "{prefix}-fabric-{environment}",
+    "workspace": "{prefix}-{name}-{environment}",
     "lakehouse": "{prefix_upper}_Lakehouse_{environment_title}",
     "storage_account": "{prefix_clean}data{environment}",
     "key_vault": "{prefix}-kv-{environment}",
@@ -53,6 +53,24 @@
       "devops": "{organization}/devops-team"
     }
   },
+  "git_integration": {
+    "enabled": true,
+    "provider": "GitHub",
+    "organization": "${GIT_ORGANIZATION}",
+    "project": "${GIT_PROJECT}",
+    "repository": "${GIT_REPOSITORY}",
+    "auto_connect_workspaces": true,
+    "auto_commit_on_creation": false,
+    "default_branch": "main",
+    "feature_branch_pattern": "feature/{product_id}/{ticket_id}",
+    "workspace_directory_pattern": "/data_products/{product_id}",
+    "commit_message_template": "{action} - {product_name} [{environment}]",
+    "sync_settings": {
+      "bidirectional_sync": true,
+      "conflict_resolution": "Workspace",
+      "pull_before_commit": true
+    }
+  },
   "contacts": {
     "data_owner": "${DATA_OWNER_EMAIL}",
     "technical_lead": "${TECHNICAL_LEAD_EMAIL}",
@@ -65,6 +83,7 @@
       "prod": "{prefix}-prod"
     }
   },
+  "products": [],
   "metadata": {
     "created_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
     "version": "1.0.0",

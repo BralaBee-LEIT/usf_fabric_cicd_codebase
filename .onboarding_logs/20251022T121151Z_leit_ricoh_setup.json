@@ -1,0 +1,51 @@
+{
+  "timestamp": "2025-10-22T12:11:45.331399",
+  "domain": "leit-ricoh-domain",
+  "workspace": "leit-ricoh",
+  "environment": "dev",
+  "items": [],
+  "users": [
+    {
+      "email": "ricoh.admin@leit-teksystems.com",
+      "role": "Admin",
+      "description": "Workspace administrator"
+    },
+    {
+      "email": "ricoh.engineer1@leit-teksystems.com",
+      "role": "Member",
+      "description": "Data engineer - Senior"
+    },
+    {
+      "email": "ricoh.engineer2@leit-teksystems.com",
+      "role": "Member",
+      "description": "Data engineer - Junior"
+    },
+    {
+      "email": "ricoh.analyst@leit-teksystems.com",
+      "role": "Contributor",
+      "description": "Data analyst"
+    },
+    {
+      "email": "ricoh.business1@leit-teksystems.com",
+      "role": "Viewer",
+      "description": "Business user - Finance"
+    },
+    {
+      "email": "ricoh.business2@leit-teksystems.com",
+      "role": "Viewer",
+      "description": "Business user - Operations"
+    }
+  ],
+  "errors": [
+    "Workspace existed (reused): 06ca81b0-8135-4c89-90b4-b6a9a3bd1879",
+    "Lakehouse creation: 403 Client Error: Forbidden for url: https://api.fabric.microsoft.com/v1/workspaces/06ca81b0-8135-4c89-90b4-b6a9a3bd1879/items",
+    "Warehouse creation: 403 Client Error: Forbidden for url: https://api.fabric.microsoft.com/v1/workspaces/06ca81b0-8135-4c89-90b4-b6a9a3bd1879/items",
+    "Notebook 01_DataIngestion: 403 Client Error: Forbidden for url: https://api.fabric.microsoft.com/v1/workspaces/06ca81b0-8135-4c89-90b4-b6a9a3bd1879/items",
+    "Notebook 02_DataTransformation: 403 Client Error: Forbidden for url: https://api.fabric.microsoft.com/v1/workspaces/06ca81b0-8135-4c89-90b4-b6a9a3bd1879/items",
+    "Notebook 03_DataValidation: 403 Client Error: Forbidden for url: https://api.fabric.microsoft.com/v1/workspaces/06ca81b0-8135-4c89-90b4-b6a9a3bd1879/items",
+    "DataPipeline RicohDataPipeline: 403 Client Error: Forbidden for url: https://api.fabric.microsoft.com/v1/workspaces/06ca81b0-8135-4c89-90b4-b6a9a3bd1879/items",
+    "SemanticModel RicohSemanticModel: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/06ca81b0-8135-4c89-90b4-b6a9a3bd1879/items",
+    "Report RicohExecutiveDashboard: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/06ca81b0-8135-4c89-90b4-b6a9a3bd1879/items"
+  ],
+  "workspace_id": "06ca81b0-8135-4c89-90b4-b6a9a3bd1879"
+}

@@ -1,0 +1,11 @@
+{
+  "timestamp": "2025-10-22T17:36:44.761785Z",
+  "project_name": "pathtest",
+  "environment": "dev",
+  "workspace_name": "usf2-fabric-pathtest-dev",
+  "workspace_id": "2e9eec46-144b-4892-b877-51bcd25826a4",
+  "config_pattern": "{prefix}-{name}-{environment}",
+  "config_prefix": "usf2-fabric",
+  "created_items": [],
+  "principals_file": null
+}

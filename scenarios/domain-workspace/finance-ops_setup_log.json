@@ -1,0 +1,27 @@
+{
+  "timestamp": "2025-10-22T15:08:17.615899",
+  "domain": "finance-ops",
+  "workspace_name": "finance-ops-workspace",
+  "items_created": [
+    {
+      "type": "Lakehouse",
+      "name": "FinanceOpsLakehouse",
+      "id": "8fc301ae-6c58-4303-b8df-7b916c008093"
+    },
+    {
+      "type": "Warehouse",
+      "name": "FinanceOpsWarehouse",
+      "id": "d21c7f61-1cf5-4389-a16a-84dabb634941"
+    },
+    {
+      "type": "Lakehouse",
+      "name": "FinanceOpsStagingLakehouse",
+      "id": "31245337-08f1-49f9-8799-34bfa3948e9a"
+    }
+  ],
+  "items_referenced": [],
+  "errors": [],
+  "workspace_id": "f1842c0f-23fb-48d0-a187-aba8bfe67b02",
+  "principals_configured": false,
+  "principals_file_created": "/home/sanmi/Documents/J'TOYE_DIGITAL/LEIT_TEKSYSTEMS/1_Project_Rhico/usf-fabric-cicd/config/finance-ops_principals.txt"
+}

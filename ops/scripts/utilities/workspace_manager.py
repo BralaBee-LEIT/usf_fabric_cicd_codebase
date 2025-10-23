@@ -22,6 +22,13 @@ from .constants import (
 )
 from .config_manager import get_config_manager
 
+# Optional: Import audit logger
+try:
+    from .audit_logger import get_audit_logger
+    AUDIT_LOGGER_AVAILABLE = True
+except ImportError:
+    AUDIT_LOGGER_AVAILABLE = False
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -55,12 +62,13 @@ class WorkspaceManager:
     Supports multi-environment operations (dev, test, prod)
     """
     
-    def __init__(self, environment: Optional[str] = None):
+    def __init__(self, environment: Optional[str] = None, enable_audit_logging: bool = True):
         """
         Initialize workspace manager
         
         Args:
             environment: Target environment (dev, test, prod). If None, no environment suffix is applied.
+            enable_audit_logging: Whether to enable audit logging (default: True)
         """
         self.tenant_id = os.getenv('AZURE_TENANT_ID')
         self.client_id = os.getenv('AZURE_CLIENT_ID')
@@ -68,6 +76,12 @@ class WorkspaceManager:
         self.base_url = FABRIC_API_BASE_URL
         self.token = None
         self.environment = environment.lower() if environment else None
+        self.max_retries = int(os.getenv('FABRIC_API_MAX_RETRIES', '3'))
+        
+        # Initialize audit logger if available and enabled
+        self.audit_logger = None
+        if enable_audit_logging and AUDIT_LOGGER_AVAILABLE:
+            self.audit_logger = get_audit_logger()
         
         if not all([self.tenant_id, self.client_id, self.client_secret]):
             raise ValueError(ERROR_MISSING_CREDENTIALS)
@@ -109,7 +123,7 @@ class WorkspaceManager:
         self, 
         method: str, 
         endpoint: str, 
-        retry_count: int = 3,
+        retry_count: int = None,
         **kwargs
     ) -> requests.Response:
         """
@@ -118,12 +132,15 @@ class WorkspaceManager:
         Args:
             method: HTTP method (GET, POST, PATCH, DELETE)
             endpoint: API endpoint
-            retry_count: Number of retries for transient failures
+            retry_count: Number of retries for transient failures (defaults to FABRIC_API_MAX_RETRIES env var or 3)
             **kwargs: Additional request parameters
         
         Returns:
             Response object
         """
+        if retry_count is None:
+            retry_count = self.max_retries
+            
         headers = kwargs.get('headers', {})
         headers['Authorization'] = f"Bearer {self._get_access_token()}"
         headers['Content-Type'] = 'application/json'
@@ -230,6 +247,16 @@ class WorkspaceManager:
             response = self._make_request('POST', 'workspaces', json=payload)
             workspace = response.json()
             logger.info(f"✓ Created workspace: {workspace_name} (ID: {workspace.get('id')})")
+            
+            # Log workspace creation to audit trail
+            if self.audit_logger:
+                self.audit_logger.log_workspace_creation(
+                    workspace_id=workspace.get('id'),
+                    workspace_name=workspace_name,
+                    capacity_id=capacity_id,
+                    description=description or f"Workspace for {self.environment or 'general'} environment"
+                )
+            
             return workspace
             
         except requests.exceptions.HTTPError as e:
@@ -265,6 +292,14 @@ class WorkspaceManager:
         try:
             self._make_request('DELETE', f'workspaces/{workspace_id}')
             logger.info(f"✓ Deleted workspace: {workspace_name} (ID: {workspace_id})")
+            
+            # Log workspace deletion to audit trail
+            if self.audit_logger:
+                self.audit_logger.log_workspace_deleted(
+                    workspace_id=workspace_id,
+                    workspace_name=workspace_name
+                )
+            
             return True
             
         except requests.exceptions.HTTPError as e:
@@ -375,6 +410,87 @@ class WorkspaceManager:
         logger.info(f"✓ Updated workspace {workspace_id}")
         return response.json()
     
+    def assign_capacity(
+        self,
+        workspace_id: str,
+        capacity_id: str
+    ) -> Dict[str, Any]:
+        """
+        Assign a Fabric capacity to an existing workspace
+        
+        Args:
+            workspace_id: Workspace ID
+            capacity_id: Capacity ID (GUID) to assign to the workspace
+        
+        Returns:
+            Updated workspace details
+        
+        Example:
+            >>> manager = WorkspaceManager()
+            >>> manager.assign_capacity(
+            ...     workspace_id="06ca81b0-8135-4c89-90b4-b6a9a3bd1879",
+            ...     capacity_id="your-capacity-guid"
+            ... )
+        """
+        # First verify the workspace exists
+        workspace = self.get_workspace_details(workspace_id)
+        workspace_name = workspace.get('displayName', workspace_id)
+        
+        # Assign capacity using PATCH with capacityId
+        payload = {
+            "capacityId": capacity_id
+        }
+        
+        try:
+            response = self._make_request(
+                'PATCH',
+                f'workspaces/{workspace_id}',
+                json=payload
+            )
+            logger.info(
+                f"✓ Assigned capacity {capacity_id} to workspace '{workspace_name}' ({workspace_id})"
+            )
+            return response.json()
+            
+        except requests.exceptions.HTTPError as e:
+            error_msg = f"Failed to assign capacity to workspace '{workspace_name}': {e.response.text}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+    
+    def unassign_capacity(self, workspace_id: str) -> Dict[str, Any]:
+        """
+        Remove capacity assignment from a workspace (revert to Trial/Shared)
+        
+        Args:
+            workspace_id: Workspace ID
+        
+        Returns:
+            Updated workspace details
+        """
+        workspace = self.get_workspace_details(workspace_id)
+        workspace_name = workspace.get('displayName', workspace_id)
+        
+        # Unassign by setting capacityId to None/empty
+        payload = {
+            "capacityId": None
+        }
+        
+        try:
+            response = self._make_request(
+                'PATCH',
+                f'workspaces/{workspace_id}',
+                json=payload
+            )
+            logger.info(
+                f"✓ Removed capacity assignment from workspace '{workspace_name}' ({workspace_id})"
+            )
+            return response.json()
+            
+        except requests.exceptions.HTTPError as e:
+            error_msg = f"Failed to unassign capacity from workspace '{workspace_name}': {e.response.text}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+    
     def list_workspace_items(
         self,
         workspace_id: str,
@@ -438,6 +554,17 @@ class WorkspaceManager:
                 f"✓ Added {principal_type} '{principal_id}' to workspace {workspace_id} "
                 f"with role '{role.value}'"
             )
+            
+            # Log user addition to audit trail
+            if self.audit_logger:
+                self.audit_logger.log_user_addition(
+                    workspace_id=workspace_id,
+                    user_email=principal_id if principal_type == "User" else None,
+                    user_id=principal_id if principal_type != "User" else None,
+                    role=role.value,
+                    principal_type=principal_type
+                )
+            
             return response.json()
             
         except requests.exceptions.HTTPError as e:
@@ -463,6 +590,14 @@ class WorkspaceManager:
                 f'workspaces/{workspace_id}/roleAssignments/{principal_id}'
             )
             logger.info(f"✓ Removed user '{principal_id}' from workspace {workspace_id}")
+            
+            # Log user removal to audit trail
+            if self.audit_logger:
+                self.audit_logger.log_user_removal(
+                    workspace_id=workspace_id,
+                    user_email=principal_id
+                )
+            
             return True
             
         except requests.exceptions.HTTPError as e:

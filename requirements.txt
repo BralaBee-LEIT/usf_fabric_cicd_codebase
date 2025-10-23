@@ -1,0 +1,31 @@
+# Core dependencies for Microsoft Fabric CI/CD
+# Pinned versions for reproducible builds
+
+# Configuration and data formats
+PyYAML==6.0.1
+
+# Microsoft Authentication
+msal==1.26.0
+
+# HTTP client
+requests==2.31.0
+urllib3==2.1.0
+
+# Testing
+pytest==8.3.3
+pytest-cov==6.0.0
+pytest-mock==3.14.0
+
+# Code quality
+flake8==7.0.0
+black==24.3.0
+isort==5.13.2
+mypy==1.8.0
+
+# Security scanning
+bandit==1.7.7
+safety==3.0.1
+
+# Additional utilities (if needed)
+python-dotenv==1.0.1
+jsonschema==4.21.1

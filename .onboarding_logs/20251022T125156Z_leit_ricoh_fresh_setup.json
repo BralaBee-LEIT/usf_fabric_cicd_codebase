@@ -1,0 +1,73 @@
+{
+  "timestamp": "2025-10-22T12:51:05.656410",
+  "domain": "leit-ricoh-domain",
+  "workspace": "ricoh-fresh-20251022125105",
+  "environment": null,
+  "capacity_id": null,
+  "items": [
+    {
+      "name": "RicohDataLakehouse",
+      "type": "Lakehouse",
+      "id": "99b3dd1b-c7e4-406b-bf31-fb095d079370"
+    },
+    {
+      "name": "01_DataIngestion",
+      "type": "Notebook",
+      "id": "c622000a-fdd1-4514-9e7d-9fcd6809d5e2"
+    },
+    {
+      "name": "02_DataTransformation",
+      "type": "Notebook",
+      "id": "182fc8d2-7281-444a-bec9-49e08894fc4f"
+    },
+    {
+      "name": "03_DataValidation",
+      "type": "Notebook",
+      "id": "06a722b6-2bba-4efb-8b90-6f3623d20c65"
+    },
+    {
+      "name": "RicohDataPipeline",
+      "type": "DataPipeline",
+      "id": "e58a736b-f65f-4a67-989e-fa616c570762"
+    }
+  ],
+  "users": [
+    {
+      "email": "ricoh.admin@leit-teksystems.com",
+      "role": "Admin",
+      "description": "Workspace administrator"
+    },
+    {
+      "email": "ricoh.engineer1@leit-teksystems.com",
+      "role": "Member",
+      "description": "Data engineer - Senior"
+    },
+    {
+      "email": "ricoh.engineer2@leit-teksystems.com",
+      "role": "Member",
+      "description": "Data engineer - Junior"
+    },
+    {
+      "email": "ricoh.analyst@leit-teksystems.com",
+      "role": "Contributor",
+      "description": "Data analyst"
+    },
+    {
+      "email": "ricoh.business1@leit-teksystems.com",
+      "role": "Viewer",
+      "description": "Business user - Finance"
+    },
+    {
+      "email": "ricoh.business2@leit-teksystems.com",
+      "role": "Viewer",
+      "description": "Business user - Operations"
+    }
+  ],
+  "errors": [
+    "Warehouse creation: Item 'RicohAnalyticsWarehouse' was created but could not be found in workspace after multiple attempts",
+    "SemanticModel RicohSemanticModel: Item 'RicohSemanticModel' was created but could not be found in workspace after multiple attempts",
+    "Report RicohExecutiveDashboard: Item 'RicohExecutiveDashboard' was created but could not be found in workspace after multiple attempts"
+  ],
+  "workspace_id": "9fe7c16e-49d7-4e8e-8377-36225f244d0e",
+  "capacity_assigned": true
+}

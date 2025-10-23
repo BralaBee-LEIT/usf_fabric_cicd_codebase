@@ -1,0 +1,97 @@
+product:
+  name: "Customer Insights"
+  description: "Customer analytics and insights platform"
+  owner_email: "data-team@company.com"
+  domain: "Customer Analytics"
+
+environments:
+  dev:
+    enabled: true
+    capacity_type: "trial"
+    description: "Development workspace for customer insights"
+  
+  test:
+    enabled: false  # Only creating DEV + feature workspace
+    capacity_type: "trial"
+    description: "Test workspace for customer insights"
+  
+  prod:
+    enabled: false  # Only creating DEV + feature workspace
+    capacity_type: "capacity"
+    capacity_id: "${FABRIC_CAPACITY_PROD_ID}"
+    description: "Production workspace for customer insights"
+
+git:
+  organization: "${GIT_ORGANIZATION}"
+  repository: "${GIT_REPOSITORY}"
+  default_branch: "main"
+  feature_prefix: "feature"  # Creates branches like: feature/customer_insights/TICKET-001
+  directory: "data_products/customer_insights"
+  auto_commit: true
+
+scaffold:
+  enabled: true
+  directories:
+    - "workspace"
+    - "notebooks"
+    - "pipelines" 
+    - "datasets"
+    - "dataflows"
+    - "reports"
+    - "docs"
+  
+  notebooks:
+    - name: "ingestion_pipeline"
+      language: "PySpark"
+      description: "Customer data ingestion from source systems"
+    
+    - name: "transformation_logic"
+      language: "PySpark"
+      description: "Transform raw customer data to analytics-ready format"
+    
+    - name: "data_quality_checks"
+      language: "Python"
+      description: "Validate customer data quality"
+
+  items:
+    lakehouses:
+      - name: "CustomerInsightsLakehouse"
+        description: "Primary lakehouse for customer data"
+    
+    warehouses:
+      - name: "CustomerInsightsWarehouse"
+        description: "Analytics warehouse for customer insights"
+    
+    pipelines:
+      - name: "CustomerDataPipeline"
+        description: "End-to-end customer data pipeline"
+
+automation:
+  audit_reference: "CUSTOMER-INSIGHTS-ONBOARDING"
+  create_default_items: true
+  principals_file_template: true
+
+# ---------------------------------------------------------------------------
+# FEATURE BRANCH WORKFLOW NOTES
+# ---------------------------------------------------------------------------
+# 
+# When you run with --feature flag:
+#   python3 ../../ops/scripts/onboard_data_product.py product_descriptor.yaml --feature JIRA-123
+# 
+# This creates:
+#   1. DEV workspace: "Customer Insights [DEV]" (if doesn't exist)
+#   2. Feature workspace: "Customer Insights-feature-JIRA-123"
+#   3. Git branch: "feature/customer_insights/JIRA-123"
+#   4. Git connection: Links workspace to branch
+#   5. Scaffold: data_products/customer_insights/ (committed to feature branch)
+# 
+# The feature workspace is ISOLATED from DEV, allowing:
+#   - Parallel development (multiple tickets simultaneously)
+#   - Safe experimentation without affecting shared environments
+#   - Automatic Git sync (changes in workspace → feature branch)
+#   - PR-based workflow (feature branch → main → DEV deployment)
+# 
+# Cleanup after merge:
+#   - Delete feature workspace (Fabric portal)
+#   - Delete feature branch: git branch -d feature/customer_insights/JIRA-123
+# ---------------------------------------------------------------------------

@@ -1,0 +1,19 @@
+product:
+  name: "Customer Analytics"
+  owner_email: "data-team@company.com"
+  domain: "Customer Insights"
+
+environments:
+  dev:
+    enabled: true
+    capacity_type: "trial"
+    description: "Development workspace for customer analytics"
+
+git:
+  organization: "${GITHUB_ORG}"
+  repository: "${GITHUB_REPO}"
+  feature_prefix: "feature"
+  directory: "data_products/customer_analytics"
+
+automation:
+  audit_reference: "JIRA-12345"

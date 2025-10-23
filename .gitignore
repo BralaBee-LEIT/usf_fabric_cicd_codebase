@@ -47,6 +47,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+fabric-env/
 
 # ============================================================================
 # IDE and Editors
@@ -117,6 +118,8 @@ great_expectations/.gitignore
 logs/
 temp/
 tmp/
+.onboarding_logs/
+audit/
 
 # ============================================================================
 # Deployment Artifacts

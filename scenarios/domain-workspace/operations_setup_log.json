@@ -1,0 +1,26 @@
+{
+  "timestamp": "2025-10-22T15:27:17.799018",
+  "domain": "operations",
+  "workspace_name": "operations-workspace",
+  "items_created": [
+    {
+      "type": "Lakehouse",
+      "name": "OperationsLakehouse",
+      "id": "aa9ebaf5-f990-4c6b-ad6c-e3beaf473183"
+    },
+    {
+      "type": "Warehouse",
+      "name": "OperationsWarehouse",
+      "id": "08a5da43-1c8c-4e1d-b1fd-20427d8fe0fb"
+    },
+    {
+      "type": "Lakehouse",
+      "name": "OperationsStagingLakehouse",
+      "id": "fa0a7f66-6ff4-4769-a527-06ee5e129377"
+    }
+  ],
+  "items_referenced": [],
+  "errors": [],
+  "workspace_id": "eab244da-5581-47b0-b0af-7d6728d92a3b",
+  "principals_configured": true
+}

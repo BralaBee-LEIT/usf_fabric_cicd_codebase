@@ -1,0 +1,208 @@
+# Microsoft Fabric Item Naming Standards
+# 
+# This configuration enforces consistent naming conventions across all Fabric items.
+# Patterns use regex for validation.
+
+version: "1.0.0"
+description: "Fabric item naming standards for consistent organization and discoverability"
+
+# Global naming rules
+global_rules:
+  max_length: 256
+  allowed_characters: "A-Za-z0-9_-"
+  case_sensitive: true
+  no_leading_numbers: false
+  no_special_chars_start: true
+  reserved_words:
+    - "system"
+    - "admin"
+    - "test"
+    - "temp"
+
+# Item-specific naming patterns
+item_types:
+  
+  Lakehouse:
+    description: "Data lakehouse naming (medallion architecture recommended)"
+    pattern: "^(BRONZE|SILVER|GOLD)_[A-Za-z0-9]+(_[A-Za-z0-9]+)*_Lakehouse$"
+    examples:
+      - "BRONZE_CustomerData_Lakehouse"
+      - "SILVER_Sales_Lakehouse"
+      - "GOLD_Analytics_Lakehouse"
+    rules:
+      - "Must start with BRONZE, SILVER, or GOLD (medallion layer)"
+      - "Must end with '_Lakehouse'"
+      - "Use underscores to separate words"
+      - "CamelCase or lowercase for descriptive name"
+    recommended_prefixes:
+      BRONZE: "Raw/ingested data lakehouses"
+      SILVER: "Cleaned/transformed data lakehouses"
+      GOLD: "Analytics-ready/aggregated data lakehouses"
+  
+  Warehouse:
+    description: "SQL warehouse naming"
+    pattern: "^[A-Za-z0-9]+(_[A-Za-z0-9]+)*_Warehouse$"
+    examples:
+      - "Sales_Warehouse"
+      - "CustomerAnalytics_Warehouse"
+      - "Enterprise_DW_Warehouse"
+    rules:
+      - "Must end with '_Warehouse'"
+      - "Use underscores to separate words"
+      - "Descriptive business domain name"
+  
+  Notebook:
+    description: "Notebook naming (sequential numbering recommended)"
+    pattern: "^\\d{2}_[A-Za-z0-9]+(_[A-Za-z0-9]+)*_Notebook$"
+    examples:
+      - "01_DataIngestion_Notebook"
+      - "02_DataTransformation_Notebook"
+      - "03_DataValidation_Notebook"
+      - "10_ModelTraining_Notebook"
+    rules:
+      - "Start with 2-digit sequence number (01-99)"
+      - "Must end with '_Notebook'"
+      - "Use underscores to separate words"
+      - "Descriptive action/purpose name"
+    recommended_sequences:
+      "01-09": "Data ingestion and extraction"
+      "10-19": "Data transformation and cleaning"
+      "20-29": "Data validation and quality checks"
+      "30-39": "Feature engineering"
+      "40-49": "Model training and evaluation"
+      "50-59": "Model deployment and serving"
+      "60-69": "Reporting and analytics"
+      "70-79": "Utilities and helpers"
+      "80-89": "Testing and debugging"
+      "90-99": "Archive and maintenance"
+  
+  DataPipeline:
+    description: "Data pipeline naming"
+    pattern: "^[A-Za-z0-9]+(_[A-Za-z0-9]+)*_Pipeline$"
+    examples:
+      - "CustomerETL_Pipeline"
+      - "SalesIngestion_Pipeline"
+      - "DailyRefresh_Pipeline"
+    rules:
+      - "Must end with '_Pipeline'"
+      - "Use underscores to separate words"
+      - "Descriptive purpose or workflow name"
+  
+  SemanticModel:
+    description: "Semantic model (dataset) naming"
+    pattern: "^[A-Za-z0-9]+(_[A-Za-z0-9]+)*_SemanticModel$"
+    examples:
+      - "Sales_SemanticModel"
+      - "CustomerInsights_SemanticModel"
+      - "Finance_SemanticModel"
+    rules:
+      - "Must end with '_SemanticModel'"
+      - "Use underscores to separate words"
+      - "Business domain focused name"
+  
+  Report:
+    description: "Power BI report naming"
+    pattern: "^[A-Za-z0-9]+(_[A-Za-z0-9]+)*_Report$"
+    examples:
+      - "SalesExecutive_Report"
+      - "CustomerChurn_Report"
+      - "FinancialOverview_Report"
+    rules:
+      - "Must end with '_Report'"
+      - "Use underscores to separate words"
+      - "Audience or purpose focused name"
+  
+  Dashboard:
+    description: "Dashboard naming"
+    pattern: "^[A-Za-z0-9]+(_[A-Za-z0-9]+)*_Dashboard$"
+    examples:
+      - "Executive_Dashboard"
+      - "Operations_Dashboard"
+      - "RealTime_Monitoring_Dashboard"
+    rules:
+      - "Must end with '_Dashboard'"
+      - "Use underscores to separate words"
+      - "Audience or monitoring focus"
+  
+  Dataflow:
+    description: "Dataflow Gen2 naming"
+    pattern: "^[A-Za-z0-9]+(_[A-Za-z0-9]+)*_Dataflow$"
+    examples:
+      - "CustomerExtraction_Dataflow"
+      - "SalesTransformation_Dataflow"
+    rules:
+      - "Must end with '_Dataflow'"
+      - "Use underscores to separate words"
+      - "Source or transformation focused"
+  
+  MLModel:
+    description: "ML model naming"
+    pattern: "^[A-Za-z0-9]+(_[A-Za-z0-9]+)*_(Model|Experiment)$"
+    examples:
+      - "ChurnPrediction_Model"
+      - "CustomerSegmentation_Model"
+      - "PricingOptimization_Experiment"
+    rules:
+      - "Must end with '_Model' or '_Experiment'"
+      - "Use underscores to separate words"
+      - "Descriptive model purpose"
+  
+  MLExperiment:
+    description: "ML experiment naming"
+    pattern: "^[A-Za-z0-9]+(_[A-Za-z0-9]+)*_Experiment$"
+    examples:
+      - "ChurnOptimization_Experiment"
+      - "SegmentationTuning_Experiment"
+    rules:
+      - "Must end with '_Experiment'"
+      - "Use underscores to separate words"
+
+# Ticket-based naming (for feature branch workflows)
+ticket_based_naming:
+  enabled: true
+  description: "Prefix items with ticket ID for feature branch isolation"
+  pattern: "^[A-Z]+-\\d+_[A-Za-z0-9]+(_[A-Za-z0-9]+)*_(Lakehouse|Warehouse|Notebook|Pipeline|SemanticModel|Report)$"
+  examples:
+    - "JIRA-12345_CustomerSegmentation_Lakehouse"
+    - "ADO-789_SalesETL_Pipeline"
+    - "GH-456_DataValidation_Notebook"
+  rules:
+    - "Start with ticket system prefix (JIRA, ADO, GH, etc.)"
+    - "Follow with dash and ticket number"
+    - "Then underscore and descriptive name"
+    - "End with item type suffix"
+  ticket_systems:
+    - "JIRA"
+    - "ADO"
+    - "GH"
+    - "AZURE"
+    - "TFS"
+
+# Environment-specific suffixes (optional)
+environment_suffixes:
+  enabled: false
+  description: "Add environment suffix to item names"
+  pattern: "^[A-Za-z0-9_]+--(DEV|TEST|PROD)$"
+  examples:
+    - "BRONZE_Sales_Lakehouse--DEV"
+    - "CustomerETL_Pipeline--PROD"
+  note: "Generally not recommended - use workspace separation instead"
+
+# Validation settings
+validation:
+  strict_mode: true  # Fail validation on pattern mismatch
+  warn_on_deviation: true  # Show warnings for non-standard names
+  auto_fix_suggestions: true  # Provide corrected name suggestions
+  log_violations: true  # Log naming violations to audit trail
+
+# Exemptions
+exemptions:
+  allow_legacy_names: false  # Allow items that don't match patterns
+  exempt_item_ids: []  # List of item IDs exempt from validation
+  exempt_workspaces: []  # List of workspace IDs exempt from validation
+
+# Reporting
+reporting:
+  generate_compliance_reports: true
+  report_frequency: "weekly"
+  report_path: "audit/naming_compliance_reports/"

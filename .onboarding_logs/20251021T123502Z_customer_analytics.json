@@ -1,0 +1,18 @@
+{
+  "timestamp": "20251021T123502Z",
+  "product": {
+    "name": "Customer Analytics",
+    "slug": "customer_analytics"
+  },
+  "dev_workspace": {
+    "id": "be8d1df8-9067-4557-a179-fd706a38dd20",
+    "displayName": "Customer Analytics [DEV]",
+    "description": "Development workspace for customer analytics",
+    "type": "Workspace"
+  },
+  "feature_workspace": null,
+  "git_branch": null,
+  "git_branch_created": false,
+  "scaffold_path": "/home/sanmi/Documents/J'TOYE_DIGITAL/LEIT_TEKSYSTEMS/1_Project_Rhico/usf-fabric-cicd/data_products/customer_analytics",
+  "registry_updated": true
+}

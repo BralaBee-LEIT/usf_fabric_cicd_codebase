@@ -1,0 +1,27 @@
+{
+  "timestamp": "2025-10-22T15:12:04.918088",
+  "domain": "retail-analytics",
+  "workspace_name": "retail-analytics-workspace",
+  "items_created": [
+    {
+      "type": "Lakehouse",
+      "name": "RetailAnalyticsLakehouse",
+      "id": "4cfe3cfd-ad40-46ab-8db3-971df82986aa"
+    },
+    {
+      "type": "Warehouse",
+      "name": "RetailAnalyticsWarehouse",
+      "id": "ea134e9e-a63e-4068-988f-fe2a5ec06506"
+    },
+    {
+      "type": "Lakehouse",
+      "name": "RetailAnalyticsStagingLakehouse",
+      "id": "790c6213-dae1-4977-aed0-beaf278a3055"
+    }
+  ],
+  "items_referenced": [],
+  "errors": [],
+  "workspace_id": "15b9c0ae-f0e8-4261-a154-48bcdc16da54",
+  "principals_configured": false,
+  "principals_file_created": "/home/sanmi/Documents/J'TOYE_DIGITAL/LEIT_TEKSYSTEMS/1_Project_Rhico/usf-fabric-cicd/config/retail-analytics_principals.txt"
+}

@@ -1,0 +1,28 @@
+# Fabric Workspace Management - Simple Commands
+# Usage: make -f Makefile.workspaces [command]
+
+.PHONY: help list create-env add-user
+
+# Load environment variables
+include .env
+export
+
+help:
+	@echo "Fabric Workspace Management Commands:"
+	@echo ""
+	@echo "  make -f Makefile.workspaces list           - List all workspaces"
+	@echo "  make -f Makefile.workspaces list-details   - List with full details"
+	@echo "  make -f Makefile.workspaces create-env     - Create dev/test/prod workspaces"
+	@echo ""
+	@echo "Or use the simpler fabric-cli.sh wrapper:"
+	@echo "  ./fabric-cli.sh list"
+	@echo "  ./fabric-cli.sh create-set my-project"
+
+list:
+	@python3 ops/scripts/manage_workspaces.py list
+
+list-details:
+	@python3 ops/scripts/manage_workspaces.py list --details
+
+create-env:
+	@python3 ops/scripts/manage_workspaces.py create-set cicd-platform

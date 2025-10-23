@@ -1,0 +1,27 @@
+{
+  "timestamp": "2025-10-22T15:05:57.743763",
+  "domain": "hr-analytics",
+  "workspace_name": "hr-analytics-workspace",
+  "items_created": [
+    {
+      "type": "Lakehouse",
+      "name": "HrAnalyticsLakehouse",
+      "id": "49948a83-92ae-42f4-92b6-237cdad0668b"
+    },
+    {
+      "type": "Warehouse",
+      "name": "HrAnalyticsWarehouse",
+      "id": "af376624-dc8a-4a7a-b76d-63ddad2639dc"
+    },
+    {
+      "type": "Lakehouse",
+      "name": "HrAnalyticsStagingLakehouse",
+      "id": "9fe926da-e617-456c-adeb-6792cbcbf333"
+    }
+  ],
+  "items_referenced": [],
+  "errors": [],
+  "workspace_id": "b4e3031f-8cc8-47e6-9881-5013e4a9d3e8",
+  "principals_configured": false,
+  "principals_file_created": "/home/sanmi/Documents/J'TOYE_DIGITAL/LEIT_TEKSYSTEMS/1_Project_Rhico/usf-fabric-cicd/scenarios/hr-analytics_principals.txt"
+}

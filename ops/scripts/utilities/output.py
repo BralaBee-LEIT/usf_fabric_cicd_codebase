@@ -5,6 +5,7 @@ Provides consistent console output and logging for both interactive and automate
 import sys
 import json
 import logging
+import re
 from typing import Any, Dict, Optional
 from datetime import datetime
 from enum import Enum
@@ -18,6 +19,41 @@ class OutputLevel(Enum):
     WARNING = "warning"
     ERROR = "error"
     CRITICAL = "critical"
+
+
+def sanitize_for_logging(value: str) -> str:
+    """Redact sensitive patterns from log messages.
+    
+    Args:
+        value: String that may contain sensitive information
+        
+    Returns:
+        Sanitized string with sensitive data redacted
+    """
+    if not value:
+        return value
+    
+    # Redact Bearer tokens
+    value = re.sub(r'(Bearer\s+)[\w\-\.]+', r'\1***REDACTED***', value, flags=re.IGNORECASE)
+    
+    # Redact Azure connection strings
+    value = re.sub(r'(AccountKey=)[\w\+/=]+', r'\1***', value, flags=re.IGNORECASE)
+    
+    # Redact passwords in connection strings
+    value = re.sub(r'(password=)[^;]+', r'\1***', value, flags=re.IGNORECASE)
+    value = re.sub(r'(pwd=)[^;]+', r'\1***', value, flags=re.IGNORECASE)
+    
+    # Redact client secrets
+    value = re.sub(r'(client_secret=)[^&\s]+', r'\1***', value, flags=re.IGNORECASE)
+    value = re.sub(r'(AZURE_CLIENT_SECRET=)[^\s]+', r'\1***', value, flags=re.IGNORECASE)
+    
+    # Redact API keys
+    value = re.sub(r'(api[_-]?key[=:]\s*)[\w\-]+', r'\1***', value, flags=re.IGNORECASE)
+    
+    # Redact access tokens
+    value = re.sub(r'(access[_-]?token[=:]\s*)[\w\-\.]+', r'\1***', value, flags=re.IGNORECASE)
+    
+    return value
 
 
 class ConsoleOutput:
@@ -81,6 +117,9 @@ class ConsoleOutput:
     
     def _print_formatted(self, message: str, level: OutputLevel):
         """Print formatted text output"""
+        # Sanitize message to prevent credential leakage
+        message = sanitize_for_logging(message)
+        
         prefix = ""
         
         if self.use_emojis:
@@ -108,6 +147,9 @@ class ConsoleOutput:
     
     def _log_to_logger(self, message: str, level: OutputLevel):
         """Log message to Python logger"""
+        # Sanitize message before logging
+        message = sanitize_for_logging(message)
+        
         log_method = {
             OutputLevel.DEBUG: self.logger.debug,
             OutputLevel.INFO: self.logger.info,

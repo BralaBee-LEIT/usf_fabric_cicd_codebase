@@ -6,13 +6,15 @@ on:
   pull_request:
     branches: [ main, develop ]
     paths:
-      - 'notebooks/**'
-      - 'pipelines/**'
-      - 'dataflows/**'
-      - 'sparkjobdefinitions/**'
-      - 'data/**'
+      - 'data_products/**/notebooks/**'
+      - 'data_products/**/pipelines/**'
+      - 'data_products/**/dataflows/**'
+      - 'data_products/**/datasets/**'
+      - 'data_products/**/workspace/**'
       - 'governance/**'
       - 'ops/**'
+      - 'naming_standards.yaml'
+      - 'project.config.json'
 
 env:
   AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -46,13 +48,14 @@ jobs:
 
       - name: Run Black formatter check
         run: |
-          black --check --diff ops/ notebooks/ data/ || exit 1
+          black --check --diff ops/ data_products/ governance/ || exit 1
 
       - name: Run Flake8 linting
         run: |
-          flake8 ops/ notebooks/ data/ --max-line-length=88 --extend-ignore=E203,W503
+          flake8 ops/ data_products/ governance/ --max-line-length=88 --extend-ignore=E203,W503
 
       - name: Validate data contracts
+        if: hashFiles('governance/data_contracts/**') != ''
         run: |
           python ops/scripts/validate_data_contracts.py \
             --contracts-dir governance/data_contracts \
@@ -64,9 +67,10 @@ jobs:
 
       - name: Check notebook outputs are cleared
         run: |
-          python ops/scripts/check_notebook_outputs.py --path notebooks/
+          python ops/scripts/check_notebook_outputs.py --path data_products/
 
       - name: Validate data quality rules
+        if: hashFiles('governance/dq_rules/**') != ''
         run: |
           python ops/scripts/validate_dq_rules.py \
             --rules-dir governance/dq_rules \
@@ -176,7 +180,7 @@ jobs:
       - name: Package Fabric artifacts
         run: |
           python ops/scripts/utilities/package_bundle.py \
-            --input . \
+            --input data_products/ \
             --output dist/fabric_bundle.zip \
             --include-notebooks \
             --include-pipelines \
