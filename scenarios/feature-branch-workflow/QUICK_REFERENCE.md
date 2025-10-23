@@ -143,7 +143,7 @@ scenarios/feature-branch-workflow/
 ├── FEATURE_WORKFLOW_GUIDE.md      # Complete guide
 ├── QUICK_REFERENCE.md             # This file
 ├── product_descriptor.yaml        # Sample product config
-└── test_feature_workflow.sh       # Test script
+└── test_feature_workflow.py       # Test script
 
 After running:
 data_products/customer_insights/   # Scaffold created here

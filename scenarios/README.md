@@ -27,7 +27,7 @@ scenarios/
 │   ├── QUICK_REFERENCE.md
 │   ├── WHAT_WAS_MISSING.md
 │   ├── product_descriptor.yaml
-│   └── test_feature_workflow.sh
+│   └── test_feature_workflow.py
 └── shared/                             # Shared documentation
     ├── ARCHITECTURE.md
     ├── CAPACITY_ASSIGNMENT_GUIDE.md
@@ -322,7 +322,7 @@ With Feature Branches:
 ```bash
 # Run automated test
 cd scenarios/feature-branch-workflow
-./test_feature_workflow.sh
+python3 test_feature_workflow.py
 ```
 
 **Key Differences:**

@@ -32,7 +32,7 @@ Created **`scenarios/feature-branch-workflow/`** - a comprehensive scenario demo
 3. **QUICK_REFERENCE.md** - Quick commands and troubleshooting
 4. **WHAT_WAS_MISSING.md** - Detailed comparison with previous scenarios
 5. **product_descriptor.yaml** - Sample product configuration
-6. **test_feature_workflow.sh** - Automated test script
+6. **test_feature_workflow.py** - Automated test script
 
 ### Key Capabilities
 
@@ -143,7 +143,7 @@ Developer Workflow:
 
 ## Test Script
 
-Created executable test script: `test_feature_workflow.sh`
+Created executable test script: `test_feature_workflow.py`
 
 **What it does:**
 1. Checks prerequisites (.env, scripts)
@@ -157,7 +157,7 @@ Created executable test script: `test_feature_workflow.sh`
 **Usage:**
 ```bash
 cd scenarios/feature-branch-workflow
-./test_feature_workflow.sh
+python3 test_feature_workflow.py
 ```
 
 ## Integration with Existing Knowledge
@@ -191,7 +191,7 @@ scenarios/feature-branch-workflow/
 ├── QUICK_REFERENCE.md             ✅ Created
 ├── WHAT_WAS_MISSING.md            ✅ Created
 ├── product_descriptor.yaml        ✅ Created
-└── test_feature_workflow.sh       ✅ Created (executable)
+└── test_feature_workflow.py       ✅ Created (executable)
 ```
 
 ### Files Updated (1 file)
@@ -243,7 +243,7 @@ scenarios/README.md                ✅ Updated (added Section 5)
 1. **Test the scenario:**
    ```bash
    cd scenarios/feature-branch-workflow
-   ./test_feature_workflow.sh
+   python3 test_feature_workflow.py
    ```
 
 2. **Review documentation:**
