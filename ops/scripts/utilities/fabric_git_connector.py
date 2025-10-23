@@ -141,16 +141,21 @@ class FabricGitConnector:
         print_info(f"  Directory: {directory_path}")
         
         # Build payload for connect endpoint
-        payload = {
-            "gitProviderDetails": {
-                "gitProviderType": self.git_provider_type,
-                "organizationName": self.organization_name,
-                "projectName": self.project_name,  # Required for Azure DevOps, None for GitHub
-                "repositoryName": self.repository_name,
-                "branchName": branch_name,
-                "directoryName": directory_path
-            }
+        git_provider_details = {
+            "gitProviderType": self.git_provider_type,
+            "organizationName": self.organization_name,
+            "repositoryName": self.repository_name,
+            "branchName": branch_name,
+            "directoryName": directory_path
         }
+        
+        # Add projectName only if provided (required for Azure DevOps)
+        if self.project_name:
+            git_provider_details["projectName"] = self.project_name
+        
+        payload = {"gitProviderDetails": git_provider_details}
+        
+        print_info(f"DEBUG: Payload = {json.dumps(payload, indent=2)}")
         
         try:
             response = self.fabric_client._make_request(
