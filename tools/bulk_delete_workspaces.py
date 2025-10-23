@@ -109,7 +109,7 @@ def main():
     
     for workspace_id in workspace_ids:
         try:
-            result = manager.delete_workspace(workspace_id)
+            result = manager.delete_workspace(workspace_id, force=True)
             print(f"✅ Deleted workspace: {workspace_id}")
             success_count += 1
         except Exception as e:
