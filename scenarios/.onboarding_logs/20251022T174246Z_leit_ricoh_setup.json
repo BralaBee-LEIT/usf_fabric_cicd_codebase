@@ -1,0 +1,76 @@
+{
+  "timestamp": "2025-10-22T17:42:16.692500",
+  "domain": "leit-ricoh-domain",
+  "workspace": "leit-ricoh",
+  "environment": "dev",
+  "capacity_id": "0749B635-C51B-46C6-948A-02F05D7FE177",
+  "items": [
+    {
+      "name": "RicohDataLakehouse",
+      "type": "Lakehouse",
+      "id": "8b26511e-695a-407c-8f4b-0f2cd4723f7a"
+    },
+    {
+      "name": "RicohAnalyticsWarehouse",
+      "type": "Warehouse",
+      "id": "089b1f18-7c0c-438e-b09a-c107198c74c2"
+    },
+    {
+      "name": "01_DataIngestion",
+      "type": "Notebook",
+      "id": "55585ed4-0af4-4afd-87f7-576dee298b81"
+    },
+    {
+      "name": "02_DataTransformation",
+      "type": "Notebook",
+      "id": "4254ab49-6823-4231-8ad0-680c20ef41b0"
+    },
+    {
+      "name": "03_DataValidation",
+      "type": "Notebook",
+      "id": "c1a6ad75-650c-4dcb-9c0e-f7a701d7852d"
+    },
+    {
+      "name": "RicohDataPipeline",
+      "type": "DataPipeline",
+      "id": "477cf9c6-caa6-48e5-be6c-a4e594ecba0c"
+    }
+  ],
+  "users": [
+    {
+      "email": "ricoh.admin@leit-teksystems.com",
+      "role": "Admin",
+      "description": "Workspace administrator"
+    },
+    {
+      "email": "ricoh.engineer1@leit-teksystems.com",
+      "role": "Member",
+      "description": "Data engineer - Senior"
+    },
+    {
+      "email": "ricoh.engineer2@leit-teksystems.com",
+      "role": "Member",
+      "description": "Data engineer - Junior"
+    },
+    {
+      "email": "ricoh.analyst@leit-teksystems.com",
+      "role": "Contributor",
+      "description": "Data analyst"
+    },
+    {
+      "email": "ricoh.business1@leit-teksystems.com",
+      "role": "Viewer",
+      "description": "Business user - Finance"
+    },
+    {
+      "email": "ricoh.business2@leit-teksystems.com",
+      "role": "Viewer",
+      "description": "Business user - Operations"
+    }
+  ],
+  "errors": [
+    "SemanticModel RicohSemanticModel: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/8df44d77-7388-4266-9477-554cbca310db/items",
+    "Report RicohExecutiveDashboard: 400 Client Error: Bad Request for url: https://api.fabric.microsoft.com/v1/workspaces/8df44d77-7388-4266-9477-554cbca310db/items"
+  ],
+  "workspace_id": "8df44d77-7388-4266-9477-554cbca310db"
+}
