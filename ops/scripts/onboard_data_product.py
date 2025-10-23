@@ -179,7 +179,14 @@ def slugify(value: str) -> str:
 
 def load_yaml_descriptor(path: Path) -> Dict[str, Any]:
     with path.open("r", encoding="utf-8") as handle:
-        return yaml.safe_load(handle) or {}
+        content = handle.read()
+        # Expand environment variables in ${VAR} format
+        import re
+        def expand_env_var(match):
+            var_name = match.group(1)
+            return os.getenv(var_name, match.group(0))  # Return original if not found
+        content = re.sub(r'\$\{([^}]+)\}', expand_env_var, content)
+        return yaml.safe_load(content) or {}
 
 
 def parse_capacity_type(raw: Optional[str]) -> CapacityType:

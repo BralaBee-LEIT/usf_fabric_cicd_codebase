@@ -22,8 +22,8 @@ environments:
     description: "Production workspace for customer insights"
 
 git:
-  organization: "${GITHUB_ORG}"
-  repository: "${GITHUB_REPO}"
+  organization: "${GIT_ORGANIZATION}"
+  repository: "${GIT_REPOSITORY}"
   default_branch: "main"
   feature_prefix: "feature"  # Creates branches like: feature/customer_insights/TICKET-001
   directory: "data_products/customer_insights"
