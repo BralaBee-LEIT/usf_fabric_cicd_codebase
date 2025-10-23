@@ -270,7 +270,7 @@ def main():
     # Step 3: Verify Git branch
     print_header("Step 3: Verify Git Branch")
     
-    branch_name = f"feature/customer_insights/{ticket}"
+    branch_name = f"customer_insights/feature/{ticket}"
     if check_git_branch_exists(branch_name):
         print_success(f"Feature branch exists: {branch_name}")
         print("\nBranch details:")

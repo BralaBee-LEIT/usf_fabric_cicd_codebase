@@ -53,7 +53,7 @@
       "audit_reference": "TEST-SCENARIO",
       "dev_workspace_id": "fc0f2e9d-dfee-4d50-9225-6f001c45abb6",
       "feature_workspaces": {
-        "TEST-1761258067": "ebb5adc0-90d6-4263-8eda-fb25e6b15b2f"
+        "TEST-1761258219": "a18a1e23-7585-4059-a78f-d5ffd3c23ad9"
       },
       "git": {
         "repository": "${GITHUB_REPO}",
