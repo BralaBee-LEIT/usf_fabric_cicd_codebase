@@ -39,14 +39,13 @@ from pathlib import Path
 from datetime import datetime
 from typing import Optional, Dict, List
 
-# Add parent directories to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-sys.path.insert(0, str(Path(__file__).parent.parent / "ops" / "scripts"))
+# Add ops/scripts to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "ops" / "scripts"))
 
-from ops.scripts.utilities.workspace_manager import WorkspaceManager, WorkspaceRole
-from ops.scripts.utilities.fabric_item_manager import FabricItemManager, FabricItemType
-from ops.scripts.utilities.fabric_api import FabricClient
-from ops.scripts.utilities.output import (
+from utilities.workspace_manager import WorkspaceManager, WorkspaceRole
+from utilities.fabric_item_manager import FabricItemManager, FabricItemType
+from utilities.fabric_api import FabricClient
+from utilities.output import (
     console_success as print_success,
     console_error as print_error,
     console_warning as print_warning,
@@ -172,9 +171,9 @@ class DomainWorkspaceSetup:
         """Step 2: Create primary lakehouse for the domain"""
         self.print_header("STEP 2: Creating Primary Lakehouse")
         
-        # Convert domain-name to CamelCase (e.g., customer-insights -> CustomerInsights)
+        # Convert domain-name to CamelCase and follow BRONZE naming standard
         domain_camel = ''.join(word.capitalize() for word in self.domain_name.split('-'))
-        lakehouse_name = f"{domain_camel}Lakehouse"
+        lakehouse_name = f"BRONZE_{domain_camel}_Lakehouse"
         
         try:
             print_info(f"Creating lakehouse: {lakehouse_name}")
@@ -183,7 +182,7 @@ class DomainWorkspaceSetup:
                 workspace_id=self.workspace_id,
                 display_name=lakehouse_name,
                 item_type=FabricItemType.LAKEHOUSE,
-                description=f"Primary data lakehouse for {self.domain_name} domain"
+                description=f"Primary data lakehouse for {self.domain_name} domain (Bronze tier - raw data)"
             )
             
             self.created_items.append(lakehouse)
@@ -244,9 +243,9 @@ class DomainWorkspaceSetup:
         """Step 4: Create additional lakehouse"""
         self.print_header("STEP 4: Creating Additional Lakehouse")
         
-        # Convert domain-name to CamelCase
+        # Convert domain-name to CamelCase and follow SILVER naming standard for staging
         domain_camel = ''.join(word.capitalize() for word in self.domain_name.split('-'))
-        additional_lakehouse_name = f"{domain_camel}StagingLakehouse"
+        additional_lakehouse_name = f"SILVER_{domain_camel}_Staging_Lakehouse"
         
         try:
             print_info(f"Creating additional lakehouse: {additional_lakehouse_name}")
@@ -255,7 +254,7 @@ class DomainWorkspaceSetup:
                 workspace_id=self.workspace_id,
                 display_name=additional_lakehouse_name,
                 item_type=FabricItemType.LAKEHOUSE,
-                description=f"Staging lakehouse for {self.domain_name} domain - for temporary/intermediate data"
+                description=f"Staging lakehouse for {self.domain_name} domain (Silver tier - curated/staging data)"
             )
             
             self.created_items.append(lakehouse)

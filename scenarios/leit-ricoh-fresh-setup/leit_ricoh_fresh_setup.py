@@ -26,14 +26,13 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 
-# Add parent directories to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-sys.path.insert(0, str(Path(__file__).parent.parent / "ops" / "scripts"))
+# Add ops/scripts to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "ops" / "scripts"))
 
-from ops.scripts.utilities.workspace_manager import WorkspaceManager, WorkspaceRole
-from ops.scripts.utilities.fabric_item_manager import FabricItemManager, FabricItemType, ItemDefinition, ItemDefinitionPart
-from ops.scripts.utilities.fabric_api import FabricClient
-from ops.scripts.utilities.output import (
+from utilities.workspace_manager import WorkspaceManager, WorkspaceRole
+from utilities.fabric_item_manager import FabricItemManager, FabricItemType, ItemDefinition, ItemDefinitionPart
+from utilities.fabric_api import FabricClient
+from utilities.output import (
     console_success as print_success,
     console_error as print_error,
     console_warning as print_warning,

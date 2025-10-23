@@ -132,6 +132,24 @@ class ConfigDrivenWorkspace:
             print(f"  Display Name: {result.get('displayName', 'N/A')}")
             print(f"  Type: {result.get('type', 'N/A')}\n")
             
+        except ValueError as e:
+            # Workspace already exists - fetch it
+            if "already exists" in str(e):
+                print(f"⚠️  Workspace already exists, retrieving existing workspace...")
+                existing_workspace = self.workspace_mgr.get_workspace_by_name(self.workspace_name)
+                
+                if existing_workspace:
+                    self.workspace_id = existing_workspace.get('id')
+                    print(f"✓ Using existing workspace '{self.workspace_name}'")
+                    print(f"  Workspace ID: {self.workspace_id}")
+                    print(f"  Display Name: {existing_workspace.get('displayName', 'N/A')}")
+                    print(f"  Type: {existing_workspace.get('type', 'N/A')}\n")
+                else:
+                    print(f"❌ Failed to retrieve existing workspace")
+                    raise
+            else:
+                print(f"❌ Failed to create workspace: {str(e)}")
+                raise
         except Exception as e:
             print(f"❌ Failed to create workspace: {str(e)}")
             raise
@@ -143,25 +161,18 @@ class ConfigDrivenWorkspace:
         print("=" * 70)
         print()
         
-        if not self.capacity_id:
-            print("⚠️  No capacity ID provided - Skipping item creation")
-            print("   Trial workspaces cannot create lakehouses/warehouses via API")
-            print("   Rerun with --capacity-id <guid> to create items")
-            print()
-            return
-        
         # Initialize item manager
         item_mgr = FabricItemManager()
         
         try:
-            # Create Lakehouse
-            lakehouse_name = self.config_manager.generate_name("lakehouse", self.environment)
+            # Create Lakehouse with proper naming (BRONZE tier for raw data)
+            lakehouse_name = f"BRONZE_{self.project_name.capitalize()}_Lakehouse"
             print(f"ℹ Creating lakehouse: {lakehouse_name}")
             lakehouse = item_mgr.create_item(
                 workspace_id=self.workspace_id,
                 display_name=lakehouse_name,
                 item_type=FabricItemType.LAKEHOUSE,
-                description=f"{self.project_name.capitalize()} lakehouse - {self.environment.upper()} environment"
+                description=f"{self.project_name.capitalize()} raw data lakehouse - {self.environment.upper()} environment"
             )
             print(f"✓ Created lakehouse: {lakehouse.display_name} (ID: {lakehouse.id})")
         except Exception as e:
