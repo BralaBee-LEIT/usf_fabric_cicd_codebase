@@ -5,10 +5,35 @@
 ---
 
 **Document Information:**
-- **Version:** 1.0
-- **Date:** October 2024
+- **Version:** 2.0
+- **Date:** October 2025
 - **Project:** USF Fabric CI/CD
 - **Repository:** usf-fabric-cicd
+- **New Features:** Git Integration, Naming Validation, Audit Logging
+
+---
+
+## 🎯 What's New in v2.0
+
+### Automated Git Integration
+- Workspaces automatically connect to Git repositories
+- Support for GitHub and Azure DevOps
+- Configurable branch patterns and directory structures
+- Bidirectional sync capabilities
+
+### Naming Standards Enforcement
+- Automatic validation of item names
+- Medallion architecture support (BRONZE/SILVER/GOLD)
+- Ticket-based naming patterns
+- Auto-fix suggestions
+
+### Centralized Audit Logging
+- Complete audit trail in JSONL format
+- Git context capture (commit hash, branch, user)
+- Compliance reporting
+- Event filtering and analytics
+
+**See [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) for detailed API reference.**
 
 ---
 
@@ -19,9 +44,10 @@
 3. [Scenario 1: Config-Driven Workspace](#scenario-1-config-driven-workspace)
 4. [Scenario 2: Domain-Workspace](#scenario-2-domain-workspace)
 5. [Scenario 3: Feature Branch Workflow](#scenario-3-feature-branch-workflow)
-6. [Comparison Matrix](#comparison-matrix)
-7. [Troubleshooting](#troubleshooting)
-8. [Next Steps](#next-steps)
+6. [New Features Usage](#new-features-usage)
+7. [Comparison Matrix](#comparison-matrix)
+8. [Troubleshooting](#troubleshooting)
+9. [Next Steps](#next-steps)
 
 ---
 
@@ -34,20 +60,24 @@
 | Conda/Miniconda | Latest | `conda --version` |
 | Python | 3.9+ | `python --version` |
 | Git | 2.x | `git --version` |
+| pytest | 7.4+ (optional) | `pytest --version` |
 
 ### Required Azure Resources
 
 - Azure Service Principal with Fabric permissions
 - Microsoft Fabric workspace capacity (for lakehouse/warehouse creation)
 - Azure Active Directory access for user management
+- **NEW:** Git repository (GitHub or Azure DevOps) for workspace sync
 
 ### Required Files
 
 ```
 usf-fabric-cicd/
 ├── .env                      # Azure credentials (REQUIRED)
-├── project.config.json       # Naming patterns (for config-driven)
+├── project.config.json       # Naming patterns + Git config (for config-driven)
+├── naming_standards.yaml     # NEW: Item naming patterns
 ├── requirements.txt          # Python dependencies
+├── requirements-test.txt     # NEW: Test dependencies
 └── scenarios/                # Scenario scripts
 ```
 
@@ -612,6 +642,209 @@ python ../../ops/scripts/manage_workspaces.py delete \
 git checkout main
 git branch -d feature/customer_insights/JIRA-12345
 git push origin --delete feature/customer_insights/JIRA-12345
+```
+
+---
+
+## New Features Usage
+
+### 🔄 Git Integration
+
+#### Automatic Git Connection
+When `git_integration.auto_connect_workspaces` is enabled in `project.config.json`, workspaces are automatically connected to Git during provisioning.
+
+**Configuration:**
+```json
+{
+  "git_integration": {
+    "enabled": true,
+    "provider": "GitHub",
+    "organization": "${GIT_ORGANIZATION}",
+    "repository": "${GIT_REPOSITORY}",
+    "auto_connect_workspaces": true,
+    "default_branch": "main",
+    "workspace_directory_pattern": "/data_products/{product_id}"
+  }
+}
+```
+
+**Environment Variables:**
+```bash
+export GIT_ORGANIZATION="your-org"
+export GIT_REPOSITORY="your-repo"
+export GIT_PROJECT="your-project"  # For Azure DevOps only
+```
+
+**Manual Git Connection:**
+```python
+from utilities.fabric_git_connector import get_git_connector
+
+connector = get_git_connector()
+connector.initialize_git_connection(
+    workspace_id="abc-123",
+    git_provider_type="GitHub",
+    organization_name="my-org",
+    repository_name="my-repo",
+    branch_name="main",
+    directory_path="/data_products/customer_insights"
+)
+```
+
+**Commit Changes:**
+```python
+connector.commit_to_git(
+    workspace_id="abc-123",
+    comment="Updated lakehouse schema",
+    commit_mode="All"
+)
+```
+
+**Update from Git:**
+```python
+connector.update_from_git(
+    workspace_id="abc-123",
+    conflict_resolution="Workspace"  # Prefer workspace version
+)
+```
+
+### ✅ Naming Validation
+
+#### Automatic Validation
+Item names are automatically validated when using `FabricItemManager` with `enable_validation=True` (default).
+
+**Medallion Architecture:**
+```python
+# Valid names
+"BRONZE_CustomerData_Lakehouse"
+"SILVER_CleanedOrders_Lakehouse"
+"GOLD_AnalyticsReady_Lakehouse"
+
+# Invalid (missing layer prefix)
+"CustomerData_Lakehouse"  # ❌ Missing BRONZE/SILVER/GOLD
+```
+
+**Sequential Notebooks:**
+```python
+# Valid names
+"01_DataIngestion_Notebook"
+"02_DataTransformation_Notebook"
+"10_ValidationChecks_Notebook"
+
+# Invalid
+"1_DataIngestion_Notebook"  # ❌ Missing leading zero
+"Ingestion_Notebook"  # ❌ Missing sequence number
+```
+
+**Ticket-Based Naming:**
+```python
+# Valid names
+"JIRA12345_CustomerAnalytics_Lakehouse"
+"ADO-5678_SalesReport_Report"
+
+# Invalid
+"CustomerAnalytics_Lakehouse"  # ❌ Missing ticket ID
+```
+
+**Manual Validation:**
+```python
+from utilities.item_naming_validator import validate_item_name
+
+result = validate_item_name(
+    item_name="BRONZE_CustomerData_Lakehouse",
+    item_type="Lakehouse"
+)
+
+if not result.is_valid:
+    print(f"Errors: {result.errors}")
+    print(f"Suggestions: {result.suggestions}")
+```
+
+**Get Name Suggestions:**
+```python
+from utilities.item_naming_validator import ItemNamingValidator
+
+validator = ItemNamingValidator()
+suggested_name = validator.suggest_name(
+    base_name="CustomerData",
+    item_type="Lakehouse",
+    layer="BRONZE",
+    ticket_id="JIRA-12345"
+)
+# Returns: "JIRA12345_BRONZE_CustomerData_Lakehouse"
+```
+
+### 📊 Audit Logging
+
+#### Automatic Logging
+All workspace and item operations are automatically logged when `enable_audit_logging=True` (default in `WorkspaceManager` and `FabricItemManager`).
+
+**View Audit Logs:**
+```bash
+# View recent events
+tail -20 audit/audit_trail.jsonl | jq .
+
+# Filter by event type
+cat audit/audit_trail.jsonl | jq 'select(.event_type=="workspace_created")'
+
+# Filter by workspace
+cat audit/audit_trail.jsonl | jq 'select(.workspace_id=="abc-123")'
+
+# Filter by date
+cat audit/audit_trail.jsonl | jq 'select(.timestamp >= "2025-10-01" and .timestamp <= "2025-10-31")'
+```
+
+**Generate Compliance Report:**
+```python
+from utilities.audit_logger import get_audit_logger
+
+logger = get_audit_logger()
+report = logger.generate_compliance_report(
+    start_date="2025-01-01",
+    end_date="2025-12-31"
+)
+
+print(f"Total events: {report['total_events']}")
+print(f"Workspaces created: {report['event_breakdown'].get('workspace_created', 0)}")
+print(f"Validation failures: {report['summary']['validation_failures']}")
+```
+
+**Manual Logging:**
+```python
+from utilities.audit_logger import get_audit_logger
+
+logger = get_audit_logger()
+
+# Log custom event
+logger.log_workspace_creation(
+    workspace_id="ws-123",
+    workspace_name="Analytics [DEV]",
+    product_id="analytics",
+    environment="dev"
+)
+
+# Read events
+events = logger.read_events(
+    event_type="workspace_created",
+    start_date="2025-10-01",
+    end_date="2025-10-31"
+)
+```
+
+**Audit Log Format:**
+```json
+{
+  "timestamp": "2025-10-23T10:30:00Z",
+  "event_type": "workspace_created",
+  "workspace_id": "abc-123",
+  "workspace_name": "Customer Insights [DEV]",
+  "product_id": "customer_insights",
+  "environment": "dev",
+  "git_commit": "a25cd38",
+  "git_branch": "feature/git-integration-automation",
+  "git_user": "developer@example.com",
+  "capacity_id": "cap-456",
+  "description": "DEV workspace for Customer Insights"
+}
 ```
 
 ---
