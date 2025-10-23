@@ -118,6 +118,8 @@ great_expectations/.gitignore
 logs/
 temp/
 tmp/
+.onboarding_logs/
+audit/
 
 # ============================================================================
 # Deployment Artifacts
