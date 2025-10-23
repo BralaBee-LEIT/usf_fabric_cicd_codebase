@@ -79,22 +79,23 @@ The generated name is used to create the workspace with environment-specific set
    AZURE_CLIENT_SECRET=your-secret
    ```
 
-3. **Fabric Capacity ID** (required for lakehouse/warehouse creation):
+3. **Fabric Capacity ID** (optional but recommended):
    - Get your capacity GUID from Fabric portal
-   - Without capacity ID, workspace uses Trial (items cannot be created via API)
+   - Without capacity ID, workspace uses Trial capacity
+   - Trial capacity has limitations: some items (Lakehouses, Warehouses) may fail with 403 errors
    - See "Getting Your Capacity ID" section below
 
 ### Basic Usage
 
 ```bash
-# Create dev workspace with capacity (enables lakehouse creation)
+# Create dev workspace with capacity (recommended for production use)
 python scenarios/config-driven-workspace/config_driven_workspace.py \
   --project analytics \
   --environment dev \
   --capacity-id <your-capacity-guid> \
   --skip-user-prompt
 
-# Create without capacity (workspace only, no items)
+# Create without capacity (workspace created, item creation may fail on Trial)
 python scenarios/config-driven-workspace/config_driven_workspace.py \
   --project analytics \
   --environment dev \
@@ -308,20 +309,23 @@ The workspace with generated name already exists. Either:
 - Use a different environment
 - Delete the existing workspace first
 
-### "FeatureNotAvailable" or "403 Forbidden" (Lakehouse creation)
-**Cause:** Workspace is using Trial capacity or capacity ID is missing/invalid
+### "FeatureNotAvailable" or "403 Forbidden" (Item creation)
+**Cause:** Trial capacity limitations or insufficient permissions
 
-**Solution:**
-1. **Get your capacity ID** (see "Getting Your Capacity ID" above)
-2. **Rerun with --capacity-id**:
-   ```bash
-   python config_driven_workspace.py --project myproject --environment dev \
-     --capacity-id <your-capacity-guid>
-   ```
-3. **Verify service principal has permissions** on the capacity
-4. **Check capacity is active** and not paused
+**Solutions:**
+1. **For Production Use - Assign Capacity:**
+   - Get your capacity ID (see "Getting Your Capacity ID" above)
+   - Rerun with `--capacity-id <your-capacity-guid>`
+   - Verify service principal has permissions on the capacity
+   - Check capacity is active and not paused
 
-Without --capacity-id, only the workspace is created (no lakehouses/warehouses).
+2. **For Development/Testing - Expected Behavior:**
+   - Trial workspaces have API limitations for certain item types
+   - Workspace is created successfully
+   - Item creation attempts but may fail gracefully
+   - You can create items manually through the Fabric portal
+
+**Note:** The scenario creates workspaces and attempts item creation. On Trial capacity, some items (Lakehouses, Warehouses, Semantic Models) may fail with 403 - this is expected behavior, not a bug.
 
 ### "Invalid choice for environment"
 Only `dev`, `test`, `prod` are configured by default. To add more environments, edit `project.config.json`:
