@@ -2,6 +2,8 @@
 
 **The most robust CI/CD setup for Microsoft Fabric with GitHub** - A production-ready, configurable, and reusable CI/CD framework for Microsoft Fabric with comprehensive data governance, quality validation, and multi-environment deployment capabilities.
 
+> **📝 Update (Oct 23, 2025):** All scenarios tested and updated. See [scenarios/SCENARIO_TEST_REPORT.md](scenarios/SCENARIO_TEST_REPORT.md) for details. Key fixes: import paths standardized, lakehouse naming now follows BRONZE/SILVER/GOLD convention, Trial capacity behavior properly documented.
+
 ## ✨ New Features (v2.0)
 
 ### 🔄 Automated Git Integration

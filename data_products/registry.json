@@ -53,7 +53,7 @@
       "audit_reference": "CUSTOMER-INSIGHTS-ONBOARDING",
       "dev_workspace_id": "fc0f2e9d-dfee-4d50-9225-6f001c45abb6",
       "feature_workspaces": {
-        "FINAL-V2-TEST": "014f576c-a26e-4913-87e3-b420721ed9fe"
+        "TEST-001": "cf8fe4b2-fec4-4392-8863-aa262356085d"
       },
       "git": {
         "repository": "usf_fabric_cicd_codebase",
