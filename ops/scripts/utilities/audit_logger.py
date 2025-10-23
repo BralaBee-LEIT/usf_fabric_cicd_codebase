@@ -506,8 +506,9 @@ class AuditLogger:
     def log_onboarding_start(
         self,
         product_id: str,
-        product_name: str,
-        feature_id: Optional[str] = None
+        product_name: str = None,
+        feature_id: Optional[str] = None,
+        descriptor_path: Optional[str] = None
     ) -> None:
         """Log onboarding start event"""
         self._log_event(
@@ -515,15 +516,21 @@ class AuditLogger:
             {
                 "product_id": product_id,
                 "product_name": product_name,
-                "feature_id": feature_id
+                "feature_id": feature_id,
+                "descriptor_path": descriptor_path
             }
         )
+    
+    # Alias for backward compatibility
+    def log_onboarding_started(self, **kwargs):
+        """Alias for log_onboarding_start"""
+        return self.log_onboarding_start(**kwargs)
     
     def log_onboarding_completion(
         self,
         product_id: str,
-        workspace_id: str,
-        items_created: int,
+        workspace_id: str = None,
+        items_created: int = None,
         duration_seconds: Optional[float] = None
     ) -> None:
         """Log onboarding completion event"""
@@ -536,6 +543,11 @@ class AuditLogger:
                 "duration_seconds": duration_seconds
             }
         )
+    
+    # Alias for backward compatibility
+    def log_onboarding_completed(self, **kwargs):
+        """Alias for log_onboarding_completion"""
+        return self.log_onboarding_completion(**kwargs)
     
     def log_onboarding_failure(
         self,

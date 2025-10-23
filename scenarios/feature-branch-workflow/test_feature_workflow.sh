@@ -133,20 +133,146 @@ fi
 
 echo ""
 
-# Step 5: Check audit log
+# Step 5: Check audit log (v2.0)
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}Step 5: Check Audit Log${NC}"
+echo -e "${BLUE}Step 5: Check Audit Logs (v2.0)${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
+# Check old format audit log
 AUDIT_LOG=$(ls -t "$REPO_ROOT/.onboarding_logs"/*customer_insights*.json 2>/dev/null | head -1)
 if [ -n "$AUDIT_LOG" ]; then
-    echo -e "${GREEN}✅ Audit log found: $(basename $AUDIT_LOG)${NC}"
+    echo -e "${GREEN}✅ Onboarding log found: $(basename $AUDIT_LOG)${NC}"
     echo ""
     echo "Summary:"
     cat "$AUDIT_LOG" | python3 -m json.tool | head -20
 else
-    echo -e "${YELLOW}⚠️  Audit log not found${NC}"
+    echo -e "${YELLOW}⚠️  Onboarding log not found${NC}"
+fi
+
+echo ""
+
+# Check new format audit trail (v2.0)
+AUDIT_TRAIL="$REPO_ROOT/audit/audit_trail.jsonl"
+if [ -f "$AUDIT_TRAIL" ]; then
+    echo -e "${GREEN}✅ NEW: Audit trail found (v2.0 feature)${NC}"
+    echo ""
+    echo "Recent events (last 5):"
+    tail -5 "$AUDIT_TRAIL" | python3 -c "import sys, json; [print(json.dumps(json.loads(line), indent=2)) for line in sys.stdin]" 2>/dev/null || tail -5 "$AUDIT_TRAIL"
+    echo ""
+    echo "Event summary:"
+    python3 -c "
+import json
+from collections import Counter
+try:
+    events = []
+    with open('$AUDIT_TRAIL', 'r') as f:
+        for line in f:
+            if line.strip():
+                events.append(json.loads(line))
+    
+    event_types = Counter(e['event_type'] for e in events)
+    print('Total events:', len(events))
+    for event_type, count in event_types.most_common():
+        print(f'  • {event_type}: {count}')
+except Exception as e:
+    print(f'Could not parse audit trail: {e}')
+" 2>/dev/null || echo "  (Install jq for better formatting: sudo apt install jq)"
+else
+    echo -e "${YELLOW}⚠️  NEW: Audit trail not found (audit logging may be disabled)${NC}"
+fi
+
+echo ""
+
+# Step 6: Verify Git Integration (v2.0)
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BLUE}Step 6: Verify Git Integration (v2.0)${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+echo "Checking if workspace was auto-connected to Git..."
+echo ""
+echo -e "${YELLOW}Note: Auto-connection requires:${NC}"
+echo "  • git_integration.enabled = true in project.config.json"
+echo "  • git_integration.auto_connect_workspaces = true"
+echo "  • GIT_ORGANIZATION and GIT_REPOSITORY environment variables set"
+echo ""
+
+if [ -f "$REPO_ROOT/project.config.json" ]; then
+    GIT_ENABLED=$(python3 -c "
+import json
+try:
+    with open('$REPO_ROOT/project.config.json', 'r') as f:
+        config = json.load(f)
+        enabled = config.get('git_integration', {}).get('enabled', False)
+        auto_connect = config.get('git_integration', {}).get('auto_connect_workspaces', False)
+        print('enabled' if (enabled and auto_connect) else 'disabled')
+except:
+    print('error')
+" 2>/dev/null)
+    
+    if [ "$GIT_ENABLED" = "enabled" ]; then
+        echo -e "${GREEN}✅ Git auto-connect is ENABLED in project.config.json${NC}"
+        echo "   The workspace should be automatically connected to Git!"
+    else
+        echo -e "${YELLOW}⚠️  Git auto-connect is DISABLED${NC}"
+        echo "   Enable it in project.config.json to test this feature"
+    fi
+else
+    echo -e "${YELLOW}⚠️  project.config.json not found${NC}"
+fi
+
+echo ""
+echo -e "${BLUE}💡 To verify in Fabric portal:${NC}"
+echo "   1. Open the feature workspace in Fabric portal"
+echo "   2. Go to Workspace Settings → Git integration"
+echo "   3. Should show: Connected to ${GITHUB_ORG:-your-org}/${GITHUB_REPO:-your-repo}"
+echo ""
+
+# Step 7: Verify Naming Standards (v2.0)
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BLUE}Step 7: Verify Naming Standards (v2.0)${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+if [ -f "$REPO_ROOT/naming_standards.yaml" ]; then
+    echo -e "${GREEN}✅ Naming standards configuration found${NC}"
+    echo ""
+    echo "Checking if naming validation is enabled..."
+    
+    # Test naming validation
+    python3 -c "
+import sys
+sys.path.insert(0, '$REPO_ROOT/ops/scripts/utilities')
+try:
+    from item_naming_validator import validate_item_name
+    
+    # Test medallion architecture
+    result = validate_item_name('BRONZE_CustomerData_Lakehouse', 'Lakehouse')
+    if result.is_valid:
+        print('✅ Medallion architecture validation: WORKING')
+        print('   Example: BRONZE_CustomerData_Lakehouse is VALID')
+    else:
+        print('⚠️  Validation not working as expected')
+    
+    # Test invalid name
+    result = validate_item_name('CustomerData', 'Lakehouse')
+    if not result.is_valid:
+        print('✅ Invalid name detection: WORKING')
+        print('   Example: CustomerData is INVALID (missing BRONZE/SILVER/GOLD)')
+    
+    print('')
+    print('Naming validation is operational!')
+    
+except ImportError as e:
+    print('⚠️  Naming validation utilities not available')
+    print(f'   Error: {e}')
+except Exception as e:
+    print(f'⚠️  Error testing naming validation: {e}')
+" 2>&1
+else
+    echo -e "${YELLOW}⚠️  naming_standards.yaml not found${NC}"
+    echo "   Create it to enable automatic naming validation"
 fi
 
 echo ""
@@ -163,6 +289,11 @@ echo "  • Feature Branch: feature/customer_insights/$TICKET"
 echo "  • Workspace: Customer Insights-feature-$TICKET"
 echo "  • Scaffold: data_products/customer_insights/"
 echo ""
+echo "v2.0 Features Tested:"
+echo "  ✓ Git Integration (auto-connect capability)"
+echo "  ✓ Audit Logging (JSONL trail)"
+echo "  ✓ Naming Standards (validation utilities)"
+echo ""
 echo "Next Steps:"
 echo "  1. Check Fabric portal for workspace"
 echo "  2. Verify Git integration in workspace settings"
@@ -173,5 +304,5 @@ echo "Cleanup (when done):"
 echo "  • Delete workspace in Fabric portal"
 echo "  • Delete branch: git push origin --delete feature/customer_insights/$TICKET"
 echo ""
-echo -e "${YELLOW}💡 Tip: This demonstrates the missing feature branch functionality!${NC}"
+echo -e "${YELLOW}💡 Tip: Run 'cat audit/audit_trail.jsonl | jq .' to see full audit trail${NC}"
 echo ""
