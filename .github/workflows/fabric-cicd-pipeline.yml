@@ -60,7 +60,7 @@ jobs:
         run: |
           python ops/scripts/validate_data_contracts.py \
             --contracts-dir governance/data_contracts \
-            --output-format github
+            --output-format json
 
       - name: Validate Fabric artifacts
         run: |
