@@ -1,0 +1,22 @@
+# Product Descriptor for Feature Branch Workflow Scenario
+# This file demonstrates User Story 1: Automate Workspace for New Data Product
+
+product:
+  name: "Customer Insights"
+  owner_email: "data-team@company.com"
+  domain: "Customer Analytics"
+
+environments:
+  dev:
+    enabled: true
+    capacity_type: "trial"
+    description: "Development workspace for Customer Insights"
+
+git:
+  organization: "${GITHUB_ORG}"
+  repository: "${GITHUB_REPO}"
+  feature_prefix: "feature"
+  directory: "data_products/customer_insights"
+
+automation:
+  audit_reference: "TEST-SCENARIO"

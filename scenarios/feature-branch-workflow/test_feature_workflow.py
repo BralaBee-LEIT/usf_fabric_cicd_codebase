@@ -231,7 +231,7 @@ def main():
     
     # Step 1: Dry run
     print_header("Step 1: Dry Run (Preview Actions)")
-    cmd = f"python3 {onboard_script} {descriptor} --feature {ticket} --dry-run"
+    cmd = f'python3 "{onboard_script}" "{descriptor}" --feature {ticket} --dry-run'
     print(f"Command: {cmd}\n")
     
     if not run_command(cmd, "Dry run"):
@@ -248,7 +248,7 @@ def main():
     print("  • Scaffold: data_products/customer_insights/")
     print()
     
-    cmd = f"python3 {onboard_script} {descriptor} --feature {ticket}"
+    cmd = f'python3 "{onboard_script}" "{descriptor}" --feature {ticket}'
     print(f"Command: {cmd}\n")
     
     if not run_command(cmd, "Feature environment creation"):
