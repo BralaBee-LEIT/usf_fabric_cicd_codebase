@@ -1,0 +1,80 @@
+# Automated Deployment Scenario - Product Configuration
+# This demonstrates a fully automated end-to-end deployment
+
+product:
+  name: "Sales Analytics"
+  description: "Automated sales analytics data product with full CI/CD"
+  owner_email: "${DATA_OWNER_EMAIL}"
+  technical_lead: "${TECHNICAL_LEAD_EMAIL}"
+  domain: "Sales & Revenue"
+  
+environments:
+  dev:
+    enabled: true
+    capacity_type: "trial"
+    description: "Development environment for Sales Analytics"
+    auto_deploy: true
+    
+git:
+  enabled: true
+  organization: "${GITHUB_ORG}"
+  repository: "${GITHUB_REPO}"
+  branch: "main"
+  directory: "data_products/sales_analytics"
+  auto_connect: true
+  auto_commit: true
+  
+workspace:
+  # Workspace will be named using project.config.json pattern
+  # Example: {prefix}-sales-analytics-dev
+  create_items: true
+  validate_naming: true
+  
+items:
+  lakehouses:
+    - name: "BRONZE_SalesData_Lakehouse"
+      description: "Raw sales data ingestion layer"
+      
+    - name: "SILVER_SalesData_Lakehouse"
+      description: "Cleaned and transformed sales data"
+      
+    - name: "GOLD_SalesAnalytics_Lakehouse"
+      description: "Analytics-ready sales data"
+      
+  notebooks:
+    - name: "01_IngestSalesData_Notebook"
+      description: "Ingest raw sales data from sources"
+      language: "python"
+      
+    - name: "02_TransformSales_Notebook"
+      description: "Clean and transform sales data"
+      language: "python"
+      
+    - name: "03_ValidateData_Notebook"
+      description: "Data quality validation"
+      language: "python"
+      
+users:
+  # Users will be added with specified roles
+  - email: "${DATA_OWNER_EMAIL}"
+    role: "Admin"
+    principal_type: "User"
+    
+  - email: "${TECHNICAL_LEAD_EMAIL}"
+    role: "Member"
+    principal_type: "User"
+    
+naming:
+  validate: true
+  auto_fix: false
+  strict_mode: true
+  
+audit:
+  enabled: true
+  log_all_operations: true
+  reference: "AUTOMATED-SCENARIO"
+  
+deployment:
+  wait_for_completion: true
+  verify_items_created: true
+  rollback_on_error: false
