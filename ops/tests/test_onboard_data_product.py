@@ -27,8 +27,13 @@ def test_parse_capacity_type_variants():
 
     assert onboarding.parse_capacity_type(None) == onboarding.CapacityType.TRIAL
     assert onboarding.parse_capacity_type("trial") == onboarding.CapacityType.TRIAL
-    assert onboarding.parse_capacity_type("Premium-P1") == onboarding.CapacityType.PREMIUM_P1
-    assert onboarding.parse_capacity_type("fabric_f8") == onboarding.CapacityType.FABRIC_F8
+    assert (
+        onboarding.parse_capacity_type("Premium-P1")
+        == onboarding.CapacityType.PREMIUM_P1
+    )
+    assert (
+        onboarding.parse_capacity_type("fabric_f8") == onboarding.CapacityType.FABRIC_F8
+    )
 
 
 def test_parse_capacity_type_invalid_value():
@@ -42,7 +47,9 @@ def test_load_env_file_sets_missing_variables(tmp_path, monkeypatch):
     """Environment loader should populate unset variables from dotenv files."""
 
     env_file = tmp_path / ".env.test"
-    env_file.write_text("NEW_VAR=value\nEXISTING_VAR=should_not_override\n", encoding="utf-8")
+    env_file.write_text(
+        "NEW_VAR=value\nEXISTING_VAR=should_not_override\n", encoding="utf-8"
+    )
 
     monkeypatch.delenv("NEW_VAR", raising=False)
     monkeypatch.setenv("EXISTING_VAR", "original")
@@ -100,7 +107,10 @@ environments:
     result = onboarder.run()
 
     assert result.product.slug == "test_fabric_product"
-    assert result.dev_workspace == {"displayName": "Test Fabric Product [DEV]", "id": None}
+    assert result.dev_workspace == {
+        "displayName": "Test Fabric Product [DEV]",
+        "id": None,
+    }
     assert result.dev_workspace_created is False
     assert result.feature_workspace is None
     assert result.registry_updated is False
@@ -115,16 +125,16 @@ environments:
 
 
 def test_onboarder_run_writes_registry_and_audit(monkeypatch, tmp_path):
-        """Executing a non-dry-run onboarding should persist registry and audit logs."""
+    """Executing a non-dry-run onboarding should persist registry and audit logs."""
 
-        fake_repo = tmp_path / "repo"
-        templates_dir = fake_repo / "data_products" / "templates" / "base_product"
-        templates_dir.mkdir(parents=True)
-        (templates_dir / "README.md").write_text("Template README", encoding="utf-8")
+    fake_repo = tmp_path / "repo"
+    templates_dir = fake_repo / "data_products" / "templates" / "base_product"
+    templates_dir.mkdir(parents=True)
+    (templates_dir / "README.md").write_text("Template README", encoding="utf-8")
 
-        descriptor_path = fake_repo / "descriptor.yaml"
-        descriptor_path.write_text(
-                """
+    descriptor_path = fake_repo / "descriptor.yaml"
+    descriptor_path.write_text(
+        """
 product:
     name: Another Product
     owner_email: owner@example.com
@@ -138,60 +148,60 @@ environments:
         enabled: true
         capacity_type: trial
                 """.strip()
-                + "\n",
-                encoding="utf-8",
-        )
+        + "\n",
+        encoding="utf-8",
+    )
 
-        class DummyConfigManager:
-                def __init__(self, *_args, **_kwargs) -> None:
-                        pass
+    class DummyConfigManager:
+        def __init__(self, *_args, **_kwargs) -> None:
+            pass
 
-                def get_github_config(self) -> dict:
-                        return {"organization": "dummy-org", "repository": "dummy-repo"}
+        def get_github_config(self) -> dict:
+            return {"organization": "dummy-org", "repository": "dummy-repo"}
 
-        class DummyWorkspaceManager:
-                def __init__(self, *_args, **_kwargs) -> None:
-                        raise AssertionError(
-                                "WorkspaceManager should not be instantiated when skip_workspaces=True"
-                        )
+    class DummyWorkspaceManager:
+        def __init__(self, *_args, **_kwargs) -> None:
+            raise AssertionError(
+                "WorkspaceManager should not be instantiated when skip_workspaces=True"
+            )
 
-        monkeypatch.setattr(onboarding, "repository_root", lambda: fake_repo)
-        monkeypatch.setattr(onboarding, "ConfigManager", DummyConfigManager)
-        monkeypatch.setattr(onboarding, "WorkspaceManager", DummyWorkspaceManager)
+    monkeypatch.setattr(onboarding, "repository_root", lambda: fake_repo)
+    monkeypatch.setattr(onboarding, "ConfigManager", DummyConfigManager)
+    monkeypatch.setattr(onboarding, "WorkspaceManager", DummyWorkspaceManager)
 
-        args = onboarding.OnboardingArguments(
-                descriptor_path=descriptor_path,
-                feature_ticket=None,
-                dry_run=False,
-                skip_git=True,
-                skip_workspaces=True,
-                skip_scaffold=False,
-                json_output=False,
-        )
+    args = onboarding.OnboardingArguments(
+        descriptor_path=descriptor_path,
+        feature_ticket=None,
+        dry_run=False,
+        skip_git=True,
+        skip_workspaces=True,
+        skip_scaffold=False,
+        json_output=False,
+    )
 
-        onboarder = onboarding.DataProductOnboarder(args)
-        result = onboarder.run()
+    onboarder = onboarding.DataProductOnboarder(args)
+    result = onboarder.run()
 
-        product_dir = fake_repo / "data_products" / "another_product"
-        assert result.scaffold_path == product_dir
-        assert product_dir.exists()
-        copied_readme = product_dir / "README.md"
-        assert copied_readme.exists()
-        assert copied_readme.read_text(encoding="utf-8") == "Template README"
+    product_dir = fake_repo / "data_products" / "another_product"
+    assert result.scaffold_path == product_dir
+    assert product_dir.exists()
+    copied_readme = product_dir / "README.md"
+    assert copied_readme.exists()
+    assert copied_readme.read_text(encoding="utf-8") == "Template README"
 
-        registry_path = fake_repo / "data_products" / "registry.json"
-        assert registry_path.exists()
-        registry = json.loads(registry_path.read_text(encoding="utf-8"))
-        assert registry["products"][0]["slug"] == "another_product"
-        assert registry["products"][0]["owner_email"] == "owner@example.com"
+    registry_path = fake_repo / "data_products" / "registry.json"
+    assert registry_path.exists()
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    assert registry["products"][0]["slug"] == "another_product"
+    assert registry["products"][0]["owner_email"] == "owner@example.com"
 
-        assert result.audit_log_path and result.audit_log_path.exists()
-        audit_payload = json.loads(result.audit_log_path.read_text(encoding="utf-8"))
-        assert audit_payload["product"]["slug"] == "another_product"
-        assert audit_payload["registry_updated"] is True
+    assert result.audit_log_path and result.audit_log_path.exists()
+    audit_payload = json.loads(result.audit_log_path.read_text(encoding="utf-8"))
+    assert audit_payload["product"]["slug"] == "another_product"
+    assert audit_payload["registry_updated"] is True
 
-        assert result.registry_updated is True
-        assert result.dev_workspace is None
+    assert result.registry_updated is True
+    assert result.dev_workspace is None
 
 
 def test_ensure_git_branch_existing_branch(monkeypatch, tmp_path):
@@ -243,7 +253,11 @@ def test_ensure_git_branch_existing_branch(monkeypatch, tmp_path):
         calls.append(("commit", [str(p.relative_to(repo)) for p in paths], message))
 
     monkeypatch.setattr(onboarding, "git_checkout", fake_git_checkout)
-    monkeypatch.setattr(onboarding, "git_checkout_new", lambda repo, branch, base: calls.append(("checkout_new", branch, base)))
+    monkeypatch.setattr(
+        onboarding,
+        "git_checkout_new",
+        lambda repo, branch, base: calls.append(("checkout_new", branch, base)),
+    )
     monkeypatch.setattr(onboarding, "git_stage_and_commit", fake_git_stage_and_commit)
 
     branch_name, created = onboarder.ensure_git_branch(product, result)
@@ -284,7 +298,9 @@ def test_ensure_git_branch_creates_branch(monkeypatch, tmp_path):
         json_output=False,
     )
 
-    args.descriptor_path.write_text("product:\n  name: Branch Product\n", encoding="utf-8")
+    args.descriptor_path.write_text(
+        "product:\n  name: Branch Product\n", encoding="utf-8"
+    )
 
     onboarder = onboarding.DataProductOnboarder(args)
     product = onboarder.load_descriptor()
@@ -365,7 +381,9 @@ environments:
         def get_workspace_by_name(self, name):
             return None
 
-        def create_workspace(self, name, description=None, capacity_id=None, capacity_type=None):
+        def create_workspace(
+            self, name, description=None, capacity_id=None, capacity_type=None
+        ):
             return {
                 "id": f"ws-{name.replace(' ', '-').lower()}",
                 "displayName": name,
@@ -416,7 +434,9 @@ environments:
 
     # Mock the entire git workflow to avoid Git integration complexity
     def mock_ensure_git_branch(self, product, result):
-        branch_name = f"{product.slug}/{product.git.feature_prefix}/{args.feature_ticket}"
+        branch_name = (
+            f"{product.slug}/{product.git.feature_prefix}/{args.feature_ticket}"
+        )
         git_operations.append(("branch_created", branch_name))
         return branch_name, True
 
@@ -428,7 +448,9 @@ environments:
 
     # Mock connect_feature_workspace_to_git to avoid MSAL auth
     def mock_connect(self, product, workspace_id, workspace_name, branch_name):
-        git_operations.append(("connected_to_git", workspace_id, workspace_name, branch_name))
+        git_operations.append(
+            ("connected_to_git", workspace_id, workspace_name, branch_name)
+        )
 
     monkeypatch.setattr(
         onboarding.DataProductOnboarder,
@@ -450,7 +472,10 @@ environments:
 
     # Verify feature workspace created
     assert result.feature_workspace is not None
-    assert result.feature_workspace["displayName"] == "Full Workflow Product [Feature TEST-100]"
+    assert (
+        result.feature_workspace["displayName"]
+        == "Full Workflow Product [Feature TEST-100]"
+    )
     assert result.feature_workspace_created is True
 
     # Verify git branch created (via mock)

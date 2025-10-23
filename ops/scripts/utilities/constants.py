@@ -4,6 +4,7 @@ Global constants for Microsoft Fabric CI/CD solution
 This module centralizes all configuration constants, URLs, and magic numbers
 to improve maintainability and allow environment-specific configuration.
 """
+
 import os
 
 # ============================================================================
@@ -12,30 +13,25 @@ import os
 
 # Azure Active Directory
 AZURE_LOGIN_BASE_URL = os.getenv(
-    "AZURE_LOGIN_BASE_URL",
-    "https://login.microsoftonline.com"
+    "AZURE_LOGIN_BASE_URL", "https://login.microsoftonline.com"
 )
 
 # Microsoft Fabric API
 FABRIC_API_BASE_URL = os.getenv(
-    "FABRIC_API_BASE_URL",
-    "https://api.fabric.microsoft.com/v1"
+    "FABRIC_API_BASE_URL", "https://api.fabric.microsoft.com/v1"
 )
 
 FABRIC_API_SCOPE = os.getenv(
-    "FABRIC_API_SCOPE",
-    "https://api.fabric.microsoft.com/.default"
+    "FABRIC_API_SCOPE", "https://api.fabric.microsoft.com/.default"
 )
 
 # Power BI API
 POWERBI_API_BASE_URL = os.getenv(
-    "POWERBI_API_BASE_URL",
-    "https://api.powerbi.com/v1.0/myorg"
+    "POWERBI_API_BASE_URL", "https://api.powerbi.com/v1.0/myorg"
 )
 
 POWERBI_API_SCOPE = os.getenv(
-    "POWERBI_API_SCOPE",
-    "https://analysis.windows.net/powerbi/api/.default"
+    "POWERBI_API_SCOPE", "https://analysis.windows.net/powerbi/api/.default"
 )
 
 # ============================================================================
@@ -51,10 +47,7 @@ AZURE_PURVIEW_SUFFIX = ".purview.azure.com"
 # Purview Configuration
 # ============================================================================
 
-PURVIEW_ENDPOINT = os.getenv(
-    "PURVIEW_ENDPOINT",
-    "https://usfpurview.purview.azure.com"
-)
+PURVIEW_ENDPOINT = os.getenv("PURVIEW_ENDPOINT", "https://usfpurview.purview.azure.com")
 
 PURVIEW_API_VERSION = os.getenv("PURVIEW_API_VERSION", "2022-07-01-preview")
 
@@ -118,10 +111,10 @@ SQL_EXTENSIONS = [".sql"]
 # ============================================================================
 
 # Email validation pattern
-EMAIL_PATTERN = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+EMAIL_PATTERN = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
 # Dataset naming pattern
-DATASET_NAME_PATTERN = r'^[a-z]+\.[a-z_]+$'
+DATASET_NAME_PATTERN = r"^[a-z]+\.[a-z_]+$"
 
 # Valid data quality check types
 VALID_DQ_CHECK_TYPES = [
@@ -134,7 +127,7 @@ VALID_DQ_CHECK_TYPES = [
     "freshness",
     "volume",
     "distribution",
-    "referential_integrity"
+    "referential_integrity",
 ]
 
 # Valid severity levels
@@ -155,11 +148,11 @@ SECRET_PATTERNS = [
 
 # SQL injection patterns
 SQL_INJECTION_PATTERNS = [
-    r'(\bDROP\b|\bDELETE\b|\bTRUNCATE\b)',
-    r'(--|\#|\/\*)',
-    r'(\bOR\b\s+[\w\d]+\s*=\s*[\w\d]+)',
-    r'(\bUNION\b.*\bSELECT\b)',
-    r'(\bEXEC\b|\bEXECUTE\b)',
+    r"(\bDROP\b|\bDELETE\b|\bTRUNCATE\b)",
+    r"(--|\#|\/\*)",
+    r"(\bOR\b\s+[\w\d]+\s*=\s*[\w\d]+)",
+    r"(\bUNION\b.*\bSELECT\b)",
+    r"(\bEXEC\b|\bEXECUTE\b)",
 ]
 
 # Maximum allowed path traversal levels
@@ -188,8 +181,8 @@ LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # Default thresholds (can be overridden in DQ rules)
 DEFAULT_COMPLETENESS_THRESHOLD = 0.95  # 95%
-DEFAULT_UNIQUENESS_THRESHOLD = 0.99    # 99%
-DEFAULT_VALIDITY_THRESHOLD = 0.98      # 98%
+DEFAULT_UNIQUENESS_THRESHOLD = 0.99  # 99%
+DEFAULT_VALIDITY_THRESHOLD = 0.98  # 98%
 
 # ============================================================================
 # Deployment Configuration
@@ -202,7 +195,7 @@ DEPLOYMENT_MODE_ROLLBACK = "rollback"
 VALID_DEPLOYMENT_MODES = [
     DEPLOYMENT_MODE_VALIDATE,
     DEPLOYMENT_MODE_DEPLOY,
-    DEPLOYMENT_MODE_ROLLBACK
+    DEPLOYMENT_MODE_ROLLBACK,
 ]
 
 # Valid environments
@@ -229,9 +222,9 @@ ITEM_CACHE_SIZE = 256
 TOKEN_CACHE_SIZE = 1
 
 # Cache TTL (in seconds)
-CACHE_TTL_SHORT = 300   # 5 minutes
+CACHE_TTL_SHORT = 300  # 5 minutes
 CACHE_TTL_MEDIUM = 1800  # 30 minutes
-CACHE_TTL_LONG = 3600    # 1 hour
+CACHE_TTL_LONG = 3600  # 1 hour
 
 # ============================================================================
 # Error Messages
@@ -262,7 +255,9 @@ SUCCESS_CONFIG_LOADED = "✅ Configuration loaded successfully"
 
 ENABLE_ROLLBACK = os.getenv("ENABLE_ROLLBACK", "true").lower() == "true"
 ENABLE_CACHING = os.getenv("ENABLE_CACHING", "true").lower() == "true"
-ENABLE_SECURITY_VALIDATION = os.getenv("ENABLE_SECURITY_VALIDATION", "true").lower() == "true"
+ENABLE_SECURITY_VALIDATION = (
+    os.getenv("ENABLE_SECURITY_VALIDATION", "true").lower() == "true"
+)
 ENABLE_VERBOSE_LOGGING = os.getenv("ENABLE_VERBOSE_LOGGING", "false").lower() == "true"
 ENABLE_DRY_RUN = os.getenv("ENABLE_DRY_RUN", "false").lower() == "true"
 
@@ -277,16 +272,17 @@ API_VERSION = "v1"
 # Helper Functions
 # ============================================================================
 
+
 def get_azure_authority_url(tenant_id: str) -> str:
     """
     Get the Azure AD authority URL for a given tenant.
-    
+
     Args:
         tenant_id: The Azure AD tenant ID
-        
+
     Returns:
         Complete authority URL
-        
+
     Example:
         >>> get_azure_authority_url("12345-67890")
         'https://login.microsoftonline.com/12345-67890'
@@ -297,13 +293,13 @@ def get_azure_authority_url(tenant_id: str) -> str:
 def get_sql_server_url(environment: str) -> str:
     """
     Get the Azure SQL Server URL for a given environment.
-    
+
     Args:
         environment: The environment name (dev, test, prod)
-        
+
     Returns:
         SQL Server connection string prefix
-        
+
     Example:
         >>> get_sql_server_url("dev")
         'Server=sql-dev.database.windows.net'
@@ -314,13 +310,13 @@ def get_sql_server_url(environment: str) -> str:
 def get_cosmos_db_url(environment: str) -> str:
     """
     Get the Azure Cosmos DB URL for a given environment.
-    
+
     Args:
         environment: The environment name (dev, test, prod)
-        
+
     Returns:
         Cosmos DB endpoint URL
-        
+
     Example:
         >>> get_cosmos_db_url("prod")
         'https://cosmos-prod.documents.azure.com:443/'
@@ -331,13 +327,13 @@ def get_cosmos_db_url(environment: str) -> str:
 def is_valid_environment(environment: str) -> bool:
     """
     Check if an environment name is valid.
-    
+
     Args:
         environment: The environment name to validate
-        
+
     Returns:
         True if valid, False otherwise
-        
+
     Example:
         >>> is_valid_environment("dev")
         True
@@ -350,13 +346,13 @@ def is_valid_environment(environment: str) -> bool:
 def is_valid_deployment_mode(mode: str) -> bool:
     """
     Check if a deployment mode is valid.
-    
+
     Args:
         mode: The deployment mode to validate
-        
+
     Returns:
         True if valid, False otherwise
-        
+
     Example:
         >>> is_valid_deployment_mode("deploy")
         True
@@ -370,34 +366,35 @@ def is_valid_deployment_mode(mode: str) -> bool:
 # Module Initialization
 # ============================================================================
 
+
 def validate_constants():
     """
     Validate that all required constants are properly configured.
     Raises ValueError if any critical constants are missing or invalid.
     """
     errors = []
-    
+
     # Validate polling configuration
     if DEFAULT_POLLING_INTERVAL_SECONDS <= 0:
         errors.append("POLLING_INTERVAL must be positive")
-    
+
     if MAX_POLLING_ATTEMPTS <= 0:
         errors.append("MAX_POLLING_ATTEMPTS must be positive")
-    
+
     # Validate retry configuration
     if MAX_API_RETRIES < 0:
         errors.append("MAX_API_RETRIES must be non-negative")
-    
+
     if RETRY_BACKOFF_FACTOR < 1.0:
         errors.append("RETRY_BACKOFF_FACTOR must be >= 1.0")
-    
+
     # Validate timeouts
     if HTTP_CONNECT_TIMEOUT <= 0:
         errors.append("HTTP_CONNECT_TIMEOUT must be positive")
-    
+
     if HTTP_READ_TIMEOUT <= 0:
         errors.append("HTTP_READ_TIMEOUT must be positive")
-    
+
     if errors:
         raise ValueError(f"Invalid constants configuration: {', '.join(errors)}")
 
