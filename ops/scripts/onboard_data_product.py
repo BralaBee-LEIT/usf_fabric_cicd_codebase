@@ -739,6 +739,17 @@ class DataProductOnboarder:
         if not (product.git.organization and product.git.repository):
             console_warning("Git organization/repository not provided; cannot connect workspace to Git")
             return
+        
+        # Skip automated Git connection if manual integration is preferred
+        skip_auto_connect = os.getenv("SKIP_AUTO_GIT_CONNECT", "false").lower() == "true"
+        if skip_auto_connect:
+            console_info("Skipping automated Git connection (SKIP_AUTO_GIT_CONNECT=true)")
+            console_info(f"To connect manually:")
+            console_info(f"  1. Open workspace '{workspace_name}' in Fabric portal")
+            console_info(f"  2. Go to Workspace Settings → Git integration")
+            console_info(f"  3. Connect to: {product.git.organization}/{product.git.repository}#{branch_name}")
+            console_info(f"  4. Set directory: /data_products/{product.slug}")
+            return
 
         # Use new git_connector if available
         if self.git_connector:
