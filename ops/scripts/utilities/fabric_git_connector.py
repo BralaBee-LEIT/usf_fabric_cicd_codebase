@@ -110,11 +110,94 @@ class FabricGitConnector:
             f"{self.organization_name}/{self.repository_name}"
         )
     
+    def get_or_create_git_connection(self, github_token: Optional[str] = None) -> str:
+        """
+        Get existing or create new Git provider connection
+        
+        This creates a Fabric Connection that stores GitHub credentials.
+        The connection ID is then used in Git connect operations.
+        
+        Args:
+            github_token: GitHub Personal Access Token (from env if not provided)
+        
+        Returns:
+            Connection ID (GUID)
+        
+        Raises:
+            ValueError: If no GitHub token provided
+        
+        API: GET/POST /v1/connections
+        """
+        token = github_token or os.getenv("GITHUB_TOKEN")
+        if not token:
+            raise ValueError(
+                "GitHub token not provided. Set GITHUB_TOKEN env var or pass github_token parameter."
+            )
+        
+        # Try to find existing connection for this repo
+        connection_name = f"GitHub-{self.organization_name}-{self.repository_name}"
+        
+        try:
+            # List existing connections
+            response = self.fabric_client._make_request('GET', 'connections')
+            connections = response.json().get('value', [])
+            
+            # Look for matching connection
+            for conn in connections:
+                if conn.get('displayName') == connection_name:
+                    connection_id = conn.get('id')
+                    print_info(f"Found existing Git connection: {connection_name} ({connection_id})")
+                    return connection_id
+        except Exception as e:
+            logger.debug(f"Could not list connections: {e}")
+        
+        # Create new connection
+        print_info(f"Creating new Git connection: {connection_name}")
+        
+        repo_url = f"https://github.com/{self.organization_name}/{self.repository_name}"
+        
+        connection_payload = {
+            "displayName": connection_name,
+            "connectivityType": "ShareableCloud",
+            "connectionDetails": {
+                "creationMethod": "GitHubSourceControl.Contents",
+                "type": "GitHubSourceControl",
+                "parameters": [
+                    {
+                        "dataType": "Text",
+                        "name": "url",
+                        "value": repo_url
+                    }
+                ]
+            },
+            "credentialDetails": {
+                "credentials": {
+                    "credentialType": "Key",
+                    "key": token
+                }
+            }
+        }
+        
+        try:
+            response = self.fabric_client._make_request(
+                'POST',
+                'connections',
+                json=connection_payload
+            )
+            connection_data = response.json()
+            connection_id = connection_data.get('id')
+            print_success(f"✓ Created Git connection: {connection_id}")
+            return connection_id
+        except Exception as e:
+            print_error(f"✗ Failed to create Git connection: {str(e)}")
+            raise
+    
     def connect_to_git(
         self,
         workspace_id: str,
         branch_name: str,
-        directory_path: str = "/"
+        directory_path: str = "/",
+        github_token: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Connect a workspace to Git repository (initial connection)
@@ -126,6 +209,7 @@ class FabricGitConnector:
             workspace_id: Fabric workspace GUID
             branch_name: Git branch to connect (e.g., "main", "feature/my-feature")
             directory_path: Folder path in repo (default: "/")
+            github_token: GitHub PAT (from env if not provided)
         
         Returns:
             Connection response from Fabric API
@@ -140,24 +224,32 @@ class FabricGitConnector:
         print_info(f"  Branch: {branch_name}")
         print_info(f"  Directory: {directory_path}")
         
+        # Get or create Git connection (stores credentials)
+        connection_id = self.get_or_create_git_connection(github_token)
+        
         # Build payload for connect endpoint
         git_provider_details = {
             "gitProviderType": self.git_provider_type,
-            "organizationName": self.organization_name,
             "repositoryName": self.repository_name,
             "branchName": branch_name,
             "directoryName": directory_path
         }
         
-        # For GitHub, try ownerName instead of/in addition to organizationName
+        # For GitHub, use ownerName instead of organizationName
         if self.git_provider_type == GitProviderType.GITHUB:
             git_provider_details["ownerName"] = self.organization_name
+        else:
+            git_provider_details["organizationName"] = self.organization_name
+            if self.project_name:
+                git_provider_details["projectName"] = self.project_name
         
-        # Add projectName only if provided (required for Azure DevOps)
-        if self.project_name:
-            git_provider_details["projectName"] = self.project_name
-        
-        payload = {"gitProviderDetails": git_provider_details}
+        payload = {
+            "gitProviderDetails": git_provider_details,
+            "myGitCredentials": {
+                "source": "ConfiguredConnection",
+                "connectionId": connection_id
+            }
+        }
         
         print_info(f"DEBUG: Payload = {json.dumps(payload, indent=2)}")
         
