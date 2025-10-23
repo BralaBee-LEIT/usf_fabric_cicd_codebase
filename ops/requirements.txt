@@ -7,6 +7,7 @@ msal==1.24.1
 requests==2.32.3
 pyyaml==6.0.2
 tabulate==0.9.0
+nbformat==5.10.4  # For notebook validation
 
 # Data governance and quality
 azure-mgmt-purview==1.0.0
