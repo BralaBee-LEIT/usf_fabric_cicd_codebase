@@ -270,10 +270,24 @@ def git_stage_and_commit(repo_path: Path, paths: List[Path], message: str) -> No
         return
     validate_git_repository(repo_path)
     rel_paths = [str(path.relative_to(repo_path)) for path in paths]
+    
+    # Try to add files - it's OK if they don't exist or have no changes
     code, _, stderr = run_command(["git", "add", *rel_paths], cwd=repo_path)
     if code != 0:
+        # Check if there are any changes to commit
+        status_code, status_out, _ = run_command(["git", "status", "--porcelain", *rel_paths], cwd=repo_path)
+        if status_code == 0 and not status_out.strip():
+            # No changes, skip commit
+            return
         raise RuntimeError(stderr or "Failed to stage onboarding assets")
-    code, _, stderr = run_command(["git", "commit", "-m", message, "--allow-empty"], cwd=repo_path)
+    
+    # Check if there are staged changes before committing
+    status_code, status_out, _ = run_command(["git", "diff", "--cached", "--name-only"], cwd=repo_path)
+    if status_code == 0 and not status_out.strip():
+        # No staged changes, skip commit
+        return
+        
+    code, _, stderr = run_command(["git", "commit", "-m", message], cwd=repo_path)
     if code != 0:
         raise RuntimeError(stderr or "Failed to commit onboarding assets")
 
