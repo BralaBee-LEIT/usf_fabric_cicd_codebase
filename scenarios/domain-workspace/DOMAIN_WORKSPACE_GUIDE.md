@@ -475,7 +475,7 @@ Follow Step 5 instructions to create shortcuts/queries
 ## Related Documentation
 
 - **Core CLI:** `ops/scripts/manage_workspaces.py --help`
-- **User Management:** `BULK_USER_QUICKSTART.md`
+- **User Management:** `../../docs/guides/BULK_USER_QUICKSTART.md`
 - **Group Support:** `scenarios/GROUP_SUPPORT_QUICKREF.md`
 - **Item Management:** `FABRIC_ITEM_CRUD_QUICKREF.md`
 - **Workspace Templates:** `config/workspace_principals.template.txt`

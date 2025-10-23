@@ -25,7 +25,7 @@
 - Compliance reporting and analytics
 - Event filtering by workspace, date range, event type
 
-See [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) for detailed usage.
+See [docs/guides/IMPLEMENTATION_GUIDE.md](docs/guides/IMPLEMENTATION_GUIDE.md) for detailed usage.
 
 ## 🚀 Quick Start
 
@@ -109,9 +109,7 @@ usf-fabric-cicd/
 ├── config/               # Configuration files
 ├── governance/           # Data governance rules
 ├── audit/                # NEW: Audit trail logs (JSONL)
-├── naming_standards.yaml # NEW: Naming pattern configuration
-├── IMPLEMENTATION_GUIDE.md  # NEW: Feature implementation guide
-└── FEATURE_SUMMARY.md    # NEW: Complete feature summary
+└── naming_standards.yaml # NEW: Naming pattern configuration
 ```
 
 ## 🛠️ Available Tools
@@ -187,7 +185,7 @@ This creates `project.config.json` with naming patterns and Git integration:
 }
 ```
 
-**See:** [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) for Git integration details
+**See:** [docs/guides/IMPLEMENTATION_GUIDE.md](docs/guides/IMPLEMENTATION_GUIDE.md) for Git integration details
 
 ### `naming_standards.yaml` - **NEW**
 Defines naming patterns for Fabric items (Lakehouse, Notebook, Pipeline, etc.).
@@ -301,13 +299,13 @@ report = logger.generate_compliance_report(
 
 **Audit Log Format:** JSONL (`audit/audit_trail.jsonl`)
 
-See [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) for complete API reference.
+See [docs/guides/IMPLEMENTATION_GUIDE.md](docs/guides/IMPLEMENTATION_GUIDE.md) for complete API reference.
 
 ## 📚 Documentation
 
-- **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** - Complete implementation guide for new features
-- **[FEATURE_SUMMARY.md](FEATURE_SUMMARY.md)** - Feature overview and compliance impact
-- **[WORKSPACE_PROVISIONING_GUIDE.md](WORKSPACE_PROVISIONING_GUIDE.md)** - Workspace provisioning reference
+- **[docs/guides/IMPLEMENTATION_GUIDE.md](docs/guides/IMPLEMENTATION_GUIDE.md)** - Complete implementation guide for new features
+- **[docs/development-maintenance/FEATURE_SUMMARY.md](docs/development-maintenance/FEATURE_SUMMARY.md)** - Feature overview and compliance impact
+- **[docs/guides/WORKSPACE_PROVISIONING_GUIDE.md](docs/guides/WORKSPACE_PROVISIONING_GUIDE.md)** - Workspace provisioning reference
 - **[scenarios/README.md](scenarios/README.md)** - Workflow comparison and examples
 - **[docs/getting-started/QUICKSTART.md](docs/getting-started/QUICKSTART.md)** - Quick start guide
 

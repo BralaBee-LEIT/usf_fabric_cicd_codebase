@@ -401,8 +401,8 @@ validator.validate_item_name("CustomerData", "Lakehouse")
 
 3. **Architecture Documentation:**
    - `scenarios/shared/ARCHITECTURE.md` (Architecture patterns)
-   - `WORKSPACE_PROVISIONING_GUIDE.md` (Provisioning guide)
-   - `IMPLEMENTATION_GUIDE.md` (Implementation details)
+   - `../guides/WORKSPACE_PROVISIONING_GUIDE.md` (Provisioning guide)
+   - `../guides/IMPLEMENTATION_GUIDE.md` (Implementation details)
 
 **Status:** ✅ Documentation current and comprehensive (Oct 22-23, 2025)
 

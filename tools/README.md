@@ -216,7 +216,9 @@ source .env
 - [Main README](../README.md) - Project overview
 - [Workspace Management Guide](../docs/workspace-management/WORKSPACE_MANAGEMENT_QUICKREF.md)
 - [Setup Scripts](../setup/README.md) - Environment setup
-- [Bulk User Management](../BULK_USER_QUICKSTART.md) - User operations
+## 📚 Related Documentation
+
+- [Bulk User Management](../docs/guides/BULK_USER_QUICKSTART.md) - User operations
 
 ---
 
