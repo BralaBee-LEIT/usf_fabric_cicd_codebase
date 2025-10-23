@@ -741,12 +741,9 @@ class DataProductOnboarder:
                 console_info(f"Connecting feature workspace to Git: {product.git.organization}/{product.git.repository}#{branch_name}")
                 self.git_connector.initialize_git_connection(
                     workspace_id=workspace_id,
-                    git_provider_type=product.git.provider,
-                    organization_name=product.git.organization,
-                    project_name=None,  # Optional for GitHub
-                    repository_name=product.git.repository,
                     branch_name=branch_name,
-                    directory_path=directory_path
+                    directory_path=directory_path,
+                    auto_commit=product.git.auto_commit
                 )
                 console_success(f"Connected feature workspace '{workspace_name}' to Git branch '{branch_name}'")
                 
@@ -776,16 +773,28 @@ class DataProductOnboarder:
             raise RuntimeError(str(exc)) from exc
 
         integration = FabricGitIntegration(workspace_name)
+        directory_path = f"/data_products/{product.slug}/{self.args.feature_ticket}"
         integration.connect_to_git(
             git_provider=product.git.provider,
             organization=product.git.organization,
             repository=product.git.repository,
             branch=branch_name,
-            directory=product.git.directory,
+            directory_path=directory_path,
         )
         console_success(
             f"Linked workspace '{workspace_name}' to {product.git.organization}/{product.git.repository}#{branch_name}"
         )
+        
+        # Log Git connection
+        if self.audit_logger:
+            self.audit_logger.log_git_connection(
+                workspace_id=workspace_id,
+                git_provider=product.git.provider,
+                organization=product.git.organization,
+                repository=product.git.repository,
+                branch=branch_name,
+                directory=directory_path
+            )
 
     def run(self) -> OnboardingResult:
         product = self.load_descriptor()
