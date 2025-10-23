@@ -111,6 +111,12 @@ jobs:
           pip install -r ops/requirements.txt
 
       - name: Run unit tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          AZURE_TENANT_ID: "test-tenant-id"
+          AZURE_CLIENT_ID: "test-client-id"
+          AZURE_CLIENT_SECRET: "test-secret"
+          AZURE_SUBSCRIPTION_ID: "test-subscription-id"
         run: |
           pytest ops/tests/ -v --junitxml=test-results.xml --cov=ops --cov-report=xml
 
