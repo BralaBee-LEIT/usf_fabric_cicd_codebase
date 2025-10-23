@@ -48,7 +48,7 @@ jobs:
 
       - name: Run Black formatter check
         run: |
-          black --check --diff ops/ data_products/ governance/ || exit 1
+          black --check --diff ops/ data_products/ governance/
 
       - name: Run Flake8 linting
         run: |
@@ -77,14 +77,14 @@ jobs:
             --output-format github
 
       - name: Upload contract validation results
-        if: always()
+        if: always() && hashFiles('contract_validation_report.json') != ''
         uses: actions/upload-artifact@v4
         with:
           name: data-contract-validation
           path: contract_validation_report.json
 
       - name: Upload DQ rules validation results
-        if: always()
+        if: always() && hashFiles('dq_rules_validation_report.json') != ''
         uses: actions/upload-artifact@v4
         with:
           name: dq-rules-validation
