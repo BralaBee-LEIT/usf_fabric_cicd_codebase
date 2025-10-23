@@ -110,7 +110,7 @@ class FabricGitConnector:
             f"{self.organization_name}/{self.repository_name}"
         )
     
-    def get_or_create_git_connection(self, github_token: Optional[str] = None) -> str:
+    def get_or_create_git_connection(self, github_token: Optional[str] = None, connection_id: Optional[str] = None) -> str:
         """
         Get existing or create new Git provider connection
         
@@ -119,20 +119,26 @@ class FabricGitConnector:
         
         Args:
             github_token: GitHub Personal Access Token (from env if not provided)
+            connection_id: Explicit connection ID to use (skips lookup/creation)
         
         Returns:
             Connection ID (GUID)
         
         Raises:
-            ValueError: If no GitHub token provided
+            ValueError: If no connection found and cannot create
         
         API: GET/POST /v1/connections
         """
-        token = github_token or os.getenv("GITHUB_TOKEN")
-        if not token:
-            raise ValueError(
-                "GitHub token not provided. Set GITHUB_TOKEN env var or pass github_token parameter."
-            )
+        # If explicit connection ID provided, use it
+        if connection_id:
+            print_info(f"Using provided connection ID: {connection_id}")
+            return connection_id
+        
+        # Check for connection ID in environment
+        env_connection_id = os.getenv("FABRIC_GIT_CONNECTION_ID")
+        if env_connection_id:
+            print_info(f"Using connection ID from FABRIC_GIT_CONNECTION_ID env var: {env_connection_id}")
+            return env_connection_id
         
         # Try to find existing connection for this repo
         connection_name = f"GitHub-{self.organization_name}-{self.repository_name}"
@@ -142,16 +148,46 @@ class FabricGitConnector:
             response = self.fabric_client._make_request('GET', 'connections')
             connections = response.json().get('value', [])
             
-            # Look for matching connection
+            print_info(f"Found {len(connections)} total connections")
+            
+            # Look for GitHub connections
+            github_connections = [c for c in connections if 'GitHub' in c.get('connectionDetails', {}).get('type', '')]
+            print_info(f"Found {len(github_connections)} GitHub connections")
+            
+            # Look for matching connection by name or repo URL
+            repo_url = f"https://github.com/{self.organization_name}/{self.repository_name}"
             for conn in connections:
-                if conn.get('displayName') == connection_name:
+                conn_name = conn.get('displayName', '')
+                conn_path = conn.get('connectionDetails', {}).get('path', '')
+                
+                if connection_name in conn_name or repo_url in conn_path:
                     connection_id = conn.get('id')
-                    print_info(f"Found existing Git connection: {connection_name} ({connection_id})")
+                    print_info(f"Found existing Git connection: {conn_name} ({connection_id})")
                     return connection_id
+            
+            # If we have GitHub connections but no exact match, offer to use the first one
+            if github_connections:
+                first_conn = github_connections[0]
+                connection_id = first_conn.get('id')
+                conn_name = first_conn.get('displayName', 'Unknown')
+                print_warning(f"No exact match found. Using first GitHub connection: {conn_name} ({connection_id})")
+                return connection_id
+                
         except Exception as e:
             logger.debug(f"Could not list connections: {e}")
+            print_warning(f"Unable to list connections: {e}")
         
-        # Create new connection
+        # Try to create new connection
+        token = github_token or os.getenv("GITHUB_TOKEN")
+        if not token:
+            raise ValueError(
+                "No Git connection found and cannot create one.\n"
+                "Options:\n"
+                "  1. Set FABRIC_GIT_CONNECTION_ID env var with your connection ID\n"
+                "  2. Create connection in Fabric portal (Settings → Manage connections)\n"
+                "  3. Set GITHUB_TOKEN env var with valid PAT (requires repo scope)"
+            )
+        
         print_info(f"Creating new Git connection: {connection_name}")
         
         repo_url = f"https://github.com/{self.organization_name}/{self.repository_name}"
@@ -187,10 +223,14 @@ class FabricGitConnector:
             connection_data = response.json()
             connection_id = connection_data.get('id')
             print_success(f"✓ Created Git connection: {connection_id}")
+            print_info(f"  TIP: Set FABRIC_GIT_CONNECTION_ID={connection_id} in .env to reuse this connection")
             return connection_id
         except Exception as e:
             print_error(f"✗ Failed to create Git connection: {str(e)}")
-            raise
+            raise ValueError(
+                f"Failed to create Git connection: {str(e)}\n"
+                "Please create connection manually in Fabric portal and set FABRIC_GIT_CONNECTION_ID env var"
+            )
     
     def connect_to_git(
         self,
