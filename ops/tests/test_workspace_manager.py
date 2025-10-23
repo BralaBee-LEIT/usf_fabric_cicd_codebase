@@ -27,12 +27,14 @@ def mock_env_vars(monkeypatch):
 @pytest.fixture
 def workspace_manager(mock_env_vars):
     """Create WorkspaceManager instance for testing"""
-    with patch("ops.scripts.utilities.workspace_manager.get_config_manager") as mock_config:
+    with patch(
+        "ops.scripts.utilities.workspace_manager.get_config_manager"
+    ) as mock_config:
         # Create a proper mock config manager
         mock_config_instance = Mock()
         mock_config_instance.generate_name.return_value = "test-workspace-dev"
         mock_config.return_value = mock_config_instance
-        
+
         manager = WorkspaceManager(environment="dev")
         manager.config_manager = mock_config_instance
         return manager
