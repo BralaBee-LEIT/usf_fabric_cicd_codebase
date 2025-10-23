@@ -149,6 +149,10 @@ class FabricGitConnector:
             "directoryName": directory_path
         }
         
+        # For GitHub, try ownerName instead of/in addition to organizationName
+        if self.git_provider_type == GitProviderType.GITHUB:
+            git_provider_details["ownerName"] = self.organization_name
+        
         # Add projectName only if provided (required for Azure DevOps)
         if self.project_name:
             git_provider_details["projectName"] = self.project_name
