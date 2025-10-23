@@ -13,6 +13,7 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 from collections import Counter
+from dotenv import load_dotenv
 
 # ANSI color codes
 class Colors:
@@ -191,6 +192,12 @@ def main():
     repo_root = scenario_dir.parent.parent
     onboard_script = repo_root / "ops" / "scripts" / "onboard_data_product.py"
     descriptor = scenario_dir / "product_descriptor.yaml"
+    
+    # Load environment variables from .env file
+    env_file = repo_root / ".env"
+    if env_file.is_file():
+        load_dotenv(env_file)
+        print_success(f"Loaded environment variables from .env")
     
     # Generate test ticket ID
     ticket = f"TEST-{int(datetime.now().timestamp())}"
