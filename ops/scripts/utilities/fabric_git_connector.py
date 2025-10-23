@@ -110,6 +110,62 @@ class FabricGitConnector:
             f"{self.organization_name}/{self.repository_name}"
         )
     
+    def connect_to_git(
+        self,
+        workspace_id: str,
+        branch_name: str,
+        directory_path: str = "/"
+    ) -> Dict[str, Any]:
+        """
+        Connect a workspace to Git repository (initial connection)
+        
+        This establishes the initial Git connection for a workspace.
+        After this, use initialize_git_connection to update settings.
+        
+        Args:
+            workspace_id: Fabric workspace GUID
+            branch_name: Git branch to connect (e.g., "main", "feature/my-feature")
+            directory_path: Folder path in repo (default: "/")
+        
+        Returns:
+            Connection response from Fabric API
+        
+        Raises:
+            Exception: If connection fails
+        
+        API: POST /workspaces/{workspaceId}/git/connect
+        """
+        print_info(f"Connecting workspace {workspace_id[:8]} to Git...")
+        print_info(f"  Repository: {self.organization_name}/{self.repository_name}")
+        print_info(f"  Branch: {branch_name}")
+        print_info(f"  Directory: {directory_path}")
+        
+        # Build payload for connect endpoint
+        payload = {
+            "gitProviderDetails": {
+                "gitProviderType": self.git_provider_type,
+                "organizationName": self.organization_name,
+                "projectName": self.project_name,  # Required for Azure DevOps, None for GitHub
+                "repositoryName": self.repository_name,
+                "branchName": branch_name,
+                "directoryName": directory_path
+            }
+        }
+        
+        try:
+            response = self.fabric_client._make_request(
+                'POST',
+                f'workspaces/{workspace_id}/git/connect',
+                json=payload
+            )
+            
+            print_success(f"✓ Workspace connected to Git successfully")
+            return response.json() if response.text else {}
+            
+        except Exception as e:
+            print_error(f"✗ Failed to connect workspace to Git: {str(e)}")
+            raise
+
     def initialize_git_connection(
         self,
         workspace_id: str,
