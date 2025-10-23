@@ -260,7 +260,7 @@ def create_items(workspace_id, product_config, dry_run=False):
     try:
         item_manager = FabricItemManager(
             enable_validation=naming_config.get("validate", True),
-            strict_mode=naming_config.get("strict_mode", False)
+            enable_audit_logging=True
         )
         
         # Create lakehouses
@@ -376,33 +376,14 @@ def add_users(workspace_id, product_config, dry_run=False):
         print_warning("DRY RUN: Would add users")
         return
     
-    try:
-        workspace_manager = WorkspaceManager()
-        
-        for user in users:
-            try:
-                # Map role string to WorkspaceRole enum if needed
-                from utilities.workspace_manager import WorkspaceRole
-                role_map = {
-                    "Admin": WorkspaceRole.ADMIN,
-                    "Member": WorkspaceRole.MEMBER,
-                    "Contributor": WorkspaceRole.CONTRIBUTOR,
-                    "Viewer": WorkspaceRole.VIEWER,
-                }
-                role = role_map.get(user["role"], WorkspaceRole.VIEWER)
-                
-                workspace_manager.add_user(
-                    workspace_id=workspace_id,
-                    principal_id=user["email"],
-                    principal_type="User",
-                    role=role
-                )
-                print_success(f"  ✓ Added {user['email']} as {user['role']}")
-            except Exception as e:
-                print_warning(f"  Skipped {user['email']}: {e}")
-    
-    except Exception as e:
-        print_error(f"Failed to add users: {e}")
+    # NOTE: User addition requires Azure AD object IDs, not emails
+    # This is a limitation of the Fabric API
+    # For now, we skip this step and document it as a manual process
+    print_warning("User addition requires Azure AD object IDs")
+    print_info("Users must be added manually via Fabric Portal:")
+    for user in users:
+        print_info(f"  • {user['email']} ({user['role']})")
+    print_info("To add users programmatically, use add_user_by_objectid.py script")
 
 
 def commit_to_git(workspace_id, product_config, dry_run=False):
@@ -453,22 +434,13 @@ def write_audit_log(product_config: Dict, workspace_id: str, created_items: Dict
         return
     
     try:
-        # AuditLogger doesn't accept reference_id in __init__
         audit_logger = AuditLogger()
         
-        # Log deployment event
-        audit_logger.log_event(
-            event_type="automated_deployment",
-            workspace_id=workspace_id,
-            details={
-                "product": product_config['product']['name'],
-                "environment": "dev",
-                "items_created": created_items,
-                "git_enabled": product_config.get('git', {}).get('enabled', False),
-                "users_added": len(product_config.get('users', [])),
-                "reference": audit_config.get('reference', 'AUTOMATED-SCENARIO'),
-                "timestamp": datetime.utcnow().isoformat()
-            }
+        # Use log_deployment_completion with correct parameters
+        audit_logger.log_deployment_completion(
+            deployment_id=f"automated-deployment-{workspace_id[:8]}",
+            environment="dev",
+            items_deployed=len(created_items)
         )
         
         print_success(f"Audit log written to: audit/audit_trail.jsonl")

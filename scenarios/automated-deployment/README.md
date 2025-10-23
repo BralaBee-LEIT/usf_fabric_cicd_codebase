@@ -24,26 +24,68 @@ This scenario showcases the **complete automation capabilities** of the Fabric C
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
-1. **Framework configured** - Run `python init_new_project.py` if not done
-2. **Azure credentials** - Set in `.env` file
-3. **Virtual environment** - Activated (`source fabric-env/bin/activate`)
+1. **Configured Framework**
+   ```bash
+   # If you haven't set up the framework yet:
+   python init_new_project.py
+   ```
 
-### Run Deployment
+2. **Environment Variables** (in `.env` file)
+   ```bash
+   # Azure Authentication
+   AZURE_TENANT_ID=your-tenant-id
+   AZURE_CLIENT_ID=your-client-id
+   AZURE_CLIENT_SECRET=your-secret
+   
+   # Git Integration (optional - will gracefully skip if not configured)
+   GITHUB_ORG=your-github-org
+   GITHUB_REPO=your-repo-name
+   GITHUB_TOKEN=your-pat-token
+   
+   # Product Contacts
+   DATA_OWNER_EMAIL=owner@company.com
+   TECHNICAL_LEAD_EMAIL=lead@company.com
+   ```
+
+3. **Fabric Capacity**
+   - **Note**: Item creation (Lakehouses, Notebooks) requires Fabric Premium capacity
+   - Trial/F2 capacity will result in 403 errors for item creation
+   - **The scenario handles this gracefully** - workspace and other steps still succeed
+   - For full end-to-end testing, use Premium capacity workspace
+
+### Run the Scenario
 
 ```bash
-# Navigate to scenario
-cd scenarios/automated-deployment/
-
-# Dry run (preview without changes)
-python run_automated_deployment.py --dry-run
+# Preview mode (dry run - no changes made)
+python scenarios/automated-deployment/run_automated_deployment.py --dry-run
 
 # Execute deployment
-python run_automated_deployment.py
+python scenarios/automated-deployment/run_automated_deployment.py
+
+# Use custom config
+python scenarios/automated-deployment/run_automated_deployment.py --config my_product.yaml
 ```
+
+### What Actually Works
+
+✅ **Always Works** (any capacity):
+- Workspace creation with config-driven naming
+- Prerequisites validation
+- Audit logging (JSONL format)
+- Error handling and graceful degradation
+
+⚠️ **Requires Premium Capacity**:
+- Lakehouse creation via API
+- Notebook creation via API
+- Git integration (workspace must support Git)
+
+⚠️ **Requires Azure AD Configuration**:
+- User addition (needs Object IDs, not emails)
+- Currently documented as manual step
 
 ### Expected Output
 
