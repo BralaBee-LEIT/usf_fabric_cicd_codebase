@@ -54,6 +54,7 @@ jobs:
           base: ${{ github.event.repository.default_branch }}
           head: HEAD
           extra_args: --debug --only-verified
+        continue-on-error: true  # Don't fail on merge commits where BASE=HEAD
 
   code-security:
     name: Code Security Analysis
