@@ -37,6 +37,19 @@ from utilities.output import (
 from utilities.workspace_manager import CapacityType, WorkspaceManager
 from utilities.config_manager import ConfigManager
 
+# Optional: Import Git integration and audit logging utilities
+try:
+    from utilities.fabric_git_connector import get_git_connector
+    GIT_CONNECTOR_AVAILABLE = True
+except ImportError:
+    GIT_CONNECTOR_AVAILABLE = False
+
+try:
+    from utilities.audit_logger import get_audit_logger
+    AUDIT_LOGGER_AVAILABLE = True
+except ImportError:
+    AUDIT_LOGGER_AVAILABLE = False
+
 # ---------------------------------------------------------------------------
 # Environment loading
 # ---------------------------------------------------------------------------
@@ -289,6 +302,16 @@ class DataProductOnboarder:
         self.console_json = console_json if arguments.json_output else None
         self.config_manager: Optional[ConfigManager] = None
 
+        # Initialize Git connector and audit logger if available
+        self.git_connector = get_git_connector() if GIT_CONNECTOR_AVAILABLE else None
+        self.audit_logger = get_audit_logger() if AUDIT_LOGGER_AVAILABLE else None
+        
+        if self.audit_logger and not self.dry_run:
+            self.audit_logger.log_onboarding_started(
+                product_id=None,  # Will be set after loading descriptor
+                descriptor_path=str(arguments.descriptor_path)
+            )
+
         try:
             self.config_manager = ConfigManager()
         except Exception as exc:
@@ -411,6 +434,51 @@ class DataProductOnboarder:
             capacity_type=product.dev.capacity_type,
         )
         console_success(f"Created workspace '{workspace_name}'")
+        
+        # Log workspace creation to audit trail
+        if self.audit_logger:
+            self.audit_logger.log_workspace_creation(
+                workspace_id=workspace.get("id"),
+                workspace_name=workspace_name,
+                product_id=product.slug,
+                environment="dev",
+                capacity_id=product.dev.capacity_id,
+                description=product.dev.description or f"DEV workspace for {product.name}"
+            )
+        
+        # Auto-connect workspace to Git if enabled
+        if self.git_connector and self.config_manager:
+            git_config = self.config_manager.config.get("git_integration", {})
+            if git_config.get("enabled") and git_config.get("auto_connect_workspaces"):
+                try:
+                    branch_name = git_config.get("default_branch", "main")
+                    directory_path = f"/data_products/{product.slug}"
+                    
+                    console_info(f"Connecting workspace to Git: {product.git.organization}/{product.git.repository}#{branch_name}")
+                    self.git_connector.initialize_git_connection(
+                        workspace_id=workspace.get("id"),
+                        git_provider_type=git_config.get("provider", "GitHub"),
+                        organization_name=product.git.organization or git_config.get("organization"),
+                        project_name=git_config.get("project"),
+                        repository_name=product.git.repository or git_config.get("repository"),
+                        branch_name=branch_name,
+                        directory_path=directory_path
+                    )
+                    console_success(f"Connected DEV workspace to Git branch '{branch_name}'")
+                    
+                    # Log Git connection
+                    if self.audit_logger:
+                        self.audit_logger.log_git_connection(
+                            workspace_id=workspace.get("id"),
+                            git_provider=git_config.get("provider", "GitHub"),
+                            organization=product.git.organization or git_config.get("organization"),
+                            repository=product.git.repository or git_config.get("repository"),
+                            branch=branch_name,
+                            directory=directory_path
+                        )
+                except Exception as exc:
+                    console_warning(f"Failed to connect workspace to Git: {exc}")
+        
         return workspace, True
 
     def ensure_feature_workspace(
@@ -445,6 +513,18 @@ class DataProductOnboarder:
             capacity_type=product.dev.capacity_type,
         )
         console_success(f"Created feature workspace '{workspace_name}'")
+        
+        # Log workspace creation
+        if self.audit_logger:
+            self.audit_logger.log_workspace_creation(
+                workspace_id=workspace.get("id"),
+                workspace_name=workspace_name,
+                product_id=product.slug,
+                environment=f"feature_{feature_ticket}",
+                capacity_id=product.dev.capacity_id,
+                description=f"Feature workspace ({feature_ticket}) for {product.name}"
+            )
+        
         return workspace, True
 
     def generate_scaffold(self, product: ProductDescriptor) -> Path:
@@ -628,8 +708,9 @@ class DataProductOnboarder:
         return branch_name, True
 
     def connect_feature_workspace_to_git(
-        self, product: ProductDescriptor, workspace_name: str, branch_name: str
+        self, product: ProductDescriptor, workspace_id: str, workspace_name: str, branch_name: str
     ) -> None:
+        """Connect feature workspace to Git using the new FabricGitConnector."""
         if self.args.skip_git or self.dry_run:
             console_info("Skipping workspace Git integration (dry-run/flagged)")
             return
@@ -638,6 +719,38 @@ class DataProductOnboarder:
             console_warning("Git organization/repository not provided; cannot connect workspace to Git")
             return
 
+        # Use new git_connector if available
+        if self.git_connector:
+            try:
+                directory_path = f"/data_products/{product.slug}/{self.args.feature_ticket}"
+                
+                console_info(f"Connecting feature workspace to Git: {product.git.organization}/{product.git.repository}#{branch_name}")
+                self.git_connector.initialize_git_connection(
+                    workspace_id=workspace_id,
+                    git_provider_type=product.git.provider,
+                    organization_name=product.git.organization,
+                    project_name=None,  # Optional for GitHub
+                    repository_name=product.git.repository,
+                    branch_name=branch_name,
+                    directory_path=directory_path
+                )
+                console_success(f"Connected feature workspace '{workspace_name}' to Git branch '{branch_name}'")
+                
+                # Log Git connection
+                if self.audit_logger:
+                    self.audit_logger.log_git_connection(
+                        workspace_id=workspace_id,
+                        git_provider=product.git.provider,
+                        organization=product.git.organization,
+                        repository=product.git.repository,
+                        branch=branch_name,
+                        directory=directory_path
+                    )
+                return
+            except Exception as exc:
+                console_warning(f"Git connector failed, falling back to legacy method: {exc}")
+
+        # Fallback to legacy FabricGitIntegration
         try:
             from utilities.fabric_deployment_pipeline import FabricGitIntegration  # type: ignore
         except (ValueError, ImportError) as exc:
@@ -680,8 +793,13 @@ class DataProductOnboarder:
             result.git_branch = branch_name
             result.git_branch_created = branch_created
 
-            if branch_name and feature_workspace and feature_workspace.get("displayName"):
-                self.connect_feature_workspace_to_git(product, feature_workspace["displayName"], branch_name)
+            if branch_name and feature_workspace and feature_workspace.get("id"):
+                self.connect_feature_workspace_to_git(
+                    product, 
+                    feature_workspace.get("id"),
+                    feature_workspace.get("displayName"),
+                    branch_name
+                )
 
         try:
             self.update_registry(product, result)
@@ -690,6 +808,15 @@ class DataProductOnboarder:
             console_warning(f"Failed to update registry: {exc}")
 
         result.audit_log_path = self.write_audit_log(result)
+
+        # Log onboarding completion
+        if self.audit_logger and not self.dry_run:
+            self.audit_logger.log_onboarding_completed(
+                product_id=product.slug,
+                workspace_id=result.dev_workspace.get("id") if result.dev_workspace else None,
+                feature_workspace_id=result.feature_workspace.get("id") if result.feature_workspace else None,
+                git_branch=result.git_branch
+            )
 
         if self.args.json_output and self.console_json:
             self.console_json({
