@@ -17,6 +17,21 @@ from .fabric_api import FabricClient
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Optional imports for validation and audit logging
+try:
+    from .item_naming_validator import ItemNamingValidator, ValidationResult
+    VALIDATION_AVAILABLE = True
+except ImportError:
+    VALIDATION_AVAILABLE = False
+    logger.warning("ItemNamingValidator not available - naming validation disabled")
+
+try:
+    from .audit_logger import get_audit_logger
+    AUDIT_LOGGING_AVAILABLE = True
+except ImportError:
+    AUDIT_LOGGING_AVAILABLE = False
+    logger.warning("AuditLogger not available - audit logging disabled")
+
 
 class FabricItemType(str, Enum):
     """Supported Fabric item types with their API names"""
@@ -153,13 +168,40 @@ class FabricItem:
 class FabricItemManager:
     """Manager for Fabric item CRUD operations"""
     
-    def __init__(self, fabric_client: Optional[FabricClient] = None):
+    def __init__(
+        self, 
+        fabric_client: Optional[FabricClient] = None,
+        enable_validation: bool = True,
+        enable_audit_logging: bool = True
+    ):
         """Initialize the item manager
         
         Args:
             fabric_client: Optional FabricClient instance. If not provided, creates a new one.
+            enable_validation: Enable naming validation (default: True)
+            enable_audit_logging: Enable audit logging (default: True)
         """
         self.client = fabric_client or FabricClient()
+        self.enable_validation = enable_validation and VALIDATION_AVAILABLE
+        self.enable_audit_logging = enable_audit_logging and AUDIT_LOGGING_AVAILABLE
+        
+        # Initialize validator if enabled
+        if self.enable_validation:
+            try:
+                self.validator = ItemNamingValidator()
+                logger.info("Naming validation enabled")
+            except Exception as e:
+                logger.warning(f"Failed to initialize validator: {e}")
+                self.enable_validation = False
+        
+        # Get audit logger if enabled
+        if self.enable_audit_logging:
+            try:
+                self.audit_logger = get_audit_logger()
+                logger.info("Audit logging enabled")
+            except Exception as e:
+                logger.warning(f"Failed to initialize audit logger: {e}")
+                self.enable_audit_logging = False
     
     def create_item(
         self,
@@ -167,7 +209,9 @@ class FabricItemManager:
         display_name: str,
         item_type: FabricItemType,
         description: Optional[str] = None,
-        definition: Optional[ItemDefinition] = None
+        definition: Optional[ItemDefinition] = None,
+        validate_naming: Optional[bool] = None,
+        ticket_id: Optional[str] = None
     ) -> FabricItem:
         """Create a new Fabric item
         
@@ -177,15 +221,62 @@ class FabricItemManager:
             item_type: Type of the item to create
             description: Optional description
             definition: Optional item definition with content
+            validate_naming: Override validation setting for this call (default: use instance setting)
+            ticket_id: Optional ticket ID for feature branch workflows
         
         Returns:
             FabricItem: The created item
         
         Raises:
-            ValueError: If item type is not supported for creation
+            ValueError: If naming validation fails and strict mode is enabled
             requests.HTTPError: If the API request fails
         """
         logger.info(f"Creating {item_type.value} '{display_name}' in workspace {workspace_id}")
+        
+        # Determine if validation should run
+        should_validate = validate_naming if validate_naming is not None else self.enable_validation
+        validation_passed = True
+        
+        # Validate naming if enabled
+        if should_validate:
+            logger.debug(f"Validating item name: '{display_name}'")
+            validation_result = self.validator.validate(
+                display_name,
+                item_type.value,
+                ticket_id
+            )
+            
+            if not validation_result.is_valid:
+                validation_passed = False
+                error_msg = f"Naming validation failed for '{display_name}':\n"
+                for error in validation_result.errors:
+                    error_msg += f"  - {error}\n"
+                
+                if validation_result.suggestions:
+                    error_msg += "\nSuggestions:\n"
+                    for suggestion in validation_result.suggestions:
+                        error_msg += f"  - {suggestion}\n"
+                
+                logger.warning(error_msg)
+                
+                # Log validation failure to audit
+                if self.enable_audit_logging:
+                    self.audit_logger.log_validation_failure(
+                        item_name=display_name,
+                        item_type=item_type.value,
+                        validation_errors=validation_result.errors
+                    )
+                
+                # In strict mode, raise error
+                if self.validator.strict_mode:
+                    raise ValueError(error_msg)
+            else:
+                logger.debug(f"✓ Naming validation passed for '{display_name}'")
+                if self.enable_audit_logging:
+                    self.audit_logger.log_validation_success(
+                        item_name=display_name,
+                        item_type=item_type.value
+                    )
         
         item = FabricItem(
             display_name=display_name,
@@ -224,6 +315,18 @@ class FabricItemManager:
                     if matching_items:
                         created_item = matching_items[0]
                         logger.info(f"Successfully created {item_type.value} '{display_name}' with ID: {created_item.id}")
+                        
+                        # Log to audit trail
+                        if self.enable_audit_logging:
+                            self.audit_logger.log_item_creation(
+                                workspace_id=workspace_id,
+                                item_id=created_item.id,
+                                item_name=display_name,
+                                item_type=item_type.value,
+                                description=description,
+                                validation_passed=validation_passed
+                            )
+                        
                         return created_item
                     if attempt < 4:
                         logger.warning(f"Item not found yet, retrying in 3 seconds... (attempt {attempt + 1}/5)")
@@ -235,6 +338,18 @@ class FabricItemManager:
             created_item = FabricItem.from_api_response(result)
             
             logger.info(f"Successfully created {item_type.value} '{display_name}' with ID: {created_item.id}")
+            
+            # Log to audit trail
+            if self.enable_audit_logging:
+                self.audit_logger.log_item_creation(
+                    workspace_id=workspace_id,
+                    item_id=created_item.id,
+                    item_name=display_name,
+                    item_type=item_type.value,
+                    description=description,
+                    validation_passed=validation_passed
+                )
+            
             return created_item
             
         except Exception as e:

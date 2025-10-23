@@ -53,6 +53,24 @@
       "devops": "{organization}/devops-team"
     }
   },
+  "git_integration": {
+    "enabled": true,
+    "provider": "GitHub",
+    "organization": "${GIT_ORGANIZATION}",
+    "project": "${GIT_PROJECT}",
+    "repository": "${GIT_REPOSITORY}",
+    "auto_connect_workspaces": true,
+    "auto_commit_on_creation": false,
+    "default_branch": "main",
+    "feature_branch_pattern": "feature/{product_id}/{ticket_id}",
+    "workspace_directory_pattern": "/data_products/{product_id}",
+    "commit_message_template": "{action} - {product_name} [{environment}]",
+    "sync_settings": {
+      "bidirectional_sync": true,
+      "conflict_resolution": "Workspace",
+      "pull_before_commit": true
+    }
+  },
   "contacts": {
     "data_owner": "${DATA_OWNER_EMAIL}",
     "technical_lead": "${TECHNICAL_LEAD_EMAIL}",
