@@ -530,6 +530,8 @@ class AuditLogger:
         self,
         product_id: str,
         workspace_id: str = None,
+        feature_workspace_id: str = None,
+        git_branch: str = None,
         items_created: int = None,
         duration_seconds: Optional[float] = None
     ) -> None:
@@ -539,6 +541,8 @@ class AuditLogger:
             {
                 "product_id": product_id,
                 "workspace_id": workspace_id,
+                "feature_workspace_id": feature_workspace_id,
+                "git_branch": git_branch,
                 "items_created": items_created,
                 "duration_seconds": duration_seconds
             }
