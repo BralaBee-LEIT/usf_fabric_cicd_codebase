@@ -294,6 +294,15 @@ class DQRulesValidator:
                                 "message": f"Rule {index + 1}: Invalid percentage format in threshold",
                             }
                         )
+                else:
+                    # String without % is invalid
+                    issues.append(
+                        {
+                            "type": "field_format",
+                            "severity": "medium",
+                            "message": f"Rule {index + 1}: Invalid threshold format. Use percentage (e.g., '95%') or numeric (0-1)",
+                        }
+                    )
             elif isinstance(threshold, (int, float)):
                 if not (0 <= threshold <= 1):
                     issues.append(

@@ -26,9 +26,16 @@ def mock_env_vars(monkeypatch):
 
 @pytest.fixture
 def workspace_manager(mock_env_vars):
-    """Create WorkspaceManager instance with mocked environment"""
-    with patch("ops.scripts.utilities.workspace_manager.get_config_manager"):
-        return WorkspaceManager(environment="dev")
+    """Create WorkspaceManager instance for testing"""
+    with patch("ops.scripts.utilities.workspace_manager.get_config_manager") as mock_config:
+        # Create a proper mock config manager
+        mock_config_instance = Mock()
+        mock_config_instance.generate_name.return_value = "test-workspace-dev"
+        mock_config.return_value = mock_config_instance
+        
+        manager = WorkspaceManager(environment="dev")
+        manager.config_manager = mock_config_instance
+        return manager
 
 
 @pytest.fixture
@@ -186,7 +193,7 @@ class TestWorkspaceOperations:
 
         assert result["id"] == "workspace-123"
         assert result["displayName"] == "test-workspace-dev"
-        mock_request.assert_called_once_with("GET", "v1/workspaces/workspace-123")
+        mock_request.assert_called_once_with("GET", "workspaces/workspace-123")
 
     @patch("ops.scripts.utilities.workspace_manager.WorkspaceManager._make_request")
     @patch(
@@ -314,7 +321,7 @@ class TestUserManagement:
 
         assert result is True
         mock_request.assert_called_once_with(
-            "DELETE", "v1/workspaces/workspace-123/roleAssignments/user@example.com"
+            "DELETE", "workspaces/workspace-123/roleAssignments/user@example.com"
         )
 
     @patch("ops.scripts.utilities.workspace_manager.WorkspaceManager._make_request")

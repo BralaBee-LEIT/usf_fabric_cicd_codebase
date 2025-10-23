@@ -227,6 +227,13 @@ class AuditLogger:
             },
         )
 
+    # Alias for backward compatibility
+    def log_workspace_deleted(
+        self, workspace_id: str, workspace_name: str, reason: Optional[str] = None
+    ) -> None:
+        """Alias for log_workspace_deletion"""
+        return self.log_workspace_deletion(workspace_id, workspace_name, reason)
+
     # Item operations
 
     def log_item_creation(
@@ -348,16 +355,20 @@ class AuditLogger:
     def log_user_addition(
         self,
         workspace_id: str,
-        user_email: str,
-        role: str,
+        user_email: Optional[str] = None,
+        user_id: Optional[str] = None,
+        role: str = "Viewer",
         principal_type: str = "User",
     ) -> None:
         """Log user addition event"""
+        principal_identifier = user_email or user_id
         self._log_event(
             AuditEventType.USER_ADDED,
             {
                 "workspace_id": workspace_id,
+                "principal_identifier": principal_identifier,
                 "user_email": user_email,
+                "user_id": user_id,
                 "role": role,
                 "principal_type": principal_type,
             },
