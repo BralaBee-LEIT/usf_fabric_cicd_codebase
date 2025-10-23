@@ -427,8 +427,8 @@ environments:
     )
 
     # Mock connect_feature_workspace_to_git to avoid MSAL auth
-    def mock_connect(self, product, workspace_name, branch_name):
-        git_operations.append(("connected_to_git", workspace_name, branch_name))
+    def mock_connect(self, product, workspace_id, workspace_name, branch_name):
+        git_operations.append(("connected_to_git", workspace_id, workspace_name, branch_name))
 
     monkeypatch.setattr(
         onboarding.DataProductOnboarder,

@@ -468,7 +468,7 @@ class DataProductOnboarder:
             )
         
         # Auto-connect workspace to Git if enabled
-        if self.git_connector and self.config_manager:
+        if self.git_connector and self.config_manager and hasattr(self.config_manager, 'config'):
             git_config = self.config_manager.config.get("git_integration", {})
             if git_config.get("enabled") and git_config.get("auto_connect_workspaces"):
                 try:
