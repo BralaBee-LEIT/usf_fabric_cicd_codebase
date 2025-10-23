@@ -72,17 +72,21 @@ def run_command(cmd, description, capture_output=False):
 
 def check_git_branch_exists(branch_name):
     """Check if a Git branch exists"""
-    result = run_command(
-        f"git branch -a | grep -q '{branch_name}'",
-        "Git branch check",
-        capture_output=False
-    )
-    return result is not None
+    try:
+        result = subprocess.run(
+            ["git", "branch", "-a"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return branch_name in result.stdout
+    except subprocess.CalledProcessError:
+        return False
 
 def get_git_log(branch_name, count=5):
     """Get Git log for a branch"""
     return run_command(
-        f"git log --oneline {branch_name} -{count}",
+        f'git log --oneline "{branch_name}" -{count}',
         "Git log",
         capture_output=True
     )
@@ -285,11 +289,11 @@ def main():
         print("\nContents:")
         
         # Try to use tree command, fall back to ls
-        tree_result = run_command(f"tree -L 2 {scaffold_path}", "Tree command", capture_output=True)
+        tree_result = run_command(f'tree -L 2 "{scaffold_path}"', "Tree command", capture_output=True)
         if tree_result:
             print(tree_result)
         else:
-            ls_result = run_command(f"ls -la {scaffold_path}", "Directory listing", capture_output=True)
+            ls_result = run_command(f'ls -la "{scaffold_path}"', "Directory listing", capture_output=True)
             if ls_result:
                 print(ls_result)
     else:

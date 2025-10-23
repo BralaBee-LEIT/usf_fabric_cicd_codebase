@@ -50,14 +50,14 @@
       "slug": "customer_insights",
       "owner_email": "data-team@company.com",
       "domain": "Customer Analytics",
-      "audit_reference": "CUSTOMER-INSIGHTS-ONBOARDING",
+      "audit_reference": "TEST-SCENARIO",
       "dev_workspace_id": "fc0f2e9d-dfee-4d50-9225-6f001c45abb6",
       "feature_workspaces": {
-        "TEST-001": "cf8fe4b2-fec4-4392-8863-aa262356085d"
+        "TEST-1761258067": "ebb5adc0-90d6-4263-8eda-fb25e6b15b2f"
       },
       "git": {
-        "repository": "usf_fabric_cicd_codebase",
-        "organization": "BralaBee-LEIT",
+        "repository": "${GITHUB_REPO}",
+        "organization": "${GITHUB_ORG}",
         "directory": "data_products/customer_insights",
         "default_branch": "main"
       }
