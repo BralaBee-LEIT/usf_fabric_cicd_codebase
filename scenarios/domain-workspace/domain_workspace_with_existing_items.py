@@ -32,25 +32,23 @@ Usage:
         --existing-lakehouse-name "SourceDataLakehouse"
 """
 import sys
-import os
 import json
 import subprocess
 from pathlib import Path
 from datetime import datetime
-from typing import Optional, Dict, List
+from typing import Optional
 
 # Add ops/scripts to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "ops" / "scripts"))
 
-from utilities.workspace_manager import WorkspaceManager, WorkspaceRole
+from utilities.workspace_manager import WorkspaceManager
 from utilities.fabric_item_manager import FabricItemManager, FabricItemType
 from utilities.fabric_api import FabricClient
 from utilities.output import (
     console_success as print_success,
     console_error as print_error,
     console_warning as print_warning,
-    console_info as print_info,
-    console_table as print_table
+    console_info as print_info
 )
 
 
@@ -286,16 +284,16 @@ class DomainWorkspaceSetup:
         print_info("  3. Copy/migrate items if needed")
         
         if self.existing_lakehouse_workspace and self.existing_lakehouse_name:
-            print_info(f"\n📌 Existing Lakehouse Reference:")
+            print_info("\n📌 Existing Lakehouse Reference:")
             print_info(f"   Workspace: {self.existing_lakehouse_workspace}")
             print_info(f"   Lakehouse: {self.existing_lakehouse_name}")
-            print_info(f"\n   To access this data:")
-            print_info(f"   1. Open your new lakehouse in Fabric portal")
-            print_info(f"   2. Right-click in Lakehouse Explorer → New shortcut")
-            print_info(f"   3. Select 'OneLake' as source")
+            print_info("\n   To access this data:")
+            print_info("   1. Open your new lakehouse in Fabric portal")
+            print_info("   2. Right-click in Lakehouse Explorer → New shortcut")
+            print_info("   3. Select 'OneLake' as source")
             print_info(f"   4. Navigate to workspace '{self.existing_lakehouse_workspace}'")
             print_info(f"   5. Select lakehouse '{self.existing_lakehouse_name}'")
-            print_info(f"   6. Choose tables/files to create shortcuts for")
+            print_info("   6. Choose tables/files to create shortcuts for")
             
             self.setup_log["items_referenced"].append({
                 "type": "Lakehouse",
@@ -305,12 +303,12 @@ class DomainWorkspaceSetup:
             })
         
         if self.existing_warehouse_workspace and self.existing_warehouse_name:
-            print_info(f"\n📌 Existing Warehouse Reference:")
+            print_info("\n📌 Existing Warehouse Reference:")
             print_info(f"   Workspace: {self.existing_warehouse_workspace}")
             print_info(f"   Warehouse: {self.existing_warehouse_name}")
-            print_info(f"\n   To query this warehouse:")
-            print_info(f"   1. Use cross-workspace T-SQL queries")
-            print_info(f"   2. Format: [workspace_name].[warehouse_name].[schema].[table]")
+            print_info("\n   To query this warehouse:")
+            print_info("   1. Use cross-workspace T-SQL queries")
+            print_info("   2. Format: [workspace_name].[warehouse_name].[schema].[table]")
             print_info(f"   3. Example: SELECT * FROM [{self.existing_warehouse_workspace}].[{self.existing_warehouse_name}].[dbo].[Sales]")
             
             self.setup_log["items_referenced"].append({
@@ -383,7 +381,7 @@ class DomainWorkspaceSetup:
             # Prompt user to edit file (unless skipped for automation)
             if self.skip_user_prompt:
                 print_warning("\n⚠️  Skipped user configuration (--skip-user-prompt) - workspace has NO users!")
-                print_info(f"To add users later, run:")
+                print_info("To add users later, run:")
                 print_info(f"  python ops/scripts/manage_workspaces.py add-users-from-file {self.workspace_id} config/{domain_principals_path.name}")
                 self.setup_log["principals_configured"] = False
                 self.setup_log["principals_file_created"] = str(domain_principals_path)
@@ -399,7 +397,7 @@ class DomainWorkspaceSetup:
             
             if response == 's':
                 print_warning("\n⚠️  Skipped user configuration - workspace has NO users!")
-                print_info(f"To add users later, run:")
+                print_info("To add users later, run:")
                 print_info(f"  python ops/scripts/manage_workspaces.py add-users-from-file {self.workspace_id} config/{domain_principals_path.name}")
                 self.setup_log["principals_configured"] = False
                 self.setup_log["principals_file_created"] = str(domain_principals_path)
@@ -560,7 +558,7 @@ class DomainWorkspaceSetup:
         print("  - 1 Analytics Warehouse")
         print("  - 1 Additional Lakehouse (staging)")
         if self.existing_lakehouse_workspace:
-            print(f"  - Reference to existing lakehouse (via shortcuts)")
+            print("  - Reference to existing lakehouse (via shortcuts)")
         
         self.print_header("")
         

@@ -6,12 +6,10 @@ Performs comprehensive validation of notebooks, pipelines, dataflows, and other 
 import argparse
 import json
 import logging
-import os
 import re
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
+from typing import Dict, Any
 import nbformat
-import yaml
 
 # Configure logging
 logging.basicConfig(

@@ -7,8 +7,8 @@ import argparse
 import json
 import logging
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
+from datetime import datetime
+from typing import Dict, Any
 from utilities.fabric_api import fabric_client
 
 # Configure logging
@@ -76,7 +76,7 @@ class FabricHealthChecker:
             start_time = time.time()
 
             # Test workspace access
-            workspace_info = fabric_client._make_request(
+            fabric_client._make_request(
                 "GET", f"workspaces/{self.workspace_id}"
             )
             response_time = time.time() - start_time
@@ -160,7 +160,7 @@ class FabricHealthChecker:
         try:
             # Get detailed item information
             item_id = item["id"]
-            item_details = fabric_client._make_request(
+            fabric_client._make_request(
                 "GET", f"workspaces/{self.workspace_id}/items/{item_id}"
             )
 
@@ -368,7 +368,7 @@ def main():
         else:
             # Text format
             lines = []
-            lines.append(f"# Fabric Workspace Health Report")
+            lines.append("# Fabric Workspace Health Report")
             lines.append(f"**Workspace:** {health_report['workspace']}")
             lines.append(f"**Environment:** {health_report['environment']}")
             lines.append(

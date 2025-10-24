@@ -6,9 +6,8 @@ This ensures notebooks don't contain large outputs or sensitive data
 import argparse
 import json
 import logging
-import os
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Dict, Any
 import nbformat
 
 # Configure logging

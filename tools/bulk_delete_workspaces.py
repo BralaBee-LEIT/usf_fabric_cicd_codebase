@@ -7,7 +7,6 @@ Supports multiple deletion methods:
 2. Reading from a file (--file/-f)
 3. Deleting all workspaces (--all)
 """
-import os
 import sys
 from dotenv import load_dotenv
 sys.path.insert(0, 'ops/scripts')
@@ -123,14 +122,14 @@ def main():
     
     for workspace_id in workspace_ids:
         try:
-            result = manager.delete_workspace(workspace_id, force=True)
+            manager.delete_workspace(workspace_id, force=True)
             print(f"✅ Deleted workspace: {workspace_id}")
             success_count += 1
         except Exception as e:
             print(f"❌ Failed to delete {workspace_id}: {str(e)}")
             fail_count += 1
     
-    print(f"\n📊 Summary:")
+    print("\n📊 Summary:")
     print(f"   ✅ Deleted: {success_count}")
     print(f"   ❌ Failed: {fail_count}")
     print(f"   📋 Total: {len(workspace_ids)}")

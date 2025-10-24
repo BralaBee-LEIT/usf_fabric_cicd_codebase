@@ -4,13 +4,11 @@ Tests workspace and user management operations
 """
 
 import pytest
-import os
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 import requests
 from ops.scripts.utilities.workspace_manager import (
     WorkspaceManager,
     WorkspaceRole,
-    CapacityType,
     create_workspace_for_environment,
     setup_complete_environment,
 )

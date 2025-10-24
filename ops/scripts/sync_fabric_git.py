@@ -6,11 +6,8 @@ Handles bi-directional sync between Fabric workspaces and Git repositories
 import argparse
 import logging
 import json
-import os
-from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from utilities.fabric_deployment_pipeline import FabricGitIntegration
-from utilities.fabric_api import fabric_client
 
 # Configure logging
 logging.basicConfig(

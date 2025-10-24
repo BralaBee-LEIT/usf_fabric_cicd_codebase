@@ -4,7 +4,6 @@ Quick validation test for Fabric CI/CD solution
 Tests core functionality without requiring credentials
 """
 
-import os
 import sys
 import yaml
 import json

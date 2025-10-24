@@ -6,7 +6,7 @@ TODO: Implement full Power BI deployment pipeline integration
 import logging
 
 from .constants import POWERBI_API_BASE_URL
-from .output import console_info, console_warning
+from .output import console_warning
 
 logger = logging.getLogger(__name__)
 

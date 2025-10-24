@@ -2,7 +2,6 @@
 Unit tests for data contract and DQ rules validators
 """
 
-import pytest
 import yaml
 from pathlib import Path
 import sys

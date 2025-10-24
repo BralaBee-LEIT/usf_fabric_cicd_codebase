@@ -1,4 +1,6 @@
-import argparse, os, zipfile
+import argparse
+import os
+import zipfile
 
 
 def zipdir(path, ziph):

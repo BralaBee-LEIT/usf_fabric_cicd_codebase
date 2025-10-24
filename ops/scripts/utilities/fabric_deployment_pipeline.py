@@ -11,8 +11,6 @@ from .fabric_api import fabric_client
 
 from .constants import (
     DEFAULT_POLLING_INTERVAL_SECONDS,
-    MAX_POLLING_ATTEMPTS,
-    DEPLOYMENT_TIMEOUT_SECONDS,
 )
 
 logger = logging.getLogger(__name__)

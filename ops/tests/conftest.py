@@ -2,13 +2,11 @@
 Pytest configuration and fixtures for Fabric CI/CD tests
 """
 
-import os
 import sys
 import pytest
 import tempfile
 import json
 from pathlib import Path
-from typing import Dict, Any
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))

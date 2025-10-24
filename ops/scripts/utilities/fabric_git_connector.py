@@ -12,7 +12,6 @@ import os
 import json
 import logging
 from typing import Dict, Any, Optional, List
-from pathlib import Path
 from datetime import datetime
 
 from .fabric_api import FabricClient
@@ -306,7 +305,7 @@ class FabricGitConnector:
                 "POST", f"workspaces/{workspace_id}/git/connect", json=payload
             )
 
-            print_success(f"✓ Workspace connected to Git successfully")
+            print_success("✓ Workspace connected to Git successfully")
             return response.json() if response.text else {}
 
         except Exception as e:
@@ -348,7 +347,7 @@ class FabricGitConnector:
         try:
             current_state = self.get_git_connection_state(workspace_id)
             if current_state.get("gitConnectionState") == GitConnectionState.CONNECTED:
-                print_warning(f"Workspace already connected to Git")
+                print_warning("Workspace already connected to Git")
                 print_info(f"  Current branch: {current_state.get('gitBranchName')}")
                 print_info(
                     f"  Current directory: {current_state.get('gitDirectoryPath')}"
@@ -376,7 +375,7 @@ class FabricGitConnector:
                 json=git_config,
             )
 
-            print_success(f"✓ Git connection initialized successfully")
+            print_success("✓ Git connection initialized successfully")
 
             # Verify connection
             connection_state = self.get_git_connection_state(workspace_id)
@@ -448,7 +447,7 @@ class FabricGitConnector:
 
         API: POST /workspaces/{workspaceId}/git/commitToGit
         """
-        print_info(f"Committing workspace items to Git...")
+        print_info("Committing workspace items to Git...")
         print_info(f"  Message: {comment}")
         print_info(f"  Mode: {commit_mode}")
 
@@ -468,7 +467,7 @@ class FabricGitConnector:
                 json=commit_payload,
             )
 
-            print_success(f"✓ Committed to Git successfully")
+            print_success("✓ Committed to Git successfully")
             return response.json() if response.text else {}
 
         except Exception as e:
@@ -494,7 +493,7 @@ class FabricGitConnector:
 
         API: POST /workspaces/{workspaceId}/git/updateFromGit
         """
-        print_info(f"Updating workspace from Git...")
+        print_info("Updating workspace from Git...")
         print_info(f"  Conflict resolution: {conflict_resolution}")
 
         update_payload = {
@@ -517,7 +516,7 @@ class FabricGitConnector:
                 json=update_payload,
             )
 
-            print_success(f"✓ Updated from Git successfully")
+            print_success("✓ Updated from Git successfully")
             return response.json() if response.text else {}
 
         except Exception as e:
@@ -533,14 +532,14 @@ class FabricGitConnector:
 
         API: POST /workspaces/{workspaceId}/git/disconnect
         """
-        print_info(f"Disconnecting workspace from Git...")
+        print_info("Disconnecting workspace from Git...")
 
         try:
             self.fabric_client._make_request(
                 "POST", f"workspaces/{workspace_id}/git/disconnect"
             )
 
-            print_success(f"✓ Git connection disconnected")
+            print_success("✓ Git connection disconnected")
 
         except Exception as e:
             print_error(f"✗ Disconnect failed: {str(e)}")

@@ -4,7 +4,6 @@ Quick validation script for feature-branch-workflow scenario
 Tests prerequisites and configuration without running the full workflow
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -94,7 +93,7 @@ def main():
     if not errors:
         print_success(f"Validation passed! ({len(warnings)} warnings)")
         print(f"\n{Colors.BLUE}Ready to run:{Colors.NC}")
-        print(f"  python3 test_feature_workflow.py")
+        print("  python3 test_feature_workflow.py")
         return 0
     else:
         print_error(f"Validation failed! ({len(errors)} errors, {len(warnings)} warnings)")

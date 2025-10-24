@@ -590,7 +590,7 @@ class AuditLogger:
                     events.append(event)
 
                 except json.JSONDecodeError:
-                    logger.warning(f"Skipping invalid JSON line in audit log")
+                    logger.warning("Skipping invalid JSON line in audit log")
                     continue
 
         return events

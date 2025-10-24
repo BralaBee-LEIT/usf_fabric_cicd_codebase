@@ -7,7 +7,6 @@ import argparse
 import sys
 import json
 import logging
-from typing import Optional, List
 from pathlib import Path
 
 # Add utilities to path
@@ -17,7 +16,6 @@ from utilities.workspace_manager import (
     WorkspaceManager,
     WorkspaceRole,
     CapacityType,
-    create_workspace_for_environment,
     setup_complete_environment,
 )
 from utilities.output import (
@@ -222,7 +220,7 @@ def cmd_delete_bulk(args):
                 fail_count += 1
 
         # Print summary
-        print_info(f"\n📊 Summary:")
+        print_info("\n📊 Summary:")
         print_success(f"  ✓ Deleted: {success_count}")
         if fail_count > 0:
             print_error(f"  ✗ Failed: {fail_count}")
@@ -285,7 +283,7 @@ def cmd_delete_all(args):
                 fail_count += 1
 
         # Print summary
-        print_info(f"\n📊 Summary:")
+        print_info("\n📊 Summary:")
         print_success(f"  ✓ Deleted: {success_count}")
         if fail_count > 0:
             print_error(f"  ✗ Failed: {fail_count}")
@@ -559,7 +557,7 @@ def cmd_add_users_from_file(args):
                 failed_count += 1
 
         # Summary
-        print_info(f"\n📊 Summary:")
+        print_info("\n📊 Summary:")
         print_success(f"  ✓ Successfully added: {success_count}")
         if failed_count > 0:
             print_error(f"  ✗ Failed: {failed_count}")
@@ -773,7 +771,7 @@ def cmd_unassign_capacity(args):
         print_success(
             f"✓ Successfully removed capacity assignment from workspace '{workspace_name}'"
         )
-        print_info(f"  Workspace reverted to Trial/Shared capacity")
+        print_info("  Workspace reverted to Trial/Shared capacity")
 
         if args.json:
             print("\n" + json.dumps(updated_workspace, indent=2))

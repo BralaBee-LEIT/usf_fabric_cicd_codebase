@@ -10,7 +10,6 @@ import yaml
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
-from enum import Enum
 
 logger = logging.getLogger(__name__)
 
@@ -229,9 +228,7 @@ class ItemNamingValidator:
         valid_systems = ticket_standards.get("ticket_systems", [])
 
         if ticket_prefix not in valid_systems:
-            warnings = [
-                f"Ticket system '{ticket_prefix}' not in recognized systems: {valid_systems}"
-            ]
+            pass
 
         # Check if name starts with ticket ID
         expected_prefix = ticket_id.replace("-", "")

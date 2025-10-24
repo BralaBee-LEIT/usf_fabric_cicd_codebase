@@ -1,4 +1,6 @@
-import argparse, yaml, sys
+import argparse
+import yaml
+import sys
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()

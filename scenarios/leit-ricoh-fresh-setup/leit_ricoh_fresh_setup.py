@@ -19,7 +19,6 @@ Key Features:
 - Supports Azure AD Groups for team management
 """
 import sys
-import os
 import json
 import base64
 import subprocess
@@ -29,7 +28,7 @@ from datetime import datetime
 # Add ops/scripts to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "ops" / "scripts"))
 
-from utilities.workspace_manager import WorkspaceManager, WorkspaceRole
+from utilities.workspace_manager import WorkspaceManager
 from utilities.fabric_item_manager import FabricItemManager, FabricItemType, ItemDefinition, ItemDefinitionPart
 from utilities.fabric_api import FabricClient
 from utilities.output import (
@@ -192,7 +191,7 @@ class RicohFreshWorkspaceSetup:
                 description="Primary lakehouse for Ricoh data storage and processing"
             )
             
-            print_success(f"✓ Lakehouse 'RicohDataLakehouse' created")
+            print_success("✓ Lakehouse 'RicohDataLakehouse' created")
             print_info(f"  Item ID: {lakehouse.id}")
             
             self.created_items.append(lakehouse)
@@ -223,7 +222,7 @@ class RicohFreshWorkspaceSetup:
                 description="Data warehouse for Ricoh analytics and reporting"
             )
             
-            print_success(f"✓ Warehouse 'RicohAnalyticsWarehouse' created")
+            print_success("✓ Warehouse 'RicohAnalyticsWarehouse' created")
             print_info(f"  Item ID: {warehouse.id}")
             
             self.created_items.append(warehouse)
@@ -396,10 +395,10 @@ class RicohFreshWorkspaceSetup:
                 # Create definition if needed
                 definition = None
                 if item_config.get("definition") == "semantic_model":
-                    print_info(f"  Generating Semantic Model definition...")
+                    print_info("  Generating Semantic Model definition...")
                     definition = self.create_semantic_model_definition(item_config["name"])
                 elif item_config.get("definition") == "report":
-                    print_info(f"  Generating Report definition...")
+                    print_info("  Generating Report definition...")
                     definition = self.create_report_definition(item_config["name"])
                 
                 item = self.item_mgr.create_item(

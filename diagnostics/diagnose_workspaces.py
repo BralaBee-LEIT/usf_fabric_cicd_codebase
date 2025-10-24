@@ -28,7 +28,6 @@ print()
 sys.path.insert(0, str(Path(__file__).parent / "ops" / "scripts"))
 
 from utilities.workspace_manager import WorkspaceManager
-from utilities.config_manager import ConfigManager
 
 print("🔍 Checking workspace visibility...")
 print()
@@ -69,7 +68,7 @@ try:
         else:
             print(f"  ❌ NOT FOUND: {name}")
             print(f"     Expected ID: {ws_id}")
-            print(f"     Status: Created by API but not returned in list")
+            print("     Status: Created by API but not returned in list")
         print()
     
     # Check tenant info
@@ -108,10 +107,10 @@ try:
                 print(f"     Capacity: {ws_data.get('capacityId', 'N/A')}")
             elif response.status_code == 404:
                 print(f"  ❌ {name}: NOT FOUND (404)")
-                print(f"     Workspace might have been deleted")
+                print("     Workspace might have been deleted")
             elif response.status_code == 403:
                 print(f"  🚫 {name}: ACCESS DENIED (403)")
-                print(f"     Service principal lacks permission")
+                print("     Service principal lacks permission")
             else:
                 print(f"  ⚠️ {name}: Unexpected response ({response.status_code})")
             print()

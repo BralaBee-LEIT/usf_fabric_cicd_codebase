@@ -19,14 +19,11 @@ Usage:
 """
 
 import argparse
-import json
 import os
 import sys
-import time
 import yaml
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 # Add parent directories to path
 repo_root = Path(__file__).parent.parent.parent
@@ -355,7 +352,7 @@ def validate_naming(workspace_id: str, product_config: Dict, created_items: Dict
                 violations.append(item['name'])
         
         if violations and naming_config.get('strict_mode', False):
-            print_error(f"Naming validation failed (strict mode)")
+            print_error("Naming validation failed (strict mode)")
             return False
         
         print_success("Naming validation complete")
@@ -450,7 +447,7 @@ def write_audit_log(product_config: Dict, workspace_id: str, created_items: Dict
             items_deployed=len(created_items)
         )
         
-        print_success(f"Audit log written to: audit/audit_trail.jsonl")
+        print_success("Audit log written to: audit/audit_trail.jsonl")
         
     except Exception as e:
         print_warning(f"Audit logging failed: {e}")

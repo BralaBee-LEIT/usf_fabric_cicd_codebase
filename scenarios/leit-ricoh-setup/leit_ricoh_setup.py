@@ -93,7 +93,7 @@ class RicohWorkspaceSetup:
         except ValueError as e:
             # Workspace already exists - fetch it
             if "already exists" in str(e):
-                print_warning(f"Workspace already exists, retrieving existing workspace...")
+                print_warning("Workspace already exists, retrieving existing workspace...")
                 existing_workspace = self.workspace_mgr.get_workspace_by_name(self.workspace_name)
                 
                 if existing_workspace:
@@ -132,7 +132,7 @@ class RicohWorkspaceSetup:
                 description="Primary lakehouse for Ricoh data storage and processing"
             )
             
-            print_success(f"✓ Lakehouse 'RicohDataLakehouse' created")
+            print_success("✓ Lakehouse 'RicohDataLakehouse' created")
             print_info(f"  Item ID: {lakehouse.id}")
             
             self.created_items.append(lakehouse)
@@ -163,7 +163,7 @@ class RicohWorkspaceSetup:
                 description="Data warehouse for Ricoh analytics and reporting"
             )
             
-            print_success(f"✓ Warehouse 'RicohAnalyticsWarehouse' created")
+            print_success("✓ Warehouse 'RicohAnalyticsWarehouse' created")
             print_info(f"  Item ID: {warehouse.id}")
             
             self.created_items.append(warehouse)

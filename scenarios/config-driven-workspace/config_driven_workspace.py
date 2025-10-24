@@ -23,13 +23,12 @@ Compare to Direct-Name Approach:
 """
 
 import sys
-import os
 import argparse
 import json
 import subprocess
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Optional
 
 # Add ops/scripts to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "ops" / "scripts"))
@@ -90,9 +89,9 @@ class ConfigDrivenWorkspace:
         self.log_file = self.log_dir / f"{self.project_name}_{self.environment}_setup_log.json"
         
         print(f"\n{'='*70}")
-        print(f"  Config-Driven Workspace Provisioning")
+        print("  Config-Driven Workspace Provisioning")
         print(f"{'='*70}")
-        print(f"\n📋 Configuration:")
+        print("\n📋 Configuration:")
         print(f"   Project Name:    {self.project_name}")
         print(f"   Environment:     {self.environment}")
         print(f"   Workspace Name:  {self.workspace_name} (generated from config)")
@@ -103,7 +102,7 @@ class ConfigDrivenWorkspace:
     def step_1_create_workspace(self):
         """Create workspace using config-driven naming"""
         print(f"{'='*70}")
-        print(f"  STEP 1: Creating Workspace (Config-Driven)")
+        print("  STEP 1: Creating Workspace (Config-Driven)")
         print(f"{'='*70}\n")
         
         env_config = self.config_manager.get_environment_config(self.environment)
@@ -116,7 +115,7 @@ class ConfigDrivenWorkspace:
         if self.capacity_id:
             print(f"   Capacity ID: {self.capacity_id}")
         else:
-            print(f"   ⚠️  No capacity ID - using Trial (lakehouse creation will fail)")
+            print("   ⚠️  No capacity ID - using Trial (lakehouse creation will fail)")
         print()
         
         try:
@@ -127,7 +126,7 @@ class ConfigDrivenWorkspace:
             )
             
             self.workspace_id = result['id']
-            print(f"✓ Workspace created successfully")
+            print("✓ Workspace created successfully")
             print(f"  Workspace ID: {self.workspace_id}")
             print(f"  Display Name: {result.get('displayName', 'N/A')}")
             print(f"  Type: {result.get('type', 'N/A')}\n")
@@ -135,7 +134,7 @@ class ConfigDrivenWorkspace:
         except ValueError as e:
             # Workspace already exists - fetch it
             if "already exists" in str(e):
-                print(f"⚠️  Workspace already exists, retrieving existing workspace...")
+                print("⚠️  Workspace already exists, retrieving existing workspace...")
                 existing_workspace = self.workspace_mgr.get_workspace_by_name(self.workspace_name)
                 
                 if existing_workspace:
@@ -145,7 +144,7 @@ class ConfigDrivenWorkspace:
                     print(f"  Display Name: {existing_workspace.get('displayName', 'N/A')}")
                     print(f"  Type: {existing_workspace.get('type', 'N/A')}\n")
                 else:
-                    print(f"❌ Failed to retrieve existing workspace")
+                    print("❌ Failed to retrieve existing workspace")
                     raise
             else:
                 print(f"❌ Failed to create workspace: {str(e)}")
@@ -207,7 +206,7 @@ class ConfigDrivenWorkspace:
     def step_3_configure_principals(self):
         """Configure workspace principals (users/groups)"""
         print(f"{'='*70}")
-        print(f"  STEP 3: Configuring Workspace Principals")
+        print("  STEP 3: Configuring Workspace Principals")
         print(f"{'='*70}\n")
         
         if not self.workspace_id:
@@ -250,11 +249,11 @@ class ConfigDrivenWorkspace:
                         "# Format: principal_id,role,description,type\n"
                         "# Example: 9117cbfa-f0a7-43b7-846f-96ba66a3c1c0,Admin,Administrator,User\n\n"
                     )
-                    print(f"  ✓ Basic template created\n")
+                    print("  ✓ Basic template created\n")
                 
                 # Prompt user to edit (unless automation mode)
                 if not self.skip_user_prompt:
-                    print(f"✏️  Please edit the principals file:")
+                    print("✏️  Please edit the principals file:")
                     print(f"   {principals_file}\n")
                     print("   Add user/group Object IDs (not emails!)\n")
                     
@@ -280,7 +279,7 @@ class ConfigDrivenWorkspace:
             if not lines:
                 print("⚠️  No valid users found in principals file")
                 print(f"   Template created at: {principals_file}")
-                print(f"   Edit it and add users, then run:")
+                print("   Edit it and add users, then run:")
                 print(f"   python ops/scripts/manage_workspaces.py add-users-from-file {self.workspace_id} {principals_file} --yes\n")
                 return
             
@@ -294,8 +293,8 @@ class ConfigDrivenWorkspace:
             
             if not has_valid_format:
                 print("⚠️  No valid user entries found (lines don't match expected format)")
-                print(f"   Expected format: principal_id,role,description,type")
-                print(f"   Example: abc123-def456-...,Admin,Administrator,User\n")
+                print("   Expected format: principal_id,role,description,type")
+                print("   Example: abc123-def456-...,Admin,Administrator,User\n")
                 return
                 
         except Exception as e:
@@ -323,9 +322,9 @@ class ConfigDrivenWorkspace:
                         print(line)
             
             if result.returncode == 0:
-                print(f"✓ Principals configured successfully\n")
+                print("✓ Principals configured successfully\n")
             else:
-                print(f"⚠️  Some principals may have failed to add")
+                print("⚠️  Some principals may have failed to add")
                 if result.stderr:
                     print(f"   Error details: {result.stderr}\n")
                     
@@ -335,7 +334,7 @@ class ConfigDrivenWorkspace:
     def step_4_save_log(self):
         """Save setup log"""
         print(f"{'='*70}")
-        print(f"  STEP 4: Saving Setup Log")
+        print("  STEP 4: Saving Setup Log")
         print(f"{'='*70}\n")
         
         log_data = {
@@ -364,9 +363,9 @@ class ConfigDrivenWorkspace:
             self.step_4_save_log()
             
             print(f"{'='*70}")
-            print(f"  ✅ Setup Complete!")
+            print("  ✅ Setup Complete!")
             print(f"{'='*70}\n")
-            print(f"📊 Summary:")
+            print("📊 Summary:")
             print(f"   Workspace: {self.workspace_name}")
             print(f"   ID: {self.workspace_id}")
             print(f"   Items: {len(self.created_items)}")

@@ -3,11 +3,10 @@ Microsoft Fabric Item CRUD Manager
 Handles Create, Read, Update, Delete operations for all Fabric item types
 """
 
-import os
 import json
 import base64
 import logging
-from typing import Dict, Any, Optional, List, Literal
+from typing import Dict, Any, Optional, List
 from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime
@@ -559,7 +558,7 @@ class FabricItemManager:
             response = self.client._make_request("POST", endpoint, params=params)
             result = response.json()
 
-            logger.info(f"Successfully retrieved item definition")
+            logger.info("Successfully retrieved item definition")
             return result
 
         except Exception as e:
@@ -593,7 +592,7 @@ class FabricItemManager:
                 json=payload,
             )
 
-            logger.info(f"Successfully updated item definition")
+            logger.info("Successfully updated item definition")
             return True
 
         except Exception as e:

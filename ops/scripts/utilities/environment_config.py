@@ -11,8 +11,6 @@ from pathlib import Path
 from .constants import (
     get_sql_server_url,
     get_cosmos_db_url,
-    is_valid_environment,
-    VALID_ENVIRONMENTS,
 )
 
 try:

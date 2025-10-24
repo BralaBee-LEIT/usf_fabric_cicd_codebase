@@ -201,7 +201,7 @@ def main():
     env_file = repo_root / ".env"
     if env_file.is_file():
         load_dotenv(env_file)
-        print_success(f"Loaded environment variables from .env")
+        print_success("Loaded environment variables from .env")
     
     # Generate test ticket ID
     ticket = f"TEST-{int(datetime.now().timestamp())}"
@@ -212,7 +212,7 @@ def main():
     
     # Test configuration
     print(f"{Colors.BLUE}🎯 Test Configuration{Colors.NC}")
-    print(f"   Scenario: Feature Branch Workflow")
+    print("   Scenario: Feature Branch Workflow")
     print(f"   Descriptor: {descriptor}")
     print(f"   Test Ticket: {ticket}")
     print(f"   Repo Root: {repo_root}")

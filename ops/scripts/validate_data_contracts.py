@@ -4,13 +4,12 @@ Data Contract Validator for Microsoft Fabric CI/CD
 Validates multiple data contract YAML files and enforces standards
 """
 
-import os
 import sys
 import yaml
 import json
 import argparse
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from dataclasses import dataclass
 import logging
 

@@ -17,12 +17,11 @@ Usage:
 
 import argparse
 import json
-import os
 import re
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict
 
 
 class Colors:
@@ -284,7 +283,7 @@ def generate_env_file(project_info: Dict, contacts: Dict, git_info: Dict):
     with open(env_path, 'w') as f:
         f.write(env_content)
     
-    print_success(f"Created .env file with customized values")
+    print_success("Created .env file with customized values")
     print_warning("IMPORTANT: Update Azure credentials in .env before running scenarios")
 
 
@@ -301,7 +300,7 @@ def save_config(config: Dict):
     with open(config_path, 'w') as f:
         json.dump(config, f, indent=2)
     
-    print_success(f"Created project.config.json")
+    print_success("Created project.config.json")
     return True
 
 
@@ -347,31 +346,31 @@ def print_next_steps(project_info: Dict):
     print(f"{Colors.BOLD}Your project is configured!{Colors.ENDC}\n")
     
     print(f"{Colors.CYAN}1. Update Azure Credentials{Colors.ENDC}")
-    print(f"   Edit .env and add your Azure Service Principal credentials:")
-    print(f"   - AZURE_CLIENT_ID")
-    print(f"   - AZURE_CLIENT_SECRET")
-    print(f"   - AZURE_TENANT_ID")
-    print(f"   - AZURE_SUBSCRIPTION_ID")
-    print(f"   - FABRIC_CAPACITY_ID\n")
+    print("   Edit .env and add your Azure Service Principal credentials:")
+    print("   - AZURE_CLIENT_ID")
+    print("   - AZURE_CLIENT_SECRET")
+    print("   - AZURE_TENANT_ID")
+    print("   - AZURE_SUBSCRIPTION_ID")
+    print("   - FABRIC_CAPACITY_ID\n")
     
     print(f"{Colors.CYAN}2. Validate Configuration{Colors.ENDC}")
-    print(f"   python setup/init_project_config.py --validate\n")
+    print("   python setup/init_project_config.py --validate\n")
     
     print(f"{Colors.CYAN}3. Run Preflight Check{Colors.ENDC}")
-    print(f"   ./setup/preflight_check.sh\n")
+    print("   ./setup/preflight_check.sh\n")
     
     print(f"{Colors.CYAN}4. Create Your First Workspace{Colors.ENDC}")
-    print(f"   python ops/scripts/manage_workspaces.py create \\")
-    print(f"       --project analytics --environment dev\n")
+    print("   python ops/scripts/manage_workspaces.py create \\")
+    print("       --project analytics --environment dev\n")
     
     print(f"{Colors.CYAN}5. Explore Scenarios{Colors.ENDC}")
-    print(f"   cd scenarios/")
-    print(f"   cat README.md\n")
+    print("   cd scenarios/")
+    print("   cat README.md\n")
     
     print(f"{Colors.BOLD}Documentation:{Colors.ENDC}")
-    print(f"   - Quick Start: docs/getting-started/QUICKSTART.md")
-    print(f"   - Provisioning Guide: docs/guides/WORKSPACE_PROVISIONING_GUIDE.md")
-    print(f"   - Implementation Guide: docs/guides/IMPLEMENTATION_GUIDE.md\n")
+    print("   - Quick Start: docs/getting-started/QUICKSTART.md")
+    print("   - Provisioning Guide: docs/guides/WORKSPACE_PROVISIONING_GUIDE.md")
+    print("   - Implementation Guide: docs/guides/IMPLEMENTATION_GUIDE.md\n")
     
     print(f"{Colors.GREEN}{'=' * 80}{Colors.ENDC}")
     print(f"{Colors.GREEN}Setup Complete! Happy building with Microsoft Fabric! 🚀{Colors.ENDC}")

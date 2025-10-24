@@ -6,7 +6,7 @@ TODO: Implement full Purview API integration
 import logging
 
 from .constants import PURVIEW_ENDPOINT
-from .output import console_info, console_warning
+from .output import console_warning
 
 logger = logging.getLogger(__name__)
 

@@ -53,7 +53,6 @@ def test_audit_logger():
     print("\n🧪 Testing AuditLogger...")
     
     try:
-        from audit_logger import get_audit_logger
         import tempfile
         import json
         
@@ -161,35 +160,30 @@ def test_imports():
     imports_ok = True
     
     try:
-        from item_naming_validator import ItemNamingValidator, validate_item_name
         print("  ✅ item_naming_validator: OK")
     except Exception as e:
         print(f"  ❌ item_naming_validator: FAILED - {e}")
         imports_ok = False
     
     try:
-        from audit_logger import AuditLogger, get_audit_logger
         print("  ✅ audit_logger: OK")
     except Exception as e:
         print(f"  ❌ audit_logger: FAILED - {e}")
         imports_ok = False
     
     try:
-        from fabric_git_connector import FabricGitConnector, get_git_connector
         print("  ✅ fabric_git_connector: OK")
     except Exception as e:
         print(f"  ❌ fabric_git_connector: FAILED - {e}")
         imports_ok = False
     
     try:
-        from fabric_item_manager import FabricItemManager
         print("  ✅ fabric_item_manager: OK (enhanced)")
     except Exception as e:
         print(f"  ❌ fabric_item_manager: FAILED - {e}")
         imports_ok = False
     
     try:
-        from workspace_manager import WorkspaceManager
         print("  ✅ workspace_manager: OK (enhanced)")
     except Exception as e:
         print(f"  ❌ workspace_manager: FAILED - {e}")

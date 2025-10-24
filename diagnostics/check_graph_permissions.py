@@ -28,7 +28,7 @@ app = ConfidentialClientApplication(
 result = app.acquire_token_for_client(scopes=["https://graph.microsoft.com/.default"])
 
 if "access_token" not in result:
-    print(f"❌ Failed to acquire token")
+    print("❌ Failed to acquire token")
     print(f"   Error: {result.get('error')}")
     print(f"   Description: {result.get('error_description')}")
     exit(1)
@@ -56,9 +56,9 @@ try:
         has_required = any(perm in decoded['roles'] for perm in required_permissions)
         
         if has_required:
-            print(f"\n✅ Has required permissions to read user information!")
+            print("\n✅ Has required permissions to read user information!")
         else:
-            print(f"\n⚠️  Missing required permissions!")
+            print("\n⚠️  Missing required permissions!")
             print(f"   Need one of: {', '.join(required_permissions)}")
     else:
         print("   ❌ No roles/permissions found in token")

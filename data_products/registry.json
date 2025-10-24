@@ -51,9 +51,9 @@
       "owner_email": "data-team@company.com",
       "domain": "Customer Analytics",
       "audit_reference": "TEST-SCENARIO",
-      "dev_workspace_id": "fc0f2e9d-dfee-4d50-9225-6f001c45abb6",
+      "dev_workspace_id": "ec8217db-6be1-4e87-af57-e166ada0804b",
       "feature_workspaces": {
-        "TEST-1761258219": "a18a1e23-7585-4059-a78f-d5ffd3c23ad9"
+        "TEST-1761263423": "2e8f1b80-e41b-4ecf-867a-6f443a845e72"
       },
       "git": {
         "repository": "${GITHUB_REPO}",

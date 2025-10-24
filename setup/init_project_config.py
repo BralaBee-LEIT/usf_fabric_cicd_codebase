@@ -5,12 +5,11 @@ Sets up project-specific configuration for Microsoft Fabric CI/CD framework
 """
 
 import json
-import os
 import re
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 
 class ProjectInitializer:
@@ -59,7 +58,7 @@ class ProjectInitializer:
             self._generate_env_vars_guide(config)
             
             print("\n✅ Project initialization completed successfully!")
-            print(f"\n📋 Next steps:")
+            print("\n📋 Next steps:")
             print("1. Review and customize project.config.json")
             print("2. Set up environment variables (see .env.example)")
             print("3. Update CODEOWNERS file with your GitHub organization")
@@ -235,7 +234,7 @@ class ProjectInitializer:
         # Import ConfigManager to generate names
         try:
             from config_manager import ConfigManager
-            config_manager = ConfigManager(str(self.config_file))
+            ConfigManager(str(self.config_file))
             
             for env in self.environments:
                 env_file = config_dir / f"{env}.json"

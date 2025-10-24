@@ -3,7 +3,6 @@
 Clear MSAL token cache and test new permissions
 """
 import os
-import json
 from msal import ConfidentialClientApplication
 
 # Load environment variables
@@ -38,7 +37,7 @@ if "access_token" in result:
     try:
         import jwt
         decoded = jwt.decode(result['access_token'], options={"verify_signature": False})
-        print(f"\n📋 Token Claims:")
+        print("\n📋 Token Claims:")
         print(f"   Audience: {decoded.get('aud')}")
         print(f"   Issuer: {decoded.get('iss')}")
         print(f"   App ID: {decoded.get('appid')}")

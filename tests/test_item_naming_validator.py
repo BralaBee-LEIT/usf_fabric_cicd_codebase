@@ -10,7 +10,7 @@ UTILITIES_PATH = Path(__file__).parent.parent / "ops" / "scripts" / "utilities"
 if str(UTILITIES_PATH) not in sys.path:
     sys.path.insert(0, str(UTILITIES_PATH))
 
-from item_naming_validator import ItemNamingValidator, ValidationResult
+from item_naming_validator import ItemNamingValidator
 
 
 class TestItemNamingValidator:

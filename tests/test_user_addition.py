@@ -81,7 +81,7 @@ for test in test_payloads:
             print(f"Response: {response.json()}")
             break
         else:
-            print(f"❌ Failed")
+            print("❌ Failed")
             print(f"Response: {response.text[:200]}")
     except Exception as e:
         print(f"❌ Error: {str(e)}")

@@ -4,7 +4,6 @@ Data Quality Rules Validator for Microsoft Fabric CI/CD
 Validates multiple DQ rules YAML files and enforces standards
 """
 
-import os
 import sys
 import yaml
 import json

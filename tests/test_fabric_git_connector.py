@@ -4,7 +4,7 @@ Unit tests for FabricGitConnector utility
 import pytest
 from pathlib import Path
 import sys
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 # Add utilities to path
 UTILITIES_PATH = Path(__file__).parent.parent / "ops" / "scripts" / "utilities"

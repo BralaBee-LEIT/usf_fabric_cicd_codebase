@@ -805,9 +805,9 @@ class DataProductOnboarder:
             console_info(
                 "Skipping automated Git connection (SKIP_AUTO_GIT_CONNECT=true)"
             )
-            console_info(f"To connect manually:")
+            console_info("To connect manually:")
             console_info(f"  1. Open workspace '{workspace_name}' in Fabric portal")
-            console_info(f"  2. Go to Workspace Settings → Git integration")
+            console_info("  2. Go to Workspace Settings → Git integration")
             console_info(
                 f"  3. Connect to: {product.git.organization}/{product.git.repository}#{branch_name}"
             )

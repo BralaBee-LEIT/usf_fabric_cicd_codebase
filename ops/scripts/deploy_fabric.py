@@ -10,7 +10,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, Any
 from utilities.fabric_api import fabric_client
 from utilities.fabric_deployment_pipeline import FabricDeploymentManager
 from utilities.environment_config import EnvironmentConfigManager
@@ -141,7 +141,7 @@ class FabricDeployer:
             notebook_name, "notebook", operation, previous_state=None
         )
 
-        result = fabric_client.create_or_update_notebook(
+        fabric_client.create_or_update_notebook(
             self.workspace, notebook_name, content
         )
         logger.info(f"Successfully deployed notebook: {notebook_name}")
@@ -166,7 +166,7 @@ class FabricDeployer:
                 f"Could not parse pipeline JSON for parameter substitution: {e}"
             )
 
-        result = fabric_client.deploy_pipeline_json(self.workspace, pipeline_json_str)
+        fabric_client.deploy_pipeline_json(self.workspace, pipeline_json_str)
         logger.info(
             f"Successfully deployed pipeline: {filename} with environment config: {self.environment}"
         )
@@ -176,7 +176,7 @@ class FabricDeployer:
         """Deploy dataflow Gen2 artifact"""
         dataflow_name = Path(filename).stem
         dataflow_def = json.loads(content.decode("utf-8"))
-        result = fabric_client.deploy_dataflow(
+        fabric_client.deploy_dataflow(
             self.workspace, dataflow_name, dataflow_def
         )
         logger.info(f"Successfully deployed dataflow: {dataflow_name}")
@@ -406,7 +406,7 @@ def main():
 
         # Handle deployment pipeline promotion
         if args.deployment_pipeline_id and args.source_stage and args.target_stage:
-            logger.info(f"Triggering deployment pipeline promotion...")
+            logger.info("Triggering deployment pipeline promotion...")
             deployment_manager = FabricDeploymentManager()
             promotion_result = deployment_manager.promote_to_next_stage(
                 args.deployment_pipeline_id, args.source_stage, args.target_stage

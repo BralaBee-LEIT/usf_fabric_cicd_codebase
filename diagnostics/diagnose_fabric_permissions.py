@@ -69,14 +69,14 @@ for method, url, description, *payload in tests:
         print(f"   Status: {response.status_code}")
         
         if response.status_code == 200 or response.status_code == 201:
-            print(f"   ✅ SUCCESS")
+            print("   ✅ SUCCESS")
             data = response.json()
             if 'value' in data:
                 print(f"   Response: Found {len(data['value'])} items")
             elif 'id' in data:
                 print(f"   Response: Created resource with ID: {data['id']}")
         elif response.status_code == 401:
-            print(f"   ❌ UNAUTHORIZED")
+            print("   ❌ UNAUTHORIZED")
             try:
                 error_data = response.json()
                 print(f"   Error Code: {error_data.get('errorCode')}")
@@ -84,14 +84,14 @@ for method, url, description, *payload in tests:
             except:
                 print(f"   Raw Response: {response.text[:200]}")
         elif response.status_code == 403:
-            print(f"   ❌ FORBIDDEN (Insufficient Permissions)")
+            print("   ❌ FORBIDDEN (Insufficient Permissions)")
             try:
                 error_data = response.json()
                 print(f"   Message: {error_data.get('message')}")
             except:
                 print(f"   Raw Response: {response.text[:200]}")
         else:
-            print(f"   ⚠️  Unexpected Status")
+            print("   ⚠️  Unexpected Status")
             print(f"   Response: {response.text[:200]}")
             
     except Exception as e:

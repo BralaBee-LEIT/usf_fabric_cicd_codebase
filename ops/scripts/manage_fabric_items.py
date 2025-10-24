@@ -8,7 +8,6 @@ import sys
 import json
 import os
 from pathlib import Path
-from typing import Optional, List
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -16,8 +15,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 from ops.scripts.utilities.fabric_item_manager import (
     FabricItemManager,
     FabricItemType,
-    FabricItem,
-    ItemDefinition,
     create_notebook_definition,
     create_pipeline_definition,
     create_spark_job_definition,
