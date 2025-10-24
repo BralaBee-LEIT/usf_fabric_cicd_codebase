@@ -25,11 +25,13 @@ def test_feature_flags_default_disabled():
 
     importlib.reload(feature_flags)
 
-    assert feature_flags.FeatureFlags.USE_KEY_VAULT is False
-    assert feature_flags.FeatureFlags.USE_RETRY_LOGIC is False
-    assert feature_flags.FeatureFlags.USE_CIRCUIT_BREAKER is False
-    assert feature_flags.FeatureFlags.USE_ROLLBACK is False
-    assert feature_flags.FeatureFlags.USE_TELEMETRY is False
+    # Use singleton instance for property access
+    flags = feature_flags._flags
+    assert flags.USE_KEY_VAULT is False
+    assert flags.USE_RETRY_LOGIC is False
+    assert flags.USE_CIRCUIT_BREAKER is False
+    assert flags.USE_ROLLBACK is False
+    assert flags.USE_TELEMETRY is False
 
 
 def test_feature_flags_can_be_enabled():
@@ -44,8 +46,10 @@ def test_feature_flags_can_be_enabled():
 
     importlib.reload(feature_flags)
 
-    assert feature_flags.FeatureFlags.USE_KEY_VAULT is True
-    assert feature_flags.FeatureFlags.USE_RETRY_LOGIC is True
+    # Use singleton instance for property access
+    flags = feature_flags._flags
+    assert flags.USE_KEY_VAULT is True
+    assert flags.USE_RETRY_LOGIC is True
 
     # Clean up
     del os.environ["FEATURE_USE_KEY_VAULT"]
@@ -61,12 +65,14 @@ def test_feature_flags_case_insensitive():
 
     importlib.reload(feature_flags)
 
-    assert feature_flags.FeatureFlags.USE_ROLLBACK is True
+    # Use singleton instance for property access
+    flags = feature_flags._flags
+    assert flags.USE_ROLLBACK is True
 
     # Test mixed case
     os.environ["FEATURE_USE_TELEMETRY"] = "True"
     importlib.reload(feature_flags)
-    assert feature_flags.FeatureFlags.USE_TELEMETRY is True
+    assert flags.USE_TELEMETRY is True
 
     # Clean up
     del os.environ["FEATURE_USE_ROLLBACK"]
@@ -90,7 +96,9 @@ def test_is_production_ready():
 
     importlib.reload(feature_flags)
 
-    assert feature_flags.FeatureFlags.is_production_ready() is False
+    # Use singleton instance for method calls
+    flags = feature_flags._flags
+    assert flags.is_production_ready() is False
 
     # Enable all required features
     os.environ["FEATURE_USE_KEY_VAULT"] = "true"
@@ -99,8 +107,9 @@ def test_is_production_ready():
     os.environ["FEATURE_USE_TELEMETRY"] = "true"
 
     importlib.reload(feature_flags)
+    flags = feature_flags._flags
 
-    assert feature_flags.FeatureFlags.is_production_ready() is True
+    assert flags.is_production_ready() is True
 
     # Clean up
     for key in [
@@ -115,10 +124,10 @@ def test_is_production_ready():
 
 def test_log_status(caplog):
     """Test log_status method"""
-    from ops.scripts.utilities.feature_flags import FeatureFlags
+    from ops.scripts.utilities.feature_flags import _flags
 
     with caplog.at_level("INFO"):
-        FeatureFlags.log_status()
+        _flags.log_status()
 
     assert "Feature Flags Status:" in caplog.text
     assert "USE_KEY_VAULT:" in caplog.text

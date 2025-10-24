@@ -1,12 +1,13 @@
 """
-Unified secret management with Azure Key Vault and .env fallback
-Provides seamless secret access with caching and graceful degradation
+Unified secret management for Fabric deployment
+Supports Azure Key Vault and local .env files
 """
 
-import os
 import logging
+import os
 import time
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
+from functools import lru_cache
 from datetime import datetime, timedelta
 
 try:
@@ -18,7 +19,7 @@ try:
 except ImportError:
     AZURE_SDK_AVAILABLE = False
 
-from .feature_flags import FeatureFlags
+from .feature_flags import _flags as FeatureFlags
 
 logger = logging.getLogger(__name__)
 
