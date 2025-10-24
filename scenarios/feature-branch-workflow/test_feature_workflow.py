@@ -233,7 +233,10 @@ def main():
         print_warning("No .env file found")
         print("   This test may fail if environment variables are not set")
         print("   Copy .env.template to .env and fill in values")
-        response = input("\n   Continue anyway? (y/N) ")
+        print()
+        print(f"{Colors.YELLOW}{'─' * 60}{Colors.NC}")
+        response = input(f"\n{Colors.BOLD}👉 Continue anyway? (y/N): {Colors.NC}").strip()
+        print(f"{Colors.YELLOW}{'─' * 60}{Colors.NC}")
         if response.lower() != 'y':
             sys.exit(1)
     
@@ -249,7 +252,11 @@ def main():
         sys.exit(1)
     
     print_success("Dry run completed")
-    input("\nPress ENTER to continue with actual creation...")
+    print()
+    print(f"{Colors.YELLOW}{'─' * 60}{Colors.NC}")
+    print(f"{Colors.YELLOW}⏸️  PAUSED - Review dry run results above{Colors.NC}")
+    print(f"{Colors.YELLOW}{'─' * 60}{Colors.NC}")
+    input(f"\n{Colors.BOLD}👉 Press ENTER to continue with actual creation...{Colors.NC} ")
     
     # Step 2: Create feature environment
     print_header("Step 2: Create Feature Environment")

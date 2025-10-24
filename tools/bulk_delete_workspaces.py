@@ -69,7 +69,14 @@ def main():
         for ws in workspaces:
             print(f"   - {ws.get('displayName', 'Unknown')} ({ws['id']})")
         
-        confirm = input("\nType 'DELETE ALL' to confirm: ")
+        print()
+        print("=" * 70)
+        print("⚠️  DANGER ZONE - This will DELETE all workspaces listed above!")
+        print("=" * 70)
+        confirm = input("\n👉 Type 'DELETE ALL' to confirm: ")
+        print("=" * 70)
+        print()
+        
         if confirm != "DELETE ALL":
             print("❌ Deletion cancelled")
             return
@@ -93,7 +100,14 @@ def main():
         for ws_id in workspace_ids:
             print(f"   - {ws_id}")
         
-        confirm = input(f"\nType 'DELETE {len(workspace_ids)}' to confirm: ")
+        print()
+        print("=" * 70)
+        print(f"⚠️  DANGER ZONE - This will DELETE {len(workspace_ids)} workspace(s) listed above!")
+        print("=" * 70)
+        confirm = input(f"\n👉 Type 'DELETE {len(workspace_ids)}' to confirm: ")
+        print("=" * 70)
+        print()
+        
         if confirm != f"DELETE {len(workspace_ids)}":
             print("❌ Deletion cancelled")
             return

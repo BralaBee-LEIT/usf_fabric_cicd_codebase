@@ -377,7 +377,7 @@ class DomainWorkspaceSetup:
             print_info("Example:")
             print_info("  # Get user Object ID:")
             print_info("  az ad user show --id user@domain.com --query id -o tsv")
-            print_info("\n  # Add to file:")
+            print_info("  # Add to file:")
             print_info("  a1b2c3d4-e5f6-...,Admin,Workspace Administrator,User\n")
             
             # Prompt user to edit file (unless skipped for automation)
@@ -389,7 +389,13 @@ class DomainWorkspaceSetup:
                 self.setup_log["principals_file_created"] = str(domain_principals_path)
                 return True
             
+            print()
+            print_warning("═" * 70)
+            print_warning("⏸️  PAUSED - Edit the file above to add users")
+            print_warning("═" * 70)
             response = input("\n✏️  Press ENTER after you've edited the file (or 's' to skip): ").strip().lower()
+            print_warning("═" * 70)
+            print()
             
             if response == 's':
                 print_warning("\n⚠️  Skipped user configuration - workspace has NO users!")

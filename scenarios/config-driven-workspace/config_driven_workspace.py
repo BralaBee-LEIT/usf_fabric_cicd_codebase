@@ -258,7 +258,12 @@ class ConfigDrivenWorkspace:
                     print(f"   {principals_file}\n")
                     print("   Add user/group Object IDs (not emails!)\n")
                     
-                    response = input("   Press ENTER after editing (or 's' to skip): ").strip().lower()
+                    print("   " + "─" * 60)
+                    print("   ⏸️  PAUSED - Edit the file above to add users")
+                    print("   " + "─" * 60)
+                    response = input("   👉 Press ENTER after editing (or 's' to skip): ").strip().lower()
+                    print("   " + "─" * 60 + "\n")
+                    
                     if response == 's':
                         print("   ⏩ Skipping user addition\n")
                         return
