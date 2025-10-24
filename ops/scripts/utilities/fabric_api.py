@@ -291,8 +291,25 @@ class FabricClient:
         return response.json()
 
 
-# Global client instance
-fabric_client = FabricClient()
+# Global client instance (lazy initialization)
+_fabric_client = None
+
+
+def get_fabric_client() -> FabricClient:
+    """Get or create the global FabricClient instance (lazy initialization)"""
+    global _fabric_client
+    if _fabric_client is None:
+        _fabric_client = FabricClient()
+    return _fabric_client
+
+
+# Backward compatibility: fabric_client property that lazily initializes
+class _FabricClientProxy:
+    """Proxy that provides backward compatibility for direct fabric_client access"""
+    def __getattr__(self, name):
+        return getattr(get_fabric_client(), name)
+
+fabric_client = _FabricClientProxy()
 
 
 # Legacy function compatibility
@@ -300,9 +317,9 @@ def create_or_update_notebook(
     workspace: str, name: str, content_bytes: bytes
 ) -> Dict[str, Any]:
     """Legacy compatibility function"""
-    return fabric_client.create_or_update_notebook(workspace, name, content_bytes)
+    return get_fabric_client().create_or_update_notebook(workspace, name, content_bytes)
 
 
 def deploy_pipeline_json(workspace: str, pipeline_json: str) -> Dict[str, Any]:
     """Legacy compatibility function"""
-    return fabric_client.deploy_pipeline_json(workspace, pipeline_json)
+    return get_fabric_client().deploy_pipeline_json(workspace, pipeline_json)
