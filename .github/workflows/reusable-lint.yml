@@ -16,6 +16,8 @@ jobs:
       - name: Lint Python
         run: |
           ruff check .
+          echo "Running black --diff to show changes:"
+          black --diff init_new_project.py scenarios/config-driven-workspace/config_driven_workspace.py scenarios/automated-deployment/run_automated_deployment.py || true
           black --check .
       - name: Lint SQL
         run: |
