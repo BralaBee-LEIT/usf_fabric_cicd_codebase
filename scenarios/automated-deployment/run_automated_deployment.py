@@ -395,25 +395,33 @@ def add_users(workspace_id, product_config, dry_run=False):
 
     # Check if there's a corresponding principals file with Object IDs
     config_dir = Path(__file__).parent.parent.parent / "config" / "principals"
-    
+
     # Try to find a principals file for this deployment
     # Look for sales_analytics or similar based on product name
-    product_name = product_config.get("product", {}).get("name", "").lower().replace(" ", "_")
+    product_name = (
+        product_config.get("product", {}).get("name", "").lower().replace(" ", "_")
+    )
     principals_file = config_dir / f"{product_name}_dev_principals.txt"
-    
+
     if not principals_file.exists():
         # Try alternate naming
         principals_file = config_dir / "sales_analytics_dev_principals.txt"
-    
+
     if principals_file.exists():
         print_info(f"Found principals file: {principals_file.name}")
         print_info("Adding users from principals file...")
-        
+
         # Use the manage_workspaces.py script to add users
-        cli_script = Path(__file__).parent.parent.parent / "ops" / "scripts" / "manage_workspaces.py"
+        cli_script = (
+            Path(__file__).parent.parent.parent
+            / "ops"
+            / "scripts"
+            / "manage_workspaces.py"
+        )
         python = sys.executable
-        
+
         import subprocess
+
         result = subprocess.run(
             [
                 python,
@@ -427,13 +435,13 @@ def add_users(workspace_id, product_config, dry_run=False):
             text=True,
             check=False,
         )
-        
+
         # Show output (filter out INFO logs)
         if result.stdout:
             for line in result.stdout.split("\n"):
                 if line.strip() and not line.startswith("INFO:"):
                     print(f"  {line}")
-        
+
         if result.returncode == 0:
             print_success("Users added successfully")
         else:
@@ -447,21 +455,30 @@ def add_users(workspace_id, product_config, dry_run=False):
         print_info(f"  {config_dir / f'{product_name}_dev_principals.txt'}")
         print_info("")
         print_info("Format: object_id,role,description,type")
-        print_info("Example: 9117cbfa-f0a7-43b7-846f-96ba66a3c1c0,Admin,Administrator,User")
+        print_info("Type can be: User, Group, or ServicePrincipal")
+        print_info("")
+        print_info("Examples:")
+        print_info("  9117cbfa-f0a7-43b7-846f-96ba66a3c1c0,Admin,Administrator,User")
+        print_info(
+            "  a1b2c3d4-e5f6-7890-abcd-ef1234567890,Viewer,Data Engineering Team,Group"
+        )
+        print_info(
+            "  b2c3d4e5-f6g7-8901-bcde-fg2345678901,Member,CI/CD Pipeline,ServicePrincipal"
+        )
         print_info("")
         print_info("Get Object IDs using Azure CLI:")
         for user in users:
-            email = user.get('email', '')
+            email = user.get("email", "")
             # Resolve environment variables
-            if email and email.startswith('${') and email.endswith('}'):
+            if email and email.startswith("${") and email.endswith("}"):
                 env_var = email[2:-1]
                 email = os.environ.get(env_var, email)
             print_info(f"  az ad user show --id {email} --query id -o tsv")
         print_info("")
         print_info("Or add users manually via Fabric Portal:")
         for user in users:
-            email = user.get('email', '')
-            if email and email.startswith('${') and email.endswith('}'):
+            email = user.get("email", "")
+            if email and email.startswith("${") and email.endswith("}"):
                 env_var = email[2:-1]
                 email = os.environ.get(env_var, email)
             print_info(f"  • {email} ({user.get('role', 'Member')})")

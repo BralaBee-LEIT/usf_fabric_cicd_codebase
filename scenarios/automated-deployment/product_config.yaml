@@ -56,7 +56,11 @@ items:
       language: "python"
       
 users:
-  # Users will be added with specified roles
+  # Users/Groups/ServicePrincipals will be added with specified roles
+  # Note: Requires a principals file with Azure AD Object IDs
+  # File location: config/principals/sales_analytics_dev_principals.txt
+  # Format: object_id,role,description,type
+  
   - email: "${DATA_OWNER_EMAIL}"
     role: "Admin"
     principal_type: "User"
@@ -64,6 +68,15 @@ users:
   - email: "${TECHNICAL_LEAD_EMAIL}"
     role: "Member"
     principal_type: "User"
+  
+  # Examples of other principal types:
+  # - name: "Data Engineering Team"
+  #   role: "Contributor"
+  #   principal_type: "Group"
+  #
+  # - name: "CI/CD Pipeline"
+  #   role: "Member"
+  #   principal_type: "ServicePrincipal"
     
 naming:
   validate: true
