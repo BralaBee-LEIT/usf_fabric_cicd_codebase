@@ -17,3 +17,20 @@ extend-exclude = '''
   | dist
 )/
 '''
+
+[tool.pytest.ini_options]
+# Pytest configuration
+markers = [
+    "real_fabric: Tests that create actual resources in Microsoft Fabric (run manually only)",
+    "slow: Tests that take a long time to run",
+    "integration: Integration tests",
+    "timeout: Set a timeout for test execution",
+]
+# Don't run real_fabric tests by default
+addopts = "-m 'not real_fabric'"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+# Add project root to Python path
+pythonpath = ["."]

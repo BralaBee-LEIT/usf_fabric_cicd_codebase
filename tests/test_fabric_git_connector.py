@@ -3,16 +3,13 @@ Unit tests for FabricGitConnector utility
 """
 
 import pytest
-from pathlib import Path
-import sys
 from unittest.mock import Mock, patch
 
-# Add utilities to path
-UTILITIES_PATH = Path(__file__).parent.parent / "ops" / "scripts" / "utilities"
-if str(UTILITIES_PATH) not in sys.path:
-    sys.path.insert(0, str(UTILITIES_PATH))
-
-from fabric_git_connector import FabricGitConnector, GitProviderType, GitConnectionState
+from ops.scripts.utilities.fabric_git_connector import (
+    FabricGitConnector,
+    GitProviderType,
+    GitConnectionState
+)
 
 
 class TestFabricGitConnector:

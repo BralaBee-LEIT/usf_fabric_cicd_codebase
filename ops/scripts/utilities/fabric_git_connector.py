@@ -84,7 +84,9 @@ class FabricGitConnector:
             repository_name: Git repository name (from env if not provided)
             git_provider_type: "GitHub" or "AzureDevOps"
         """
-        self.fabric_client = FabricClient()
+        from .fabric_api import get_fabric_client
+        
+        self.fabric_client = get_fabric_client()
 
         # Git provider configuration
         self.organization_name = organization_name or os.getenv("GIT_ORGANIZATION")
