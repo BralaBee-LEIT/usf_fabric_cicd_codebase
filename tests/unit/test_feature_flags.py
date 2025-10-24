@@ -15,6 +15,8 @@ def test_feature_flags_default_disabled():
         "FEATURE_USE_CIRCUIT_BREAKER",
         "FEATURE_USE_ROLLBACK",
         "FEATURE_USE_TELEMETRY",
+        "FEATURE_USE_HEALTH_CHECKS",
+        "FEATURE_USE_AZURE_KEYVAULT",
     ]:
         if key in os.environ:
             del os.environ[key]
@@ -32,6 +34,8 @@ def test_feature_flags_default_disabled():
     assert flags.USE_CIRCUIT_BREAKER is False
     assert flags.USE_ROLLBACK is False
     assert flags.USE_TELEMETRY is False
+    assert flags.USE_HEALTH_CHECKS is False
+    assert flags.USE_AZURE_KEYVAULT is False
 
 
 def test_feature_flags_can_be_enabled():
@@ -87,6 +91,7 @@ def test_is_production_ready():
         "FEATURE_USE_RETRY_LOGIC",
         "FEATURE_USE_ROLLBACK",
         "FEATURE_USE_TELEMETRY",
+        "FEATURE_USE_HEALTH_CHECKS",
     ]:
         if key in os.environ:
             del os.environ[key]
@@ -105,6 +110,7 @@ def test_is_production_ready():
     os.environ["FEATURE_USE_RETRY_LOGIC"] = "true"
     os.environ["FEATURE_USE_ROLLBACK"] = "true"
     os.environ["FEATURE_USE_TELEMETRY"] = "true"
+    os.environ["FEATURE_USE_HEALTH_CHECKS"] = "true"
 
     importlib.reload(feature_flags)
     flags = feature_flags._flags
@@ -117,6 +123,7 @@ def test_is_production_ready():
         "FEATURE_USE_RETRY_LOGIC",
         "FEATURE_USE_ROLLBACK",
         "FEATURE_USE_TELEMETRY",
+        "FEATURE_USE_HEALTH_CHECKS",
     ]:
         if key in os.environ:
             del os.environ[key]
