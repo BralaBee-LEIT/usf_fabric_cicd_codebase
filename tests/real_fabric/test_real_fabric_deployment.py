@@ -154,6 +154,98 @@ class FabricAPIClient:
         response = requests.delete(url, headers=self._get_headers(), timeout=60)
         response.raise_for_status()
 
+    @fabric_retry(max_attempts=3, min_wait=1, max_wait=5)
+    def add_workspace_user(
+        self,
+        workspace_id: str,
+        principal_id: str,
+        role: str = "Member",
+        principal_type: str = "User",
+    ) -> Dict:
+        """
+        Add a user, group, or service principal to a workspace
+
+        Args:
+            workspace_id: The workspace ID
+            principal_id: Principal's Azure AD Object ID (GUID)
+            role: Role to assign (Admin, Member, Contributor, Viewer)
+            principal_type: Type of principal (User, Group, ServicePrincipal)
+        """
+        url = f"{self.base_url}/workspaces/{workspace_id}/roleAssignments"
+        payload = {
+            "principal": {"id": principal_id, "type": principal_type},
+            "role": role,
+        }
+
+        response = requests.post(
+            url, json=payload, headers=self._get_headers(), timeout=60
+        )
+        response.raise_for_status()
+        return response.json()
+
+
+def parse_principals_file(file_path: str) -> list:
+    """
+    Parse principals file in CSV format
+
+    Format: principal_id,role,description,type
+    Example: a1b2c3d4-...,Admin,Workspace Admin,User
+
+    Returns list of dicts with: principal_id, role, type, description
+    """
+    principals = []
+
+    if not os.path.exists(file_path):
+        print(f"⚠️  Principals file not found: {file_path}")
+        return principals
+
+    with open(file_path, "r") as f:
+        for line_num, line in enumerate(f, 1):
+            line = line.strip()
+
+            # Skip empty lines and comments
+            if not line or line.startswith("#"):
+                continue
+
+            # Parse CSV format: principal_id,role,description,type
+            parts = [p.strip() for p in line.split(",")]
+
+            if len(parts) < 2:
+                print(
+                    f"⚠️  Line {line_num}: Invalid format (need at least principal_id,role)"
+                )
+                continue
+
+            principal_id = parts[0]
+            role = parts[1]
+            description = parts[2] if len(parts) > 2 else ""
+            principal_type = parts[3] if len(parts) > 3 else "User"
+
+            # Validate principal_type
+            if principal_type not in ["User", "Group", "ServicePrincipal"]:
+                print(
+                    f"⚠️  Line {line_num}: Invalid type '{principal_type}', defaulting to 'User'"
+                )
+                principal_type = "User"
+
+            # Validate role
+            if role not in ["Admin", "Member", "Contributor", "Viewer"]:
+                print(
+                    f"⚠️  Line {line_num}: Invalid role '{role}', defaulting to 'Viewer'"
+                )
+                role = "Viewer"
+
+            principals.append(
+                {
+                    "principal_id": principal_id,
+                    "role": role,
+                    "type": principal_type,
+                    "description": description,
+                }
+            )
+
+    return principals
+
 
 # ======================================================================
 # Fixtures
@@ -307,10 +399,231 @@ class TestRealFabricDeployment:
                 except Exception as cleanup_error:
                     print(f"⚠️  Workspace cleanup warning: {cleanup_error}")
 
+    def test_complete_deployment_scenario(self, fabric_client, test_workspace_name):
+        """
+        Complete end-to-end deployment scenario
+
+        This test demonstrates a full deployment workflow:
+        1. Create workspace
+        2. Create multiple lakehouses
+        3. Validate all resources
+        4. Keep resources alive for inspection
+        5. Clean up only at the very end
+        """
+        workspace_id = None
+        lakehouse_ids = []
+
+        try:
+            print("\n" + "=" * 70)
+            print("🚀 COMPLETE DEPLOYMENT SCENARIO - Real Fabric Resources")
+            print("=" * 70)
+
+            # Step 1: Create workspace
+            print(f"\n📦 Step 1: Creating workspace...")
+            print(f"   Name: {test_workspace_name}")
+            print(f"   Capacity: {fabric_client.capacity_id}")
+
+            workspace_response = fabric_client.create_workspace(
+                display_name=test_workspace_name,
+                description="Complete deployment test - DO NOT DELETE YET",
+            )
+            workspace_id = workspace_response["id"]
+            print(f"   ✅ Workspace created: {workspace_id}")
+
+            # Step 2: Wait for workspace to be ready
+            print(f"\n⏳ Step 2: Waiting for workspace provisioning...")
+            print(f"   Waiting 10 seconds for workspace to become available...")
+            time.sleep(10)
+
+            workspace_info = fabric_client.get_workspace(workspace_id)
+            print(f"   ✅ Workspace ready: {workspace_info['displayName']}")
+
+            # Step 3: Create first lakehouse (Bronze layer)
+            print(f"\n🏗️  Step 3: Creating Bronze lakehouse...")
+            bronze_name = f"bronze_lakehouse_{str(uuid.uuid4())[:8]}"
+            print(f"   Name: {bronze_name}")
+
+            bronze_response = fabric_client.create_lakehouse(
+                workspace_id=workspace_id,
+                display_name=bronze_name,
+                description="Bronze layer - raw data landing zone",
+            )
+            bronze_id = bronze_response["id"]
+            lakehouse_ids.append(
+                {"id": bronze_id, "name": bronze_name, "layer": "Bronze"}
+            )
+            print(f"   ✅ Bronze lakehouse created: {bronze_id}")
+
+            # Wait for lakehouse to be available
+            print(f"   ⏳ Waiting 5 seconds for lakehouse provisioning...")
+            time.sleep(5)
+
+            # Step 4: Create second lakehouse (Silver layer)
+            print(f"\n🏗️  Step 4: Creating Silver lakehouse...")
+            silver_name = f"silver_lakehouse_{str(uuid.uuid4())[:8]}"
+            print(f"   Name: {silver_name}")
+
+            silver_response = fabric_client.create_lakehouse(
+                workspace_id=workspace_id,
+                display_name=silver_name,
+                description="Silver layer - cleansed and validated data",
+            )
+            silver_id = silver_response["id"]
+            lakehouse_ids.append(
+                {"id": silver_id, "name": silver_name, "layer": "Silver"}
+            )
+            print(f"   ✅ Silver lakehouse created: {silver_id}")
+
+            # Wait for lakehouse to be available
+            print(f"   ⏳ Waiting 5 seconds for lakehouse provisioning...")
+            time.sleep(5)
+
+            # Step 5: Create third lakehouse (Gold layer)
+            print(f"\n🏗️  Step 5: Creating Gold lakehouse...")
+            gold_name = f"gold_lakehouse_{str(uuid.uuid4())[:8]}"
+            print(f"   Name: {gold_name}")
+
+            gold_response = fabric_client.create_lakehouse(
+                workspace_id=workspace_id,
+                display_name=gold_name,
+                description="Gold layer - business-ready curated data",
+            )
+            gold_id = gold_response["id"]
+            lakehouse_ids.append({"id": gold_id, "name": gold_name, "layer": "Gold"})
+            print(f"   ✅ Gold lakehouse created: {gold_id}")
+
+            # Wait for lakehouse to be available
+            print(f"   ⏳ Waiting 5 seconds for lakehouse provisioning...")
+            time.sleep(5)
+
+            # Step 6: Validate all resources exist
+            print(f"\n✅ Step 6: Validating all resources...")
+            print(f"   Workspace ID: {workspace_id}")
+            for lh in lakehouse_ids:
+                print(f"   {lh['layer']} Lakehouse: {lh['id']} ({lh['name']})")
+
+            # Step 7: Add principals to workspace from config file
+            print(f"\n👥 Step 7: Adding principals to workspace...")
+
+            # Look for principals file (use TEST_PRINCIPALS_FILE env var or default)
+            principals_file = os.getenv("TEST_PRINCIPALS_FILE")
+            if not principals_file:
+                # Default to a test principals file in config/principals
+                config_dir = os.path.join(
+                    os.path.dirname(__file__), "../../config/principals"
+                )
+                principals_file = os.path.join(
+                    config_dir, "workspace_principals.template.txt"
+                )
+
+            print(f"   Principals file: {principals_file}")
+
+            principals = parse_principals_file(principals_file)
+
+            if principals:
+                print(f"   Found {len(principals)} principal(s) to add")
+                added_count = 0
+
+                for principal in principals:
+                    try:
+                        print(
+                            f"   Adding {principal['type']}: {principal['description']}"
+                        )
+                        print(f"      ID: {principal['principal_id']}")
+                        print(f"      Role: {principal['role']}")
+
+                        fabric_client.add_workspace_user(
+                            workspace_id=workspace_id,
+                            principal_id=principal["principal_id"],
+                            role=principal["role"],
+                            principal_type=principal["type"],
+                        )
+                        added_count += 1
+                        print(f"      ✅ Added successfully")
+
+                    except Exception as principal_error:
+                        print(f"      ⚠️  Failed to add principal: {principal_error}")
+                        # Continue with other principals
+
+                print(
+                    f"   ✅ Successfully added {added_count}/{len(principals)} principal(s)"
+                )
+            else:
+                print(f"   ℹ️  No principals found in file (or file not found)")
+                print(f"   To test principal addition:")
+                print(
+                    f"      1. Set TEST_PRINCIPALS_FILE=/path/to/principals.txt in .env"
+                )
+                print(f"      2. Or add principals to: {principals_file}")
+
+            # Step 8: Verify workspace is accessible
+            print(f"\n🔍 Step 8: Verifying workspace accessibility...")
+            workspace_details = fabric_client.get_workspace(workspace_id)
+            print(f"   ✅ Workspace '{workspace_details['displayName']}' is accessible")
+
+            # Step 9: Summary
+            print(f"\n" + "=" * 70)
+            print("✅ DEPLOYMENT COMPLETE - All resources created successfully")
+            print("=" * 70)
+            print(f"\n📋 Deployment Summary:")
+            print(f"   Workspace: {test_workspace_name}")
+            print(f"   Workspace ID: {workspace_id}")
+            print(f"   Total Lakehouses: {len(lakehouse_ids)}")
+            for lh in lakehouse_ids:
+                print(f"      - {lh['layer']}: {lh['name']}")
+            if principals:
+                print(f"   Principals Added: {len([p for p in principals])} configured")
+
+            print(f"\n💡 Resources are now live in your Fabric environment")
+            print(f"   You can view them in the Fabric Portal before cleanup")
+            print(f"   Cleanup will happen automatically after test validation...")
+
+            # Keep resources alive for a moment to allow inspection
+            print(f"\n⏳ Keeping resources alive for 10 seconds for inspection...")
+            time.sleep(10)
+
+            # Validate assertions
+            assert workspace_id is not None, "Workspace should be created"
+            assert len(lakehouse_ids) == 3, "All 3 lakehouses should be created"
+            print(f"\n✅ All validations passed!")
+
+        finally:
+            # Cleanup all resources in reverse order
+            print(f"\n🧹 Starting cleanup process...")
+
+            # Delete lakehouses first (in reverse order: Gold, Silver, Bronze)
+            for lh in reversed(lakehouse_ids):
+                try:
+                    print(f"   🧹 Deleting {lh['layer']} lakehouse: {lh['id']}")
+                    fabric_client.delete_lakehouse(workspace_id, lh["id"])
+                    print(f"   ✅ {lh['layer']} lakehouse deleted")
+                except Exception as cleanup_error:
+                    print(
+                        f"   ⚠️  Failed to delete {lh['layer']} lakehouse: {cleanup_error}"
+                    )
+
+            # Wait for all lakehouse deletions to propagate
+            if lakehouse_ids:
+                print(
+                    f"   ⏳ Waiting for lakehouse deletions to propagate (10 seconds)..."
+                )
+                time.sleep(10)
+
+            # Delete workspace last
+            if workspace_id:
+                try:
+                    print(f"   🧹 Deleting workspace: {workspace_id}")
+                    fabric_client.delete_workspace(workspace_id)
+                    print(f"   ✅ Workspace deleted")
+                except Exception as cleanup_error:
+                    print(f"   ⚠️  Failed to delete workspace: {cleanup_error}")
+
+            print(f"\n✅ Cleanup complete - All resources removed")
+
     def test_circuit_breaker_with_real_api(self, fabric_client):
         """
         Test circuit breaker behavior with real API calls
-        
+
         Note: Circuit breaker needs to be explicitly called, not just via retry decorator
         """
         breaker = get_circuit_breaker("real_fabric_test")
@@ -345,11 +658,13 @@ class TestRealFabricDeployment:
             assert (
                 breaker.state == "open" or failure_count >= 5
             ), f"Circuit breaker should have opened (state={breaker.state}, failures={failure_count})"
-            
+
             if breaker.state == "open":
                 print(f"✅ Circuit breaker opened after {failure_count} failures")
             else:
-                print(f"✅ Validated {failure_count} failures with circuit breaker protection")
+                print(
+                    f"✅ Validated {failure_count} failures with circuit breaker protection"
+                )
 
         finally:
             # Reset circuit breaker

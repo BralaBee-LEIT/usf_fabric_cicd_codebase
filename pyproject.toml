@@ -24,6 +24,7 @@ markers = [
     "real_fabric: Tests that create actual resources in Microsoft Fabric (run manually only)",
     "slow: Tests that take a long time to run",
     "integration: Integration tests",
+    "timeout: Set a timeout for test execution",
 ]
 # Don't run real_fabric tests by default
 addopts = "-m 'not real_fabric'"
