@@ -32,3 +32,5 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+# Add project root to Python path
+pythonpath = ["."]
