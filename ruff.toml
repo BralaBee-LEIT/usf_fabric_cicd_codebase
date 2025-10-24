@@ -1,0 +1,24 @@
+# Ruff configuration for usf-fabric-cicd
+
+[lint]
+# Ignore E402 (module level import not at top) in test files where we need to modify sys.path first
+ignore = []
+
+[lint.per-file-ignores]
+# Test files need to add utilities to path before importing
+"tests/*.py" = ["E402", "F401"]
+"ops/tests/*.py" = ["E402", "F401"]
+
+# Diagnostics scripts need to add utilities to path before importing
+# Also allow bare except for error handling
+"diagnostics/*.py" = ["E402", "E722"]
+
+# Scenarios need to load .env and modify sys.path before imports
+"scenarios/**/*.py" = ["E402", "F401"]
+
+# Utilities may have intentional bare except for git command error handling
+# And conditional imports for optional features
+"ops/scripts/utilities/*.py" = ["E722", "F401"]
+
+# Main scripts may need to modify path before imports
+"ops/scripts/*.py" = ["E402"]

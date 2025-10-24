@@ -76,9 +76,7 @@ class FabricHealthChecker:
             start_time = time.time()
 
             # Test workspace access
-            fabric_client._make_request(
-                "GET", f"workspaces/{self.workspace_id}"
-            )
+            fabric_client._make_request("GET", f"workspaces/{self.workspace_id}")
             response_time = time.time() - start_time
 
             self.health_report["metrics"]["workspace_response_time"] = response_time

@@ -39,22 +39,22 @@ print("✅ Successfully acquired Microsoft Graph token\n")
 # Decode token to see permissions
 try:
     decoded = jwt.decode(token, options={"verify_signature": False})
-    
+
     print("📋 Token Details:")
     print(f"   App ID: {decoded.get('appid')}")
     print(f"   Audience: {decoded.get('aud')}")
     print(f"   Issuer: {decoded.get('iss')}")
     print(f"   Expires: {decoded.get('exp')}")
-    
+
     print("\n🔐 Application Permissions (Roles):")
-    if 'roles' in decoded:
-        for role in decoded['roles']:
+    if "roles" in decoded:
+        for role in decoded["roles"]:
             print(f"   ✅ {role}")
-        
+
         # Check for required permissions
-        required_permissions = ['User.Read.All', 'Directory.Read.All']
-        has_required = any(perm in decoded['roles'] for perm in required_permissions)
-        
+        required_permissions = ["User.Read.All", "Directory.Read.All"]
+        has_required = any(perm in decoded["roles"] for perm in required_permissions)
+
         if has_required:
             print("\n✅ Has required permissions to read user information!")
         else:
@@ -63,10 +63,10 @@ try:
     else:
         print("   ❌ No roles/permissions found in token")
         print("   This means admin consent was not granted or permissions not added")
-    
-    if 'scp' in decoded:
+
+    if "scp" in decoded:
         print(f"\n📝 Delegated Permissions (Scopes): {decoded['scp']}")
-        
+
 except Exception as e:
     print(f"❌ Could not decode token: {str(e)}")
 

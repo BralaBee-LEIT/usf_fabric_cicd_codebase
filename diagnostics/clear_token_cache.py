@@ -7,6 +7,7 @@ from msal import ConfidentialClientApplication
 
 # Load environment variables
 from dotenv import load_dotenv
+
 load_dotenv()
 
 client_id = os.getenv("AZURE_CLIENT_ID")
@@ -32,27 +33,30 @@ if "access_token" in result:
     print("✅ Successfully acquired fresh access token!")
     print(f"   Token type: {result.get('token_type')}")
     print(f"   Expires in: {result.get('expires_in')} seconds")
-    
+
     # Decode token to check claims (optional - requires pyjwt)
     try:
         import jwt
-        decoded = jwt.decode(result['access_token'], options={"verify_signature": False})
+
+        decoded = jwt.decode(
+            result["access_token"], options={"verify_signature": False}
+        )
         print("\n📋 Token Claims:")
         print(f"   Audience: {decoded.get('aud')}")
         print(f"   Issuer: {decoded.get('iss')}")
         print(f"   App ID: {decoded.get('appid')}")
-        if 'roles' in decoded:
+        if "roles" in decoded:
             print(f"   Roles: {', '.join(decoded['roles'])}")
-        if 'scp' in decoded:
+        if "scp" in decoded:
             print(f"   Scopes: {decoded['scp']}")
     except ImportError:
         print("   (Install pyjwt to see token details: pip install pyjwt)")
     except Exception as e:
         print(f"   (Could not decode token: {e})")
-    
+
     print("\n✅ Token cache cleared and fresh token acquired!")
     print("   You can now try creating workspaces again.")
-    
+
 else:
     print("❌ Failed to acquire token:")
     print(f"   Error: {result.get('error')}")

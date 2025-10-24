@@ -141,9 +141,7 @@ class FabricDeployer:
             notebook_name, "notebook", operation, previous_state=None
         )
 
-        fabric_client.create_or_update_notebook(
-            self.workspace, notebook_name, content
-        )
+        fabric_client.create_or_update_notebook(self.workspace, notebook_name, content)
         logger.info(f"Successfully deployed notebook: {notebook_name}")
         self._update_stats("notebooks", True)
 
@@ -176,9 +174,7 @@ class FabricDeployer:
         """Deploy dataflow Gen2 artifact"""
         dataflow_name = Path(filename).stem
         dataflow_def = json.loads(content.decode("utf-8"))
-        fabric_client.deploy_dataflow(
-            self.workspace, dataflow_name, dataflow_def
-        )
+        fabric_client.deploy_dataflow(self.workspace, dataflow_name, dataflow_def)
         logger.info(f"Successfully deployed dataflow: {dataflow_name}")
         self._update_stats("dataflows", True)
 

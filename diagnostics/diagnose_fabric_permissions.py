@@ -39,17 +39,19 @@ print("✅ Successfully acquired access token\n")
 
 # Test different API endpoints
 base_url = "https://api.fabric.microsoft.com/v1"
-headers = {
-    "Authorization": f"Bearer {token}",
-    "Content-Type": "application/json"
-}
+headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
 tests = [
     ("GET", f"{base_url}/workspaces", "List Workspaces (READ)"),
-    ("POST", f"{base_url}/workspaces", "Create Workspace (WRITE)", {
-        "displayName": "test-workspace-diagnostic",
-        "description": "Diagnostic test workspace"
-    }),
+    (
+        "POST",
+        f"{base_url}/workspaces",
+        "Create Workspace (WRITE)",
+        {
+            "displayName": "test-workspace-diagnostic",
+            "description": "Diagnostic test workspace",
+        },
+    ),
 ]
 
 print("Testing API Endpoints:")
@@ -59,21 +61,23 @@ for method, url, description, *payload in tests:
     print(f"\n📝 {description}")
     print(f"   Method: {method}")
     print(f"   URL: {url}")
-    
+
     try:
         if method == "GET":
             response = requests.get(url, headers=headers, timeout=30)
         elif method == "POST":
-            response = requests.post(url, headers=headers, json=payload[0] if payload else None, timeout=30)
-        
+            response = requests.post(
+                url, headers=headers, json=payload[0] if payload else None, timeout=30
+            )
+
         print(f"   Status: {response.status_code}")
-        
+
         if response.status_code == 200 or response.status_code == 201:
             print("   ✅ SUCCESS")
             data = response.json()
-            if 'value' in data:
+            if "value" in data:
                 print(f"   Response: Found {len(data['value'])} items")
-            elif 'id' in data:
+            elif "id" in data:
                 print(f"   Response: Created resource with ID: {data['id']}")
         elif response.status_code == 401:
             print("   ❌ UNAUTHORIZED")
@@ -93,14 +97,15 @@ for method, url, description, *payload in tests:
         else:
             print("   ⚠️  Unexpected Status")
             print(f"   Response: {response.text[:200]}")
-            
+
     except Exception as e:
         print(f"   ❌ ERROR: {str(e)}")
 
 print("\n" + "=" * 70)
 print("📊 Diagnostic Summary")
 print("=" * 70)
-print("""
+print(
+    """
 If you see:
 - ✅ GET succeeds, ❌ POST fails with 401: Permissions not granted correctly
 - ❌ Both fail with 401: Token acquisition issue or API not enabled
@@ -119,4 +124,5 @@ Common Solutions:
    - Add your App ID to the list
 
 3. Ensure you have an active Fabric capacity or trial
-""")
+"""
+)

@@ -8,15 +8,16 @@ sys.path.insert(0, str(Path(__file__).parent / "ops" / "scripts" / "utilities"))
 
 # Load environment
 import os
+
 env_file = Path(__file__).parent / ".env"
 if env_file.exists():
-    with env_file.open('r') as f:
+    with env_file.open("r") as f:
         for line in f:
             line = line.strip()
-            if line and not line.startswith('#') and '=' in line:
-                if line.startswith('export '):
+            if line and not line.startswith("#") and "=" in line:
+                if line.startswith("export "):
                     line = line[7:]
-                key, value = line.split('=', 1)
+                key, value = line.split("=", 1)
                 key = key.strip()
                 if key not in os.environ:
                     value = value.strip().strip('"').strip("'")
@@ -34,7 +35,9 @@ print(f"Total workspaces found: {len(workspaces)}")
 print()
 
 # Check for Customer Analytics
-customer_analytics = [ws for ws in workspaces if "Customer Analytics" in ws['displayName']]
+customer_analytics = [
+    ws for ws in workspaces if "Customer Analytics" in ws["displayName"]
+]
 
 if customer_analytics:
     print("✅ Found Customer Analytics workspace(s):")
