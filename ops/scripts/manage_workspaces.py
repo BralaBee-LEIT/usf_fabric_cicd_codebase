@@ -9,6 +9,12 @@ import json
 import logging
 from pathlib import Path
 
+# Load environment variables
+from dotenv import load_dotenv
+env_file = Path(__file__).parent.parent.parent / ".env"
+if env_file.is_file():
+    load_dotenv(env_file)
+
 # Add utilities to path
 sys.path.insert(0, str(Path(__file__).parent / "utilities"))
 

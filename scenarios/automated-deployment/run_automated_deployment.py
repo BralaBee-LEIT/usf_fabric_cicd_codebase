@@ -21,6 +21,7 @@ Usage:
 import argparse
 import os
 import sys
+import subprocess
 import yaml
 from pathlib import Path
 from typing import Dict, Optional
@@ -384,7 +385,7 @@ def add_users(workspace_id, product_config, dry_run=False):
         print_warning("No users configured")
         return
 
-    print_info(f"Adding {len(users)} users...")
+    print_info(f"Configured users: {len(users)}")
 
     if dry_run:
         for user in users:
@@ -392,14 +393,78 @@ def add_users(workspace_id, product_config, dry_run=False):
         print_warning("DRY RUN: Would add users")
         return
 
-    # NOTE: User addition requires Azure AD object IDs, not emails
-    # This is a limitation of the Fabric API
-    # For now, we skip this step and document it as a manual process
-    print_warning("User addition requires Azure AD object IDs")
-    print_info("Users must be added manually via Fabric Portal:")
-    for user in users:
-        print_info(f"  • {user['email']} ({user['role']})")
-    print_info("To add users programmatically, use add_user_by_objectid.py script")
+    # Check if there's a corresponding principals file with Object IDs
+    config_dir = Path(__file__).parent.parent.parent / "config" / "principals"
+    
+    # Try to find a principals file for this deployment
+    # Look for sales_analytics or similar based on product name
+    product_name = product_config.get("product", {}).get("name", "").lower().replace(" ", "_")
+    principals_file = config_dir / f"{product_name}_dev_principals.txt"
+    
+    if not principals_file.exists():
+        # Try alternate naming
+        principals_file = config_dir / "sales_analytics_dev_principals.txt"
+    
+    if principals_file.exists():
+        print_info(f"Found principals file: {principals_file.name}")
+        print_info("Adding users from principals file...")
+        
+        # Use the manage_workspaces.py script to add users
+        cli_script = Path(__file__).parent.parent.parent / "ops" / "scripts" / "manage_workspaces.py"
+        python = sys.executable
+        
+        import subprocess
+        result = subprocess.run(
+            [
+                python,
+                str(cli_script),
+                "add-users-from-file",
+                workspace_id,
+                str(principals_file),
+                "--yes",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        
+        # Show output (filter out INFO logs)
+        if result.stdout:
+            for line in result.stdout.split("\n"):
+                if line.strip() and not line.startswith("INFO:"):
+                    print(f"  {line}")
+        
+        if result.returncode == 0:
+            print_success("Users added successfully")
+        else:
+            print_warning("Some users may have failed to add")
+            if result.stderr:
+                print_warning(f"Errors: {result.stderr[:200]}")
+    else:
+        # No principals file - show manual instructions
+        print_warning("No principals file found")
+        print_info("To add users automatically, create a principals file:")
+        print_info(f"  {config_dir / f'{product_name}_dev_principals.txt'}")
+        print_info("")
+        print_info("Format: object_id,role,description,type")
+        print_info("Example: 9117cbfa-f0a7-43b7-846f-96ba66a3c1c0,Admin,Administrator,User")
+        print_info("")
+        print_info("Get Object IDs using Azure CLI:")
+        for user in users:
+            email = user.get('email', '')
+            # Resolve environment variables
+            if email and email.startswith('${') and email.endswith('}'):
+                env_var = email[2:-1]
+                email = os.environ.get(env_var, email)
+            print_info(f"  az ad user show --id {email} --query id -o tsv")
+        print_info("")
+        print_info("Or add users manually via Fabric Portal:")
+        for user in users:
+            email = user.get('email', '')
+            if email and email.startswith('${') and email.endswith('}'):
+                env_var = email[2:-1]
+                email = os.environ.get(env_var, email)
+            print_info(f"  • {email} ({user.get('role', 'Member')})")
 
 
 def commit_to_git(workspace_id, product_config, dry_run=False):

@@ -1,0 +1,23 @@
+# Workspace Principals for Sales Analytics - Development
+# Format: principal_id,role,description,type
+#
+# Principal Types:
+#   - User: Individual Azure AD user
+#   - Group: Azure AD security or Microsoft 365 group
+#   - ServicePrincipal: Service principal for automation
+#
+# Roles:
+#   - Admin: Full workspace control
+#   - Member: Can edit content and manage items
+#   - Contributor: Can edit content but not manage workspace
+#   - Viewer: Read-only access
+#
+# Getting Object IDs:
+#   User:  az ad user show --id user@domain.com --query id -o tsv
+#   Group: az ad group show --group "Team Name" --query id -o tsv
+#   SP:    az ad sp show --id <client-id> --query id -o tsv
+#
+# IMPORTANT: Use Azure AD Object IDs (GUIDs), NOT emails or names!
+
+# Sales Analytics Team
+9117cbfa-f0a7-43b7-846f-96ba66a3c1c0,Admin,Data Owner & Technical Lead - Sanmi Ibitoye,User
