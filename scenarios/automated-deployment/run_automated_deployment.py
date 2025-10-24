@@ -4,7 +4,7 @@ Automated End-to-End Deployment Scenario
 
 This scenario demonstrates a fully automated deployment combining all framework features:
 - Workspace creation with config-driven naming
-- Git integration and automatic connection  
+- Git integration and automatic connection
 - Naming standards validation
 - Item creation (Lakehouses, Notebooks)
 - User management

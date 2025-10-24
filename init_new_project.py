@@ -10,7 +10,7 @@ This interactive script helps set up the framework for a new organization by:
 
 Usage:
     python init_new_project.py
-    
+
     # Non-interactive mode:
     python init_new_project.py --org "Contoso" --prefix "contoso" --non-interactive
 """

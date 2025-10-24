@@ -13,12 +13,12 @@ Key Differences from Direct-Name Scenarios:
 
 Usage:
     python config_driven_workspace.py --project "analytics" --environment "dev"
-    
+
     This creates workspace: usf2-fabric-analytics-dev (based on project.config.json)
 
 Compare to Direct-Name Approach:
     python ../domain-workspace/domain_workspace_with_existing_items.py --workspace-name "analytics"
-    
+
     This creates workspace: analytics (exact name provided)
 """
 
