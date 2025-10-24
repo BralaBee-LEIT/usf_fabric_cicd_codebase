@@ -7,6 +7,15 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, timedelta
 
+# Check if Azure SDK is available
+try:
+    import azure.keyvault.secrets
+    import azure.identity
+
+    AZURE_SDK_AVAILABLE = True
+except ImportError:
+    AZURE_SDK_AVAILABLE = False
+
 
 @pytest.fixture
 def clean_env():
@@ -149,11 +158,12 @@ def test_secret_manager_set_secret_requires_keyvault(clean_env):
         manager.set_secret("test-key", "test-value")
 
 
-@pytest.mark.skip(
-    reason="Azure SDK not installed - install via 'pip install -r requirements.txt'"
+@pytest.mark.skipif(
+    not AZURE_SDK_AVAILABLE,
+    reason="Azure SDK not installed - install via 'pip install -r requirements.txt'",
 )
-@patch("azure.keyvault.secrets.SecretClient")
-@patch("azure.identity.ClientSecretCredential")
+@patch("ops.scripts.utilities.secret_manager.SecretClient")
+@patch("ops.scripts.utilities.secret_manager.ClientSecretCredential")
 def test_secret_manager_keyvault_initialization(
     mock_credential, mock_secret_client, clean_env
 ):
@@ -169,11 +179,9 @@ def test_secret_manager_keyvault_initialization(
     mock_secret_client.return_value = mock_client_instance
     mock_client_instance.list_properties_of_secrets.return_value = iter([])
 
-    # Need to import with mocks in place
-    import sys
-
-    if "ops.scripts.utilities.secret_manager" in sys.modules:
-        del sys.modules["ops.scripts.utilities.secret_manager"]
+    # Mock the credential
+    mock_credential_instance = MagicMock()
+    mock_credential.return_value = mock_credential_instance
 
     from ops.scripts.utilities.secret_manager import SecretManager
 
@@ -181,15 +189,22 @@ def test_secret_manager_keyvault_initialization(
 
     assert manager.use_keyvault is True
     assert manager.kv_client is not None
+    # Verify ClientSecretCredential was called with correct params
     mock_credential.assert_called_once_with(
         tenant_id="tenant-123", client_id="client-456", client_secret="secret-789"
     )
+    # Verify SecretClient was initialized with the vault URL and credential
+    mock_secret_client.assert_called_once_with(
+        vault_url="https://test-vault.vault.azure.net",
+        credential=mock_credential_instance,
+    )
 
 
-@pytest.mark.skip(
-    reason="Azure SDK not installed - install via 'pip install -r requirements.txt'"
+@pytest.mark.skipif(
+    not AZURE_SDK_AVAILABLE,
+    reason="Azure SDK not installed - install via 'pip install -r requirements.txt'",
 )
-@patch("azure.keyvault.secrets.SecretClient")
+@patch("ops.scripts.utilities.secret_manager.SecretClient")
 def test_secret_manager_keyvault_get_secret(mock_secret_client, clean_env):
     """Test getting secret from Key Vault"""
     os.environ["FEATURE_USE_KEY_VAULT"] = "true"
@@ -217,10 +232,11 @@ def test_secret_manager_keyvault_get_secret(mock_secret_client, clean_env):
     mock_client_instance.get_secret.assert_called_once_with("test-secret")
 
 
-@pytest.mark.skip(
-    reason="Azure SDK not installed - install via 'pip install -r requirements.txt'"
+@pytest.mark.skipif(
+    not AZURE_SDK_AVAILABLE,
+    reason="Azure SDK not installed - install via 'pip install -r requirements.txt'",
 )
-@patch("azure.keyvault.secrets.SecretClient")
+@patch("ops.scripts.utilities.secret_manager.SecretClient")
 def test_secret_manager_keyvault_fallback_on_error(mock_secret_client, clean_env):
     """Test fallback to .env when Key Vault fails"""
     os.environ["FEATURE_USE_KEY_VAULT"] = "true"
