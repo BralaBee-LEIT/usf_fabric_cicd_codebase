@@ -1,0 +1,58 @@
+graph TB
+    subgraph "Local Development"
+        L1[.env for Secrets]
+        L2[Mock External Services]
+        L3[Unit Tests Only]
+        L4[Fast Feedback Loop]
+    end
+    
+    subgraph "Development Environment"
+        D1[Azure Key Vault: dev-kv]
+        D2[Fabric Workspace: dev-ws]
+        D3[App Insights: dev-ai]
+        D4[Integration Tests Enabled]
+        D5[Feature Flags: All ON]
+    end
+    
+    subgraph "Staging Environment"
+        S1[Azure Key Vault: staging-kv]
+        S2[Fabric Workspace: staging-ws]
+        S3[App Insights: staging-ai]
+        S4[E2E Tests Enabled]
+        S5[Production Parity: 95%]
+        S6[Blue-Green Deployment]
+    end
+    
+    subgraph "Production Environment"
+        P1[Azure Key Vault: prod-kv<br/>High Availability]
+        P2[Fabric Workspace: prod-ws<br/>Business Critical Tier]
+        P3[App Insights: prod-ai<br/>Advanced Analytics]
+        P4[Circuit Breakers: Active]
+        P5[Monitoring & Alerts: 24/7]
+        P6[Disaster Recovery: RPO < 1hr]
+        P7[Feature Flags: Gradual Rollout]
+    end
+    
+    L1 --> D1
+    L3 --> D4
+    
+    D1 --> S1
+    D4 --> S4
+    D5 --> S5
+    
+    S1 --> P1
+    S4 --> P5
+    S6 --> P6
+    
+    style L1 fill:#e3f2fd
+    style L4 fill:#e3f2fd
+    
+    style D1 fill:#fff3e0
+    style D5 fill:#fff3e0
+    
+    style S1 fill:#f3e5f5
+    style S6 fill:#f3e5f5
+    
+    style P1 fill:#4caf50
+    style P5 fill:#4caf50
+    style P7 fill:#4caf50

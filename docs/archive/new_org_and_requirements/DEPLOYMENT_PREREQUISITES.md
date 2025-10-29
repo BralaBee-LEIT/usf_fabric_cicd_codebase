@@ -566,16 +566,16 @@ Enable these settings:
   ```
 - [ ] **5.2** Create dev/test/prod workspaces
   ```bash
-  ./fabric-cli.sh create-set your-project-name
+  ./tools/fabric-cli.sh create-set your-project-name
   ```
 - [ ] **5.3** Verify workspaces created
   ```bash
-  ./fabric-cli.sh lsd
+  ./tools/fabric-cli.sh lsd
   ```
 - [ ] **5.4** Add team members to workspaces
   ```bash
   # For each workspace and user
-  ./fabric-cli.sh add-user WORKSPACE_ID user@domain.com --role Member
+  ./tools/fabric-cli.sh add-user WORKSPACE_ID user@domain.com --role Member
   ```
 
 ### **Phase 6: Testing & Validation (2-3 hours)**
@@ -593,9 +593,9 @@ Enable these settings:
 - [ ] **6.3** Test workspace operations
   ```bash
   # List, create test workspace, delete test workspace
-  ./fabric-cli.sh ls
-  ./fabric-cli.sh create test-workspace -e dev
-  ./fabric-cli.sh delete WORKSPACE_ID
+  ./tools/fabric-cli.sh ls
+  ./tools/fabric-cli.sh create test-workspace -e dev
+  ./tools/fabric-cli.sh delete WORKSPACE_ID
   ```
 - [ ] **6.4** Test CI/CD pipeline
   - [ ] Create feature branch
@@ -761,10 +761,10 @@ python init_project_config.py
 ./quick_setup.sh
 
 # 4. Create workspaces
-./fabric-cli.sh create-set your-project
+./tools/fabric-cli.sh create-set your-project
 
 # 5. Verify
-./fabric-cli.sh lsd
+./tools/fabric-cli.sh lsd
 ```
 
 ---

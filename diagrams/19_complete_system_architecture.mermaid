@@ -1,0 +1,88 @@
+graph TB
+    subgraph "Presentation Layer"
+        CLI[Enhanced Fabric CLI<br/>37+ Commands]
+        SCRIPTS[Python Scripts<br/>14 Core Modules]
+    end
+    
+    subgraph "Orchestration Layer"
+        AUTH[Authentication Manager<br/>Token Caching + Refresh]
+        CONFIG[Configuration Manager<br/>Environment-Aware]
+        SECRETS[Secret Manager<br/>Key Vault + .env Fallback]
+        LOGGER[Structured Logger<br/>Console + File + AppInsights]
+    end
+    
+    subgraph "Business Logic Layer"
+        WS[Workspace Management<br/>CRUD + User Management]
+        ITEMS[Fabric Items<br/>Lakehouse, Pipeline, Notebook]
+        DEPLOY[Deployment Orchestration<br/>Bundle + Rollback]
+        DQ[Data Quality<br/>Great Expectations]
+        GIT[Git Integration<br/>Sync + Conflict Resolution]
+        CONTRACT[Data Contracts<br/>Schema Validation]
+    end
+    
+    subgraph "Resilience Layer"
+        RETRY[Retry Handler<br/>Exponential Backoff]
+        CIRCUIT[Circuit Breaker<br/>Fast Fail Protection]
+        TIMEOUT[Timeout Manager<br/>Operation-Specific]
+        ROLLBACK[Rollback Engine<br/>Transaction Safety]
+    end
+    
+    subgraph "Integration Layer"
+        FABRIC_API[Microsoft Fabric REST API<br/>Workspaces, Items, Jobs]
+        POWERBI_API[Power BI REST API<br/>Reports, Datasets]
+        PURVIEW_API[Purview REST API<br/>Scanning, Governance]
+        KEY_VAULT[Azure Key Vault<br/>Secret Storage]
+        APP_INSIGHTS[Azure App Insights<br/>Telemetry & Monitoring]
+    end
+    
+    subgraph "Data Layer"
+        CACHE[Token Cache<br/>Encrypted File Storage]
+        STATE[State Store<br/>Transaction Snapshots]
+        LOGS[Log Files<br/>Rotating 10MB Chunks]
+    end
+    
+    CLI --> AUTH
+    CLI --> CONFIG
+    SCRIPTS --> AUTH
+    SCRIPTS --> CONFIG
+    
+    AUTH --> SECRETS
+    AUTH --> LOGGER
+    CONFIG --> SECRETS
+    
+    SECRETS --> KEY_VAULT
+    LOGGER --> APP_INSIGHTS
+    
+    WS --> RETRY
+    ITEMS --> RETRY
+    DEPLOY --> RETRY
+    DQ --> RETRY
+    GIT --> RETRY
+    CONTRACT --> RETRY
+    
+    RETRY --> CIRCUIT
+    CIRCUIT --> TIMEOUT
+    TIMEOUT --> ROLLBACK
+    
+    ROLLBACK --> STATE
+    
+    RETRY --> FABRIC_API
+    RETRY --> POWERBI_API
+    RETRY --> PURVIEW_API
+    
+    AUTH --> CACHE
+    LOGGER --> LOGS
+    
+    FABRIC_API --> APP_INSIGHTS
+    POWERBI_API --> APP_INSIGHTS
+    PURVIEW_API --> APP_INSIGHTS
+    
+    style CLI fill:#00bcd4
+    style AUTH fill:#ff9800
+    style SECRETS fill:#4caf50
+    style RETRY fill:#9c27b0
+    style CIRCUIT fill:#f44336
+    style ROLLBACK fill:#ffc107
+    style FABRIC_API fill:#2196f3
+    style KEY_VAULT fill:#4caf50
+    style APP_INSIGHTS fill:#ff5722

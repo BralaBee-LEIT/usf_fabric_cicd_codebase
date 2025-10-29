@@ -1,0 +1,38 @@
+sequenceDiagram
+    participant User
+    participant Script
+    participant AuthManager
+    participant Cache
+    participant AzureAD
+    participant FabricAPI
+    
+    User->>Script: Execute Command
+    Script->>AuthManager: get_access_token()
+    
+    AuthManager->>Cache: Check Token Cache
+    alt Token Valid & Not Expired
+        Cache-->>AuthManager: Return Cached Token
+    else Token Expired/Missing
+        AuthManager->>AzureAD: Authenticate<br/>(Device Code/Interactive)
+        AzureAD-->>User: Display Auth Code
+        User->>AzureAD: Complete Authentication
+        AzureAD-->>AuthManager: Access Token + Refresh Token
+        AuthManager->>Cache: Store Tokens<br/>(Encrypted)
+    end
+    
+    AuthManager-->>Script: Valid Access Token
+    Script->>FabricAPI: API Request<br/>Bearer {token}
+    
+    alt Token Still Valid
+        FabricAPI-->>Script: 200 OK + Data
+    else Token Expired During Request
+        FabricAPI-->>Script: 401 Unauthorized
+        Script->>AuthManager: Refresh Token
+        AuthManager->>AzureAD: Use Refresh Token
+        AzureAD-->>AuthManager: New Access Token
+        AuthManager->>Cache: Update Cache
+        Script->>FabricAPI: Retry with New Token
+        FabricAPI-->>Script: 200 OK + Data
+    end
+    
+    Script-->>User: Command Result

@@ -1,0 +1,42 @@
+graph TB
+    subgraph "Current Architecture (Baseline)"
+        U1[User Layer<br/>CLI Scripts & Scenarios]
+        U2[Utility Layer<br/>FabricClient, WorkspaceManager<br/>ItemManager, GitConnector]
+        U3[Configuration Layer<br/>ConfigManager, YAML/JSON, .env]
+        U4[External Services<br/>Fabric API, Azure AD, Git]
+        
+        U1 --> U2
+        U1 --> U3
+        U2 --> U4
+        
+        style U1 fill:#e1f5ff
+        style U2 fill:#fff3e0
+        style U3 fill:#f3e5f5
+        style U4 fill:#e8f5e9
+    end
+    
+    subgraph "Target Architecture (Production-Ready)"
+        T1[User Layer<br/>CLI + Scenarios + Health Checks]
+        T2[Enhanced Utilities<br/>+ Retry Logic<br/>+ Circuit Breaker<br/>+ Transactions]
+        T3[Reliability Layer<br/>RetryHandler<br/>CircuitBreaker<br/>TransactionMgr<br/>FeatureFlags]
+        T4[Observability<br/>App Insights<br/>Telemetry<br/>Metrics<br/>Dashboards]
+        T5[Security & Config<br/>SecretManager<br/>ConfigValidator<br/>Schema Validation]
+        T6[External Services<br/>+ Key Vault<br/>+ App Insights]
+        
+        T1 --> T2
+        T1 --> T3
+        T1 --> T4
+        T2 --> T3
+        T2 --> T5
+        T2 --> T6
+        T3 --> T6
+        T4 --> T6
+        T5 --> T6
+        
+        style T1 fill:#4caf50
+        style T2 fill:#ff9800
+        style T3 fill:#2196f3
+        style T4 fill:#9c27b0
+        style T5 fill:#f44336
+        style T6 fill:#00bcd4
+    end

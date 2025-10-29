@@ -1,0 +1,45 @@
+flowchart TD
+    A[Start Transaction] --> B[Log Transaction ID<br/>+ Operation Type]
+    B --> C[Validate Inputs]
+    
+    C -->|Invalid| D[Rollback: None Needed<br/>Early Exit]
+    C -->|Valid| E[Execute Primary Operation]
+    
+    E -->|Success| F[Execute Secondary Operations]
+    E -->|Failure| G[Rollback: Primary Failed]
+    
+    F -->|Success| H[Commit Transaction<br/>Log Success]
+    F -->|Failure| I[Rollback: Secondary Failed]
+    
+    G --> J{Operation Type?}
+    J -->|Create| K[Delete Created Resource<br/>Restore State]
+    J -->|Update| L[Restore Previous State<br/>From Snapshot]
+    J -->|Delete| M[Recreate Resource<br/>From Backup]
+    
+    I --> J
+    
+    K --> N[Verify Rollback<br/>Compare States]
+    L --> N
+    M --> N
+    
+    N -->|Success| O[Log Rollback Success<br/>Clean Exit]
+    N -->|Failure| P[Log Rollback Failure<br/>Manual Intervention Required]
+    
+    D --> Q[Log Early Exit]
+    H --> R[Log Commit]
+    O --> S[Return Status]
+    P --> S
+    Q --> S
+    R --> S
+    
+    style A fill:#e1f5ff
+    style E fill:#fff3e0
+    style F fill:#fff3e0
+    style H fill:#4caf50
+    style G fill:#f44336
+    style I fill:#f44336
+    style K fill:#ff9800
+    style L fill:#ff9800
+    style M fill:#ff9800
+    style P fill:#d32f2f
+    style R fill:#00bcd4

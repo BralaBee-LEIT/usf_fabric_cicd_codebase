@@ -1,0 +1,183 @@
+erDiagram
+    WORKSPACE ||--o{ LAKEHOUSE : contains
+    WORKSPACE ||--o{ NOTEBOOK : contains
+    WORKSPACE ||--o{ DATAFLOW : contains
+    WORKSPACE ||--o{ DATASET : contains
+    WORKSPACE ||--o{ REPORT : contains
+    WORKSPACE ||--|| CAPACITY : "assigned to"
+    WORKSPACE ||--|| REGISTRY_ENTRY : "tracked by"
+    WORKSPACE ||--|| AUDIT_LOG : "logged in"
+    WORKSPACE ||--|| GIT_BRANCH : "synced with"
+    
+    LAKEHOUSE ||--o{ FOLDER : contains
+    LAKEHOUSE ||--o{ FILE : contains
+    LAKEHOUSE ||--|| WORKSPACE : "belongs to"
+    
+    FOLDER ||--o{ FILE : contains
+    FOLDER ||--o{ FOLDER : "nested in"
+    FOLDER ||--|| LAKEHOUSE : "belongs to"
+    
+    FILE ||--|| FOLDER : "stored in"
+    
+    GIT_BRANCH ||--o{ COMMIT : contains
+    GIT_BRANCH ||--|| WORKSPACE : "represents"
+    
+    COMMIT ||--o{ FILE_CHANGE : includes
+    COMMIT ||--|| GIT_BRANCH : "belongs to"
+    
+    REGISTRY_ENTRY ||--|| WORKSPACE : references
+    AUDIT_LOG ||--|| WORKSPACE : documents
+    
+    WORKSPACE {
+        string workspace_id PK "UUID from Fabric"
+        string workspace_name UK "Unique name"
+        string display_name "Human readable"
+        string description "Purpose description"
+        string capacity_id FK "P1/F64/etc"
+        string environment "DEV/TEST/PROD"
+        datetime created_at "Creation timestamp"
+        datetime updated_at "Last modification"
+        string created_by "User/Service Principal"
+        string state "Active/Archived/Deleted"
+    }
+    
+    CAPACITY {
+        string capacity_id PK "Azure resource ID"
+        string capacity_name "e.g. USF_Fabric_Dev"
+        string sku "P1/F64/F128/etc"
+        string region "East US 2"
+        int max_workspaces "Limit"
+        string subscription_id "Azure subscription"
+    }
+    
+    LAKEHOUSE {
+        string lakehouse_id PK "UUID from Fabric"
+        string lakehouse_name "e.g. USF_Lakehouse"
+        string workspace_id FK "Parent workspace"
+        string description "Purpose"
+        datetime created_at "Creation timestamp"
+        string onelake_path "Blob storage path"
+        string sql_endpoint "SQL connection string"
+    }
+    
+    FOLDER {
+        string folder_id PK "Generated ID"
+        string folder_name "e.g. bronze/silver/gold"
+        string folder_path "Full path"
+        string parent_folder_id FK "Nesting support"
+        string lakehouse_id FK "Parent lakehouse"
+        datetime created_at "Creation timestamp"
+        string purpose "Data layer description"
+    }
+    
+    FILE {
+        string file_id PK "Generated ID"
+        string file_name "e.g. data.parquet"
+        string file_path "Full path with folders"
+        string folder_id FK "Parent folder"
+        int file_size_bytes "Size"
+        string file_type "parquet/csv/json/py"
+        datetime created_at "Upload timestamp"
+        datetime modified_at "Last modification"
+        string checksum "MD5/SHA256"
+    }
+    
+    NOTEBOOK {
+        string notebook_id PK "UUID from Fabric"
+        string notebook_name "e.g. Transform_Data"
+        string workspace_id FK "Parent workspace"
+        string language "Python/Spark/SQL"
+        datetime created_at "Creation timestamp"
+        datetime last_run_at "Last execution"
+        string last_run_status "Success/Failed/Running"
+    }
+    
+    DATAFLOW {
+        string dataflow_id PK "UUID from Fabric"
+        string dataflow_name "ETL flow name"
+        string workspace_id FK "Parent workspace"
+        string source_type "API/Database/File"
+        string destination_type "Lakehouse/Warehouse"
+        datetime created_at "Creation timestamp"
+        string schedule "Cron expression"
+    }
+    
+    DATASET {
+        string dataset_id PK "UUID from Fabric"
+        string dataset_name "Semantic model name"
+        string workspace_id FK "Parent workspace"
+        string source_lakehouse_id FK "Data source"
+        datetime created_at "Creation timestamp"
+        datetime last_refresh_at "Last data refresh"
+        string refresh_status "Success/Failed"
+    }
+    
+    REPORT {
+        string report_id PK "UUID from Fabric"
+        string report_name "Dashboard name"
+        string workspace_id FK "Parent workspace"
+        string dataset_id FK "Data source"
+        datetime created_at "Creation timestamp"
+        datetime last_viewed_at "Usage tracking"
+        int view_count "Usage metric"
+    }
+    
+    REGISTRY_ENTRY {
+        string entry_id PK "Generated ID"
+        string workspace_id FK "Tracked workspace"
+        string workspace_name "Name at creation"
+        string capacity_id "Capacity assignment"
+        string environment "DEV/TEST/PROD"
+        datetime onboarded_at "Registration timestamp"
+        string onboarded_by "User/Service Principal"
+        string yaml_file_path "Source definition"
+        string git_branch "Feature branch name"
+        string status "Active/Archived/Deleted"
+        json metadata "Additional attributes"
+    }
+    
+    AUDIT_LOG {
+        string log_id PK "Generated UUID"
+        string workspace_id FK "Subject workspace"
+        string workspace_name "Name at time of action"
+        datetime timestamp "Action timestamp"
+        string action_type "CREATE/UPDATE/DELETE/SCAFFOLD"
+        string actor "User/Service Principal"
+        string action_status "SUCCESS/FAILED/PARTIAL"
+        json action_details "Full event payload"
+        string error_message "If failed"
+        float execution_time_seconds "Performance metric"
+        string log_file_path "JSON file location"
+    }
+    
+    GIT_BRANCH {
+        string branch_id PK "Generated ID"
+        string branch_name "e.g. feature/workspace-name"
+        string workspace_id FK "Associated workspace"
+        string repository_url "GitHub/ADO URL"
+        string base_branch "Usually main/master"
+        datetime created_at "Branch creation"
+        datetime last_commit_at "Latest commit"
+        string merge_status "Open/Merged/Closed"
+        string pull_request_url "PR link"
+    }
+    
+    COMMIT {
+        string commit_id PK "Git SHA"
+        string branch_id FK "Parent branch"
+        datetime committed_at "Commit timestamp"
+        string author "Git user"
+        string commit_message "Description"
+        int files_changed "Change count"
+        string commit_url "GitHub/ADO URL"
+    }
+    
+    FILE_CHANGE {
+        string change_id PK "Generated ID"
+        string commit_id FK "Parent commit"
+        string file_path "Changed file path"
+        string change_type "CREATE/UPDATE/DELETE"
+        int lines_added "Addition count"
+        int lines_deleted "Deletion count"
+        string diff_url "GitHub/ADO diff URL"
+    }

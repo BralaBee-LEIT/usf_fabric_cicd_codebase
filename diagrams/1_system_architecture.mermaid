@@ -1,0 +1,100 @@
+graph TB
+    subgraph "User Interface Layer"
+        CLI[CLI Tool<br/>onboard_data_product.py<br/>⚡ 9-second execution]
+        YAML[YAML Descriptor<br/>workspace.yaml<br/>product_descriptor.yaml]
+        CONFIG[Project Config<br/>project.config.json<br/>Naming patterns]
+        PRINCIPALS[Principals File<br/>config/principals/<br/>User/Group assignments]
+    end
+
+    subgraph "Core Engine Layer"
+        PARSER[YAML Parser<br/>Configuration Validator<br/>Schema validation]
+        ORCHESTRATOR[Orchestrator<br/>Workflow Engine<br/>onboard_data_product.py]
+        AUDIT[Audit Logger ✅<br/>JSONL Tracking<br/>audit_trail.jsonl]
+    end
+
+    subgraph "v2.0 Utilities Layer ✅ PRODUCTION"
+        GIT_CONNECTOR[Git Connector<br/>fabric_git_connector.py<br/>Automated linking & sync]
+        NAMING_VALIDATOR[Naming Validator<br/>item_naming_validator.py<br/>Medallion architecture]
+        AUDIT_LOGGER[Audit Logger<br/>audit_logger.py<br/>Compliance reporting]
+        ITEM_MANAGER[Item Manager<br/>fabric_item_manager.py<br/>Enhanced CRUD]
+        WORKSPACE_MANAGER[Workspace Manager<br/>workspace_manager.py<br/>Capacity assignment]
+    end
+
+    subgraph "API Integration Layer"
+        FABRIC_API[Microsoft Fabric API<br/>Workspace/Item Operations<br/>REST API]
+        GIT_API[Git Provider API<br/>GitHub/Azure DevOps<br/>Branch/Repo operations]
+        AZURE_AD[Azure AD API<br/>Authentication<br/>Service Principal]
+        REGISTRY[Registry Manager<br/>State Tracking<br/>.workspace_registry.json]
+    end
+
+    subgraph "Production Hardening Layer 🔧 OPTIONAL"
+        RETRY[Retry Logic<br/>retry_handler.py<br/>Exponential backoff]
+        CIRCUIT[Circuit Breaker<br/>circuit_breaker.py<br/>Failure protection]
+        ROLLBACK[Transaction Rollback<br/>transaction_rollback.py<br/>Automatic cleanup]
+        TELEMETRY[Telemetry<br/>telemetry.py<br/>Application Insights]
+        HEALTH[Health Checks<br/>health_check.py<br/>Liveness/Readiness]
+    end
+
+    subgraph "External Services"
+        FABRIC[Microsoft Fabric<br/>Tenant<br/>Capacity/Workspaces]
+        GITHUB[Git Providers<br/>GitHub/Azure DevOps<br/>Repositories]
+        STORAGE[File System<br/>Local Storage<br/>Git repository]
+        INSIGHTS[App Insights<br/>Azure Monitor<br/>Telemetry optional]
+    end
+
+    subgraph "Output Layer"
+        WORKSPACE[Fabric Workspace ✅<br/>Lakehouse + Resources<br/>Capacity assigned]
+        GIT_REPO[Git Repository ✅<br/>Feature/Main branch<br/>Bidirectional sync]
+        FOLDERS[Folder Structure ✅<br/>data_products/*/<br/>Scaffolded template]
+        LOGS[Audit Logs ✅<br/>.onboarding_logs/<br/>audit_trail.jsonl]
+        STATE[Registry Entry ✅<br/>.workspace_registry.json<br/>Metadata catalog]
+    end
+
+    YAML --> PARSER
+    CONFIG --> PARSER
+    PRINCIPALS --> PARSER
+    CLI --> ORCHESTRATOR
+    PARSER --> ORCHESTRATOR
+    
+    ORCHESTRATOR --> NAMING_VALIDATOR
+    ORCHESTRATOR --> GIT_CONNECTOR
+    ORCHESTRATOR --> AUDIT_LOGGER
+    ORCHESTRATOR --> ITEM_MANAGER
+    ORCHESTRATOR --> WORKSPACE_MANAGER
+
+    WORKSPACE_MANAGER --> FABRIC_API
+    ITEM_MANAGER --> FABRIC_API
+    GIT_CONNECTOR --> GIT_API
+    NAMING_VALIDATOR --> WORKSPACE_MANAGER
+    AUDIT_LOGGER --> AUDIT
+    
+    FABRIC_API --> AZURE_AD
+    GIT_API --> AZURE_AD
+    ORCHESTRATOR --> REGISTRY
+
+    FABRIC_API -.->|Optional| RETRY
+    RETRY -.->|Optional| CIRCUIT
+    FABRIC_API -.->|Optional| ROLLBACK
+    WORKSPACE_MANAGER -.->|Optional| TELEMETRY
+    WORKSPACE_MANAGER -.->|Optional| HEALTH
+
+    FABRIC_API --> FABRIC
+    GIT_API --> GITHUB
+    REGISTRY --> STORAGE
+    TELEMETRY -.->|Optional| INSIGHTS
+
+    FABRIC --> WORKSPACE
+    GITHUB --> GIT_REPO
+    ORCHESTRATOR --> FOLDERS
+    AUDIT --> LOGS
+    REGISTRY --> STATE
+
+    classDef production fill:#107C10,stroke:#0B5A0B,color:#fff,stroke-width:3px
+    classDef v2feature fill:#0078D4,stroke:#005A9E,color:#fff,stroke-width:2px
+    classDef optional fill:#FF8C00,stroke:#CC7000,color:#fff,stroke-width:2px
+    classDef external fill:#666,stroke:#444,color:#fff
+
+    class CLI,PARSER,ORCHESTRATOR,FABRIC_API,GIT_API,AZURE_AD,REGISTRY,WORKSPACE,GIT_REPO,FOLDERS,LOGS,STATE,YAML,CONFIG,PRINCIPALS production
+    class GIT_CONNECTOR,NAMING_VALIDATOR,AUDIT_LOGGER,ITEM_MANAGER,WORKSPACE_MANAGER,AUDIT v2feature
+    class RETRY,CIRCUIT,ROLLBACK,TELEMETRY,HEALTH optional
+    class FABRIC,GITHUB,STORAGE,INSIGHTS external

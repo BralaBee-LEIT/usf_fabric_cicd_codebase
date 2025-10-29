@@ -136,12 +136,32 @@ def mock_env_vars(monkeypatch):
         "AZURE_SUBSCRIPTION_ID": "test-subscription-id",
         "DATA_OWNER_EMAIL": "owner@test.com",
         "TECHNICAL_LEAD_EMAIL": "lead@test.com",
+        "GIT_ORGANIZATION": "test-org",
+        "GIT_REPOSITORY": "test-repo",
+        "GITHUB_TOKEN": "ghp_test_token",
     }
 
     for key, value in env_vars.items():
         monkeypatch.setenv(key, value)
 
     return env_vars
+
+
+@pytest.fixture(autouse=True)
+def setup_test_env_vars(monkeypatch):
+    """Automatically set required environment variables for all tests"""
+    # Set minimal required env vars to prevent initialization failures
+    # These can be overridden by individual tests using monkeypatch
+    test_env = {
+        "AZURE_TENANT_ID": "test-tenant-id",
+        "AZURE_CLIENT_ID": "test-client-id", 
+        "AZURE_CLIENT_SECRET": "test-secret",
+        "GIT_ORGANIZATION": "test-org",
+        "GIT_REPOSITORY": "test-repo",
+    }
+    
+    for key, value in test_env.items():
+        monkeypatch.setenv(key, value)
 
 
 @pytest.fixture

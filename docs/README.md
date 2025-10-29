@@ -67,15 +67,19 @@ Daily operations for managing workspaces and users.
 ---
 
 ### 4. 📦 Fabric Items & CRUD (`fabric-items-crud/`)
-Create, edit, and manage Fabric items (notebooks, lakehouses, etc.).
+Create, edit, and manage Fabric items (notebooks, lakehouses, etc.) plus CLI operations.
 
 | Document | Description | Read Time |
 |----------|-------------|-----------|
-| [`FABRIC_ITEM_CRUD_QUICKREF.md`](fabric-items-crud/FABRIC_ITEM_CRUD_QUICKREF.md) ⭐ | Quick reference for CRUD | 8 min |
+| [`FABRIC_CLI_QUICKREF.md`](fabric-items-crud/FABRIC_CLI_QUICKREF.md) ⭐ | **Enhanced CLI reference - All 37+ commands** | 15 min |
+| [`FABRIC_ITEM_CRUD_QUICKREF.md`](fabric-items-crud/FABRIC_ITEM_CRUD_QUICKREF.md) | Quick reference for CRUD operations | 8 min |
 | [`FABRIC_ITEM_CRUD_SUMMARY.md`](fabric-items-crud/FABRIC_ITEM_CRUD_SUMMARY.md) | Complete CRUD capabilities | 15 min |
-| [`FABRIC_CLI_QUICKREF.md`](fabric-items-crud/FABRIC_CLI_QUICKREF.md) | CLI command reference | 10 min |
 
-**Start with:** `FABRIC_ITEM_CRUD_QUICKREF.md`
+**CLI Documentation (Enhanced v2.0):**
+- [`CLI_ENHANCEMENT_SUMMARY.md`](../CLI_ENHANCEMENT_SUMMARY.md) - Why & how CLI was enhanced (21% → 100% coverage)
+- [`CLI_COMPREHENSIVE_TESTING.md`](../CLI_COMPREHENSIVE_TESTING.md) - Complete test results for all 37 commands
+
+**Start with:** `FABRIC_CLI_QUICKREF.md` for complete CLI coverage
 
 ---
 

@@ -39,6 +39,45 @@ python setup/init_project_config.py --validate
 
 See [docs/getting-started/NEW_PROJECT_SETUP.md](docs/getting-started/NEW_PROJECT_SETUP.md) for detailed instructions.
 
+## 🎯 Quick CLI Commands
+
+Once setup is complete, use the **Enhanced Fabric CLI** for complete framework management:
+
+```bash
+# Quick workspace listing
+./tools/fabric-cli-enhanced.sh ls
+
+# Get comprehensive help
+./tools/fabric-cli-enhanced.sh help
+
+# Data product onboarding
+./tools/fabric-cli-enhanced.sh onboard data_products/onboarding/my_product.yaml
+
+# Fabric items management
+./tools/fabric-cli-enhanced.sh items list --workspace dev-workspace
+./tools/fabric-cli-enhanced.sh items create --workspace dev-ws --name MyLakehouse --type Lakehouse
+
+# Git integration
+./tools/fabric-cli-enhanced.sh git sync-to-workspace --workspace dev-ws
+./tools/fabric-cli-enhanced.sh git sync-to-git --workspace dev-ws
+
+# Deployment
+./tools/fabric-cli-enhanced.sh deploy --workspace prod-ws --bundle deploy.zip
+
+# Health & monitoring
+./tools/fabric-cli-enhanced.sh health --workspace dev-ws -e dev
+
+# Data quality
+./tools/fabric-cli-enhanced.sh dq validate --workspace dev-ws
+```
+
+**📚 CLI Documentation:**
+- **Quick Reference:** [`docs/fabric-items-crud/FABRIC_CLI_QUICKREF.md`](docs/fabric-items-crud/FABRIC_CLI_QUICKREF.md) - All 37+ commands with examples
+- **Enhancement Summary:** [`CLI_ENHANCEMENT_SUMMARY.md`](CLI_ENHANCEMENT_SUMMARY.md) - Why & how the CLI was enhanced
+- **Test Report:** [`CLI_COMPREHENSIVE_TESTING.md`](CLI_COMPREHENSIVE_TESTING.md) - Complete verification results
+
+**Note:** The enhanced CLI (`./tools/fabric-cli-enhanced.sh`) provides access to **100% of framework functionality** (14 scripts, 10 categories). The legacy CLI (`./tools/fabric-cli.sh`) is still available for backward compatibility.
+
 ## ✨ New Features (v2.0)
 
 ### 🔄 Automated Git Integration
@@ -150,8 +189,8 @@ usf-fabric-cicd/
 ## 🛠️ Available Tools
 
 ### Operational Tools
-- **[fabric-cli.sh](tools/README.md)** - User-friendly CLI wrapper
-- **[bulk_delete_workspaces.py](tools/README.md)** - Bulk workspace deletion
+- **[fabric-cli.sh](tools/fabric-cli.sh)** - User-friendly CLI wrapper (`./tools/fabric-cli.sh`)
+- **[bulk_delete_workspaces.py](tools/bulk_delete_workspaces.py)** - Bulk workspace deletion
 
 ### Diagnostics
 - **[diagnose_fabric_permissions.py](diagnostics/README.md)** - API permissions checker

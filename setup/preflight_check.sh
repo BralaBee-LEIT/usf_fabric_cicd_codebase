@@ -110,8 +110,8 @@ fi
 
 # Check 8: Configuration Manager
 echo -e "${YELLOW}[8/10]${NC} Testing configuration manager..."
-if python -c "from ops.scripts.utilities.config_manager import ConfigManager; cm = ConfigManager(); print(cm.get_project_name())" 2>/dev/null; then
-    PROJECT_NAME=$(python -c "from ops.scripts.utilities.config_manager import ConfigManager; cm = ConfigManager(); print(cm.get_project_name())")
+if python -c "from ops.scripts.utilities.config_manager import ConfigManager; cm = ConfigManager(); info = cm.get_project_info(); print(info['name'])" 2>/dev/null; then
+    PROJECT_NAME=$(python -c "from ops.scripts.utilities.config_manager import ConfigManager; cm = ConfigManager(); info = cm.get_project_info(); print(info['name'])")
     echo -e "       ${GREEN}✓${NC} Configuration loaded (Project: $PROJECT_NAME)"
 else
     echo -e "       ${RED}✗${NC} Configuration manager failed"
@@ -120,7 +120,7 @@ fi
 
 # Check 9: Fabric Authentication
 echo -e "${YELLOW}[9/10]${NC} Testing Fabric authentication..."
-if python -c "from ops.scripts.utilities.workspace_manager import WorkspaceManager; wm = WorkspaceManager()" 2>/dev/null; then
+if python -c "from dotenv import load_dotenv; load_dotenv(); from ops.scripts.utilities.workspace_manager import WorkspaceManager; wm = WorkspaceManager()" 2>/dev/null; then
     echo -e "       ${GREEN}✓${NC} Fabric authentication successful"
 else
     echo -e "       ${RED}✗${NC} Fabric authentication failed"

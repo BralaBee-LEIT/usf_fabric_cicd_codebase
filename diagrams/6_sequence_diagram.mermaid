@@ -1,0 +1,112 @@
+sequenceDiagram
+    actor User
+    participant CLI as onboard_data_product.py
+    participant Parser as YAML Parser
+    participant Validator as Schema Validator
+    participant Auth as Auth Manager
+    participant FabricAPI as Microsoft Fabric API
+    participant GitClient as Git Client
+    participant Registry as Registry Manager
+    participant Audit as Audit Logger
+
+    Note over User,Audit: 🚀 User Story 1: 9-Second Workspace Creation
+
+    User->>CLI: python onboard_data_product.py<br/>--yaml workspace.yaml
+    activate CLI
+    
+    CLI->>CLI: Load environment config<br/>Parse command-line args
+    CLI->>Parser: Load workspace.yaml
+    activate Parser
+    Parser->>Parser: Read YAML file<br/>Parse structure
+    Parser-->>CLI: Parsed configuration
+    deactivate Parser
+    
+    CLI->>Validator: Validate YAML schema
+    activate Validator
+    Validator->>Validator: Check required fields<br/>Validate data types<br/>Check naming rules
+    alt Validation Failure
+        Validator-->>CLI: ❌ Validation errors
+        CLI-->>User: Display errors & exit
+    else Validation Success
+        Validator-->>CLI: ✅ Schema valid
+        deactivate Validator
+    end
+    
+    CLI->>Auth: Request authentication
+    activate Auth
+    Auth->>Auth: Check token cache
+    alt Token Cached & Valid
+        Auth-->>CLI: Return cached token
+    else Token Missing/Expired
+        Auth->>FabricAPI: OAuth 2.0 flow<br/>Service Principal
+        activate FabricAPI
+        FabricAPI-->>Auth: Access token (expires 1hr)
+        deactivate FabricAPI
+        Auth->>Auth: Cache token locally
+        Auth-->>CLI: Return fresh token
+    end
+    deactivate Auth
+    
+    Note over CLI,FabricAPI: 📊 Phase 1: Workspace Creation (3s)
+    
+    CLI->>FabricAPI: POST /v1/workspaces<br/>{ name, description, capacityId }
+    activate FabricAPI
+    FabricAPI->>FabricAPI: Validate capacity<br/>Check naming conflicts<br/>Create workspace
+    alt Workspace Exists
+        FabricAPI-->>CLI: ⚠️ 409 Conflict
+        CLI->>FabricAPI: GET /v1/workspaces<br/>Filter by name
+        FabricAPI-->>CLI: Existing workspace details
+        CLI->>CLI: Compare configuration<br/>Decide: update or skip
+    else Creation Success
+        FabricAPI-->>CLI: ✅ 201 Created<br/>{ id, name, capacityId }
+        deactivate FabricAPI
+    end
+    
+    Note over CLI,GitClient: 📁 Phase 2: Local Scaffolding (2s)
+    
+    CLI->>CLI: Generate folder structure<br/>Create README.md<br/>Apply templates
+    CLI->>CLI: Create .gitkeep files<br/>Generate documentation
+    
+    CLI->>GitClient: Initialize feature branch
+    activate GitClient
+    GitClient->>GitClient: Check if repo exists<br/>Create if needed
+    GitClient->>GitClient: git checkout -b feature/workspace-name
+    GitClient->>GitClient: git add .<br/>git commit -m "..."
+    GitClient->>GitClient: git push origin feature/workspace-name
+    GitClient-->>CLI: ✅ Branch created & pushed
+    deactivate GitClient
+    
+    Note over CLI,Registry: 📋 Phase 3: Registration & Audit (4s)
+    
+    CLI->>Registry: Register workspace
+    activate Registry
+    Registry->>Registry: Load .workspace_registry.json
+    Registry->>Registry: Add new entry:<br/>{ id, name, created_at, capacity }
+    Registry->>Registry: Save updated registry
+    Registry-->>CLI: ✅ Registered
+    deactivate Registry
+    
+    CLI->>Audit: Log onboarding event
+    activate Audit
+    Audit->>Audit: Create log entry:<br/>{ timestamp, workspace, actions }
+    Audit->>Audit: Write to .onboarding_logs/<br/>workspace-name-YYYYMMDD-HHMMSS.json
+    Audit-->>CLI: ✅ Logged
+    deactivate Audit
+    
+    CLI->>CLI: Calculate execution time<br/>Format success message
+    CLI-->>User: ✅ Workspace created successfully!<br/>⏱️ Execution time: 9.23s<br/>📦 Branch: feature/workspace-name<br/>🔗 Workspace ID: 7b51a...
+    deactivate CLI
+    
+    Note over User,Audit: 🎯 Result: Workspace live in Fabric Cloud<br/>📦 Code committed to feature branch<br/>📋 Audit trail persisted<br/>🗂️ Registry updated
+
+    alt Optional: User requests --feature flag
+        User->>CLI: --feature flag provided
+        Note over CLI,GitClient: Creates isolated feature branch<br/>No merge to main until approved
+    end
+    
+    alt Error Handling
+        FabricAPI-->>CLI: ❌ 500 Internal Server Error
+        CLI->>CLI: Log error details<br/>Rollback local changes
+        CLI->>Audit: Log failure event
+        CLI-->>User: ❌ Operation failed<br/>Check logs for details
+    end

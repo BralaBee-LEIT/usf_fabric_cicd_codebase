@@ -1,0 +1,133 @@
+graph TB
+    subgraph "Input Layer"
+        YAML[� YAML Descriptor<br/>product_descriptor.yaml<br/>workspace.yaml]
+        CONFIG[⚙️ Project Config<br/>project.config.json<br/>Naming patterns]
+        PRINCIPALS[👥 Principals File<br/>config/principals/<br/>User/Group assignments]
+    end
+
+    subgraph "CLI Layer - Primary Deployment Method ✅ PRODUCTION"
+        CLI_INVOKE[🖥️ CLI Invocation<br/>onboard_data_product.py<br/>⚡ 9-second execution]
+        CLI_PARSE[� Parse Input<br/>YAML + Config + Principals]
+        CLI_VALIDATE[✅ Validate<br/>Schema + Naming + Access]
+    end
+
+    subgraph "Utilities Layer ✅ PRODUCTION"
+        UTIL_GIT[🔗 Git Connector<br/>Automated repo linking<br/>Bidirectional sync]
+        UTIL_NAMING[📛 Naming Validator<br/>Medallion architecture<br/>Sequential numbering]
+        UTIL_AUDIT[� Audit Logger<br/>JSONL trail<br/>Compliance reporting]
+        UTIL_ITEM[🧩 Item Manager<br/>Create/Update/Delete<br/>Fabric items]
+        UTIL_WORKSPACE[🏢 Workspace Manager<br/>Provision/Configure<br/>Capacity assignment]
+    end
+
+    subgraph "API Integration Layer ✅ PRODUCTION"
+        API_FABRIC[🌐 Fabric REST API<br/>Workspace/Item CRUD<br/>Authentication]
+        API_GIT[� Git Provider API<br/>GitHub/Azure DevOps<br/>Branch/Repo operations]
+        API_AZURE[☁️ Azure AD<br/>Service Principal<br/>Token management]
+    end
+
+    subgraph "Production Hardening Layer 🔧 OPTIONAL"
+        PH_RETRY[� Retry Logic<br/>Exponential backoff<br/>Transient failure handling]
+        PH_CIRCUIT[⚡ Circuit Breaker<br/>Failure threshold<br/>Auto-recovery]
+        PH_ROLLBACK[↩️ Transaction Rollback<br/>Automatic cleanup<br/>Resource tracking]
+        PH_TELEMETRY[� Telemetry<br/>Application Insights<br/>Event/Metric tracking]
+        PH_HEALTH[💊 Health Checks<br/>Liveness/Readiness<br/>Dependency status]
+    end
+
+    subgraph "Output Layer ✅ PRODUCTION"
+        OUT_WORKSPACE[🏢 Fabric Workspace<br/>Capacity assigned<br/>Users configured]
+        OUT_GIT[📚 Git Repository<br/>Feature/Main branch<br/>Bidirectional sync]
+        OUT_AUDIT[📋 Audit Logs<br/>audit_trail.jsonl<br/>Compliance ready]
+        OUT_REGISTRY[� Registry<br/>Metadata catalog<br/>Deployment tracking]
+    end
+
+    subgraph "GitHub Actions CI/CD ✅ OPERATIONAL"
+        GHA_TRIGGER[🎯 Triggers<br/>PR/Push/Manual<br/>workflow_dispatch]
+        
+        subgraph "CI Pipeline - Testing ✅ OPERATIONAL"
+            GHA_LINT[✅ Lint & Format<br/>Black, Flake8, Pylint]
+            GHA_UNIT[🧪 Unit Tests<br/>89 tests<br/>Python 3.10/3.11/3.12]
+            GHA_INTEGRATION[� Integration Tests<br/>6 tests<br/>Feature interactions]
+            GHA_E2E[🎭 E2E Tests<br/>6 tests<br/>Complete workflows]
+            GHA_SECURITY[🔒 Security Scan<br/>Bandit, Safety<br/>Vulnerability check]
+            GHA_COVERAGE[� Coverage Report<br/>85%+ target<br/>Codecov integration]
+        end
+        
+        subgraph "CD Pipeline - Deployment 🔧 OPTIONAL"
+            GHA_APPROVAL[� Manual Approval<br/>Environment gates<br/>Reviewer requirements]
+            GHA_DEPLOY[� Deploy Workflow<br/>deploy.yml<br/>Environment selection]
+            GHA_VALIDATE[✅ Post-Deploy Tests<br/>Smoke tests<br/>Health checks]
+            GHA_NOTIFY[📧 Notifications<br/>Success/Failure alerts]
+        end
+    end
+
+    subgraph "Two Deployment Workflows"
+        WORKFLOW_DIRECT[🎯 Direct CLI<br/>Developer laptop<br/>Manual execution]
+        WORKFLOW_AUTOMATED[🤖 Automated CI/CD<br/>GitHub Actions<br/>Triggered deployment]
+    end
+
+    %% Input to CLI
+    YAML --> CLI_INVOKE
+    CONFIG --> CLI_INVOKE
+    PRINCIPALS --> CLI_INVOKE
+
+    %% CLI Layer Flow
+    CLI_INVOKE --> CLI_PARSE
+    CLI_PARSE --> CLI_VALIDATE
+
+    %% CLI to Utilities
+    CLI_VALIDATE --> UTIL_NAMING
+    CLI_VALIDATE --> UTIL_GIT
+    CLI_VALIDATE --> UTIL_AUDIT
+    CLI_VALIDATE --> UTIL_ITEM
+    CLI_VALIDATE --> UTIL_WORKSPACE
+
+    %% Utilities to APIs
+    UTIL_WORKSPACE --> API_FABRIC
+    UTIL_ITEM --> API_FABRIC
+    UTIL_GIT --> API_GIT
+    API_FABRIC --> API_AZURE
+    API_GIT --> API_AZURE
+
+    %% Optional Hardening (dotted lines)
+    API_FABRIC -.->|Optional| PH_RETRY
+    PH_RETRY -.->|Optional| PH_CIRCUIT
+    API_FABRIC -.->|Optional| PH_ROLLBACK
+    UTIL_WORKSPACE -.->|Optional| PH_TELEMETRY
+    UTIL_WORKSPACE -.->|Optional| PH_HEALTH
+
+    %% APIs to Outputs
+    API_FABRIC --> OUT_WORKSPACE
+    API_GIT --> OUT_GIT
+    UTIL_AUDIT --> OUT_AUDIT
+    UTIL_WORKSPACE --> OUT_REGISTRY
+
+    %% GitHub Actions Flow
+    GHA_TRIGGER --> GHA_LINT
+    GHA_LINT --> GHA_UNIT
+    GHA_UNIT --> GHA_INTEGRATION
+    GHA_INTEGRATION --> GHA_E2E
+    GHA_E2E --> GHA_SECURITY
+    GHA_SECURITY --> GHA_COVERAGE
+    
+    GHA_COVERAGE -->|Pass| GHA_APPROVAL
+    GHA_COVERAGE -->|Fail| GHA_TRIGGER
+    
+    GHA_APPROVAL -->|Approved| GHA_DEPLOY
+    GHA_DEPLOY --> CLI_INVOKE
+    GHA_DEPLOY --> GHA_VALIDATE
+    GHA_VALIDATE --> GHA_NOTIFY
+
+    %% Two Workflows
+    WORKFLOW_DIRECT --> CLI_INVOKE
+    WORKFLOW_AUTOMATED --> GHA_TRIGGER
+
+    %% Styling
+    classDef production fill:#107C10,stroke:#0B5A0B,color:#fff,stroke-width:3px
+    classDef operational fill:#0078D4,stroke:#005A9E,color:#fff,stroke-width:2px
+    classDef optional fill:#FF8C00,stroke:#CC7000,color:#fff,stroke-width:2px
+    classDef input fill:#6264A7,stroke:#464775,color:#fff
+
+    class YAML,CONFIG,PRINCIPALS input
+    class CLI_INVOKE,CLI_PARSE,CLI_VALIDATE,UTIL_GIT,UTIL_NAMING,UTIL_AUDIT,UTIL_ITEM,UTIL_WORKSPACE,API_FABRIC,API_GIT,API_AZURE,OUT_WORKSPACE,OUT_GIT,OUT_AUDIT,OUT_REGISTRY,WORKFLOW_DIRECT production
+    class GHA_TRIGGER,GHA_LINT,GHA_UNIT,GHA_INTEGRATION,GHA_E2E,GHA_SECURITY,GHA_COVERAGE,GHA_APPROVAL,GHA_DEPLOY,GHA_VALIDATE,GHA_NOTIFY,WORKFLOW_AUTOMATED operational
+    class PH_RETRY,PH_CIRCUIT,PH_ROLLBACK,PH_TELEMETRY,PH_HEALTH optional

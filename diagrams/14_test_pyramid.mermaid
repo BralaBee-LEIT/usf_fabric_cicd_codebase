@@ -1,0 +1,56 @@
+graph TD
+    subgraph "E2E Tests (Few)"
+        E1[Full System Tests<br/>Real Azure Resources]
+        E2[User Journey Tests<br/>Complete Workflows]
+        E3[Smoke Tests<br/>Production Validation]
+    end
+    
+    subgraph "Integration Tests (More)"
+        I1[API Integration Tests<br/>Fabric REST APIs]
+        I2[Auth Flow Tests<br/>Token Management]
+        I3[Secret Management Tests<br/>Key Vault Integration]
+        I4[Database Tests<br/>State Persistence]
+        I5[External Dependency Tests<br/>PowerBI, Purview]
+    end
+    
+    subgraph "Unit Tests (Most)"
+        U1[Core Logic Tests<br/>Business Rules]
+        U2[Utility Function Tests<br/>Helpers, Validators]
+        U3[Data Model Tests<br/>Serialization, Schemas]
+        U4[Error Handling Tests<br/>Edge Cases, Failures]
+        U5[Configuration Tests<br/>Settings, Environment]
+        U6[Mock Tests<br/>Isolated Components]
+        U7[Retry Logic Tests<br/>Backoff, Circuit Breaker]
+    end
+    
+    E1 --> I1
+    E2 --> I2
+    E3 --> I3
+    
+    I1 --> U1
+    I2 --> U2
+    I3 --> U3
+    I4 --> U4
+    I5 --> U5
+    
+    style E1 fill:#d32f2f
+    style E2 fill:#d32f2f
+    style E3 fill:#d32f2f
+    
+    style I1 fill:#ff9800
+    style I2 fill:#ff9800
+    style I3 fill:#ff9800
+    style I4 fill:#ff9800
+    style I5 fill:#ff9800
+    
+    style U1 fill:#4caf50
+    style U2 fill:#4caf50
+    style U3 fill:#4caf50
+    style U4 fill:#4caf50
+    style U5 fill:#4caf50
+    style U6 fill:#4caf50
+    style U7 fill:#4caf50
+    
+    classDef e2eStyle fill:#d32f2f,stroke:#333,color:#fff
+    classDef integrationStyle fill:#ff9800,stroke:#333,color:#000
+    classDef unitStyle fill:#4caf50,stroke:#333,color:#fff

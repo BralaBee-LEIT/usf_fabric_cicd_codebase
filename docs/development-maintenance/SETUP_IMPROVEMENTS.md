@@ -67,7 +67,7 @@ pip install -r ops/requirements.txt
 conda activate fabric-cicd
 
 # Then use any commands
-./fabric-cli.sh ls
+./tools/fabric-cli.sh ls
 ./quick_setup.sh
 make list
 ```
@@ -125,7 +125,7 @@ python --version
 # Should show: ✅ Already in fabric-cicd environment
 
 # 5. Test CLI
-./fabric-cli.sh ls
+./tools/fabric-cli.sh ls
 # Should list your workspaces
 ```
 

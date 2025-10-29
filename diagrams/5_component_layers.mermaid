@@ -1,0 +1,154 @@
+graph TB
+    subgraph "Presentation Layer"
+        CLI[Command Line Interface<br/>-----<br/>onboard_data_product.py<br/>Rich console output<br/>Interactive prompts<br/>⚡ 9-second execution]
+        
+        FUTURE_WEB[Web UI Dashboard<br/>-----<br/>React or Next.js<br/>Visual workspace management<br/>🎯 Future Enhancement]
+    end
+
+    subgraph "Application Layer"
+        CORE[Core Orchestrator<br/>-----<br/>Python 3.10, 3.11, 3.12<br/>Async await support<br/>Error handling and retry logic]
+        
+        VALIDATORS[Validators & Parsers<br/>-----<br/>YAML schema validation<br/>Pydantic models<br/>Data sanitization]
+        
+        TEMPLATE[Template Engine<br/>-----<br/>Jinja2 templates<br/>Folder scaffolding<br/>README generation]
+    end
+
+    subgraph "Business Logic Layer - v2.0 ✅ PRODUCTION"
+        WORKSPACE_MGR[Workspace Manager<br/>-----<br/>workspace_manager.py<br/>Create Update Delete<br/>Naming conventions<br/>Capacity assignment]
+        
+        ITEM_MGR[Item Manager<br/>-----<br/>fabric_item_manager.py<br/>Lakehouse or Notebook CRUD<br/>Template support]
+        
+        GIT_MGR[Git Connector<br/>-----<br/>fabric_git_connector.py<br/>Automated repo linking<br/>Bidirectional sync<br/>Feature branch workflow]
+        
+        NAMING_VAL[Naming Validator<br/>-----<br/>item_naming_validator.py<br/>Medallion architecture<br/>Sequential numbering<br/>Ticket-based naming]
+        
+        AUDIT_MGR[Audit Logger<br/>-----<br/>audit_logger.py<br/>JSONL logging<br/>10 plus event types<br/>Compliance reporting]
+        
+        REGISTRY_MGR[Registry Manager<br/>-----<br/>State persistence<br/>Workspace inventory<br/>Metadata management<br/>.workspace_registry.json]
+    end
+
+    subgraph "Production Hardening Layer 🔧 OPTIONAL"
+        RETRY[Retry Handler<br/>-----<br/>retry_handler.py<br/>@fabric_retry decorator<br/>Exponential backoff<br/>Configurable attempts]
+        
+        CIRCUIT[Circuit Breaker<br/>-----<br/>circuit_breaker.py<br/>Failure threshold<br/>Auto-recovery<br/>State management]
+        
+        ROLLBACK[Transaction Rollback<br/>-----<br/>transaction_rollback.py<br/>DeploymentTransaction<br/>Automatic cleanup<br/>Resource tracking]
+        
+        TELEMETRY[Telemetry<br/>-----<br/>telemetry.py<br/>Application Insights<br/>Event Metric tracking<br/>Exception logging]
+        
+        HEALTH[Health Checks<br/>-----<br/>health_check.py<br/>Liveness probes<br/>Readiness probes<br/>Dependency status]
+        
+        SECRET[Secret Manager<br/>-----<br/>secret_manager.py<br/>Azure Key Vault<br/>Local caching<br/>Fallback support]
+        
+        FEATURE[Feature Flags<br/>-----<br/>feature_flags.py<br/>Environment-based<br/>Dynamic toggle<br/>No restart required]
+    end
+
+    subgraph "Integration Layer"
+        FABRIC_CLIENT[Fabric API Client<br/>-----<br/>fabric_api.py<br/>REST API wrapper<br/>OAuth authentication<br/>Rate limiting and retry]
+        
+        GIT_CLIENT[Git Client<br/>-----<br/>GitPython library<br/>GitHub or ADO integration<br/>Branch operations<br/>Commit and push]
+        
+        CONFIG_MGR[Configuration Manager<br/>-----<br/>config_manager.py<br/>project.config.json<br/>Environment variables<br/>Defaults and overrides]
+    end
+
+    subgraph "Data Layer"
+        CACHE[Local Cache<br/>-----<br/>Token caching<br/>Workspace metadata<br/>Temporary storage]
+        
+        REGISTRY_FILE[Registry File<br/>-----<br/>.workspace_registry.json<br/>Persistent state<br/>Version controlled]
+        
+        AUDIT_FILES[Audit Log Files<br/>-----<br/>audit_trail.jsonl<br/>10 plus event types<br/>Immutable history]
+    end
+
+    subgraph "External Services"
+        FABRIC_API[Microsoft Fabric APIs<br/>-----<br/>Workspace Management<br/>Item Management<br/>Git Integration<br/>Capacity APIs]
+        
+        GIT_REMOTE[Git Remote<br/>-----<br/>GitHub<br/>Azure DevOps<br/>Automated linking]
+        
+        AUTH_SERVICE[Authentication<br/>-----<br/>Azure AD Entra ID<br/>Service Principal<br/>OAuth 2]
+        
+        INSIGHTS[App Insights<br/>-----<br/>Azure Monitor<br/>Telemetry collection<br/>Optional]
+        
+        KEYVAULT[Azure Key Vault<br/>-----<br/>Secret storage<br/>Secure access<br/>Optional]
+    end
+
+    subgraph "Infrastructure Layer"
+        NETWORK[Network Layer<br/>-----<br/>HTTPS TLS<br/>Proxy support<br/>Connection pooling]
+        
+        LOGGING[Logging Framework<br/>-----<br/>Python logging<br/>Log levels<br/>File rotation]
+        
+        MONITORING[Monitoring<br/>-----<br/>Performance metrics<br/>Error tracking<br/>Health checks]
+    end
+
+    subgraph "GitHub Actions CI/CD ✅ OPERATIONAL"
+        GHA_CI[CI Pipeline<br/>-----<br/>Lint, Unit Tests 89<br/>Integration Tests 6<br/>E2E Tests 6<br/>Security Scan<br/>Coverage 85 percent plus]
+        
+        GHA_CD[CD Pipeline<br/>-----<br/>deploy.yml<br/>Manual approval<br/>Environment selection<br/>Post-deploy validation]
+    end
+
+    CLI --> CORE
+    FUTURE_WEB -.->|Future| CORE
+    
+    CORE --> VALIDATORS
+    CORE --> TEMPLATE
+    CORE --> WORKSPACE_MGR
+    CORE --> ITEM_MGR
+    CORE --> GIT_MGR
+    CORE --> NAMING_VAL
+    CORE --> AUDIT_MGR
+    CORE --> REGISTRY_MGR
+    
+    VALIDATORS --> FABRIC_CLIENT
+    WORKSPACE_MGR --> FABRIC_CLIENT
+    ITEM_MGR --> FABRIC_CLIENT
+    GIT_MGR --> GIT_CLIENT
+    NAMING_VAL --> WORKSPACE_MGR
+    AUDIT_MGR --> AUDIT_FILES
+    REGISTRY_MGR --> REGISTRY_FILE
+    
+    FABRIC_CLIENT --> CONFIG_MGR
+    GIT_CLIENT --> CONFIG_MGR
+    FABRIC_CLIENT --> CACHE
+    
+    FABRIC_CLIENT -.->|Optional| RETRY
+    RETRY -.->|Optional| CIRCUIT
+    FABRIC_CLIENT -.->|Optional| ROLLBACK
+    WORKSPACE_MGR -.->|Optional| TELEMETRY
+    WORKSPACE_MGR -.->|Optional| HEALTH
+    CONFIG_MGR -.->|Optional| SECRET
+    CORE -.->|Optional| FEATURE
+    
+    FABRIC_CLIENT --> FABRIC_API
+    GIT_CLIENT --> GIT_REMOTE
+    FABRIC_API --> AUTH_SERVICE
+    TELEMETRY -.->|Optional| INSIGHTS
+    SECRET -.->|Optional| KEYVAULT
+    
+    FABRIC_CLIENT --> NETWORK
+    GIT_CLIENT --> NETWORK
+    CORE --> LOGGING
+    LOGGING --> MONITORING
+    
+    GHA_CI --> CORE
+    GHA_CD --> CORE
+    
+    classDef presentation fill:#E3F2FD,stroke:#0078D4,stroke-width:2px
+    classDef application fill:#FFF3E0,stroke:#FF8C00,stroke-width:2px
+    classDef business fill:#E8F5E9,stroke:#107C10,stroke-width:3px
+    classDef hardening fill:#FF8C00,stroke:#CC7000,stroke-width:2px
+    classDef integration fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px
+    classDef data fill:#FFF9C4,stroke:#F57F17,stroke-width:2px
+    classDef external fill:#EEEEEE,stroke:#666,stroke-width:2px
+    classDef infrastructure fill:#E0F2F1,stroke:#00796B,stroke-width:2px
+    classDef cicd fill:#0078D4,stroke:#005A9E,stroke-width:2px
+    classDef future fill:#FFEBEE,stroke:#C62828,stroke-width:2px,stroke-dasharray: 5 5
+
+    class CLI presentation
+    class FUTURE_WEB future
+    class CORE,VALIDATORS,TEMPLATE application
+    class WORKSPACE_MGR,ITEM_MGR,GIT_MGR,NAMING_VAL,AUDIT_MGR,REGISTRY_MGR business
+    class RETRY,CIRCUIT,ROLLBACK,TELEMETRY,HEALTH,SECRET,FEATURE hardening
+    class FABRIC_CLIENT,GIT_CLIENT,CONFIG_MGR integration
+    class CACHE,REGISTRY_FILE,AUDIT_FILES data
+    class FABRIC_API,GIT_REMOTE,AUTH_SERVICE,INSIGHTS,KEYVAULT external
+    class NETWORK,LOGGING,MONITORING infrastructure
+    class GHA_CI,GHA_CD cicd

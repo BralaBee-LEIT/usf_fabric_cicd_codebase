@@ -1,0 +1,45 @@
+stateDiagram-v2
+    [*] --> Closed: Initial State
+    
+    Closed --> Attempting: Execute Request
+    
+    Attempting --> Success: Response 200-299
+    Attempting --> RetryDelay: Transient Error<br/>(429, 503, timeout)
+    Attempting --> Open: Max Retries Exceeded
+    Attempting --> Failed: Permanent Error<br/>(400, 404)
+    
+    RetryDelay --> Attempting: After Backoff<br/>(exp: 1s, 2s, 4s, 8s)
+    
+    Success --> Closed: Reset Counters
+    
+    Open --> HalfOpen: After Cooldown<br/>(30 seconds)
+    
+    HalfOpen --> Attempting: Test Request
+    HalfOpen --> Open: Test Failed
+    
+    Failed --> [*]: Raise Exception
+    
+    note right of Closed
+        Success Count: 0
+        Failure Count: 0
+        State: CLOSED
+    end note
+    
+    note right of Open
+        Circuit Breaker OPEN
+        Fast Fail Mode
+        No requests allowed
+    end note
+    
+    note right of HalfOpen
+        Testing Recovery
+        Limited Requests
+        Monitoring Mode
+    end note
+    
+    note right of RetryDelay
+        Exponential Backoff:
+        1s → 2s → 4s → 8s → 16s
+        Max Retries: 5
+        Jitter: ±20%
+    end note

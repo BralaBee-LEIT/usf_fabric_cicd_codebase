@@ -1,0 +1,80 @@
+graph TB
+    subgraph "Performance Metrics"
+        M1[API Response Time<br/>Target: p95 < 2s]
+        M2[Success Rate<br/>Target: > 99.5%]
+        M3[Error Rate<br/>Target: < 0.5%]
+        M4[Throughput<br/>Requests/min]
+    end
+    
+    subgraph "Reliability Metrics"
+        R1[Circuit Breaker State<br/>Open/Closed/Half-Open]
+        R2[Retry Count<br/>Per Request Type]
+        R3[Token Refresh Rate<br/>Per Hour]
+        R4[Cache Hit Rate<br/>Target: > 80%]
+    end
+    
+    subgraph "Security Metrics"
+        S1[Authentication Failures<br/>Alert: > 5/min]
+        S2[Key Vault Access<br/>Latency & Success]
+        S3[Secret Rotation Age<br/>Alert: > 90 days]
+        S4[Failed Authorization<br/>Attempts]
+    end
+    
+    subgraph "Business Metrics"
+        B1[Workspace Operations<br/>Create/Update/Delete]
+        B2[User Management<br/>Add/Remove Actions]
+        B3[Deployment Success<br/>Rate by Environment]
+        B4[Rollback Frequency<br/>Target: < 2%]
+    end
+    
+    subgraph "System Health"
+        H1[Memory Usage<br/>Alert: > 80%]
+        H2[CPU Usage<br/>Alert: > 70%]
+        H3[Disk I/O<br/>Log Rotation]
+        H4[Network Latency<br/>Azure Services]
+    end
+    
+    M1 --> D1[Grafana Dashboard]
+    M2 --> D1
+    M3 --> D1
+    M4 --> D1
+    
+    R1 --> D2[Reliability Dashboard]
+    R2 --> D2
+    R3 --> D2
+    R4 --> D2
+    
+    S1 --> A1[Security Alerts]
+    S2 --> A1
+    S3 --> A1
+    S4 --> A1
+    
+    B1 --> D3[Business Dashboard]
+    B2 --> D3
+    B3 --> D3
+    B4 --> D3
+    
+    H1 --> A2[System Alerts]
+    H2 --> A2
+    H3 --> A2
+    H4 --> A2
+    
+    D1 --> N[Notification Hub]
+    D2 --> N
+    D3 --> N
+    A1 --> N
+    A2 --> N
+    
+    N --> O1[Email]
+    N --> O2[Teams]
+    N --> O3[PagerDuty]
+    
+    style M1 fill:#4caf50
+    style M2 fill:#4caf50
+    style R1 fill:#ff9800
+    style R4 fill:#ff9800
+    style S1 fill:#f44336
+    style S3 fill:#f44336
+    style B3 fill:#00bcd4
+    style H1 fill:#9c27b0
+    style N fill:#ffc107

@@ -1,0 +1,76 @@
+graph LR
+    subgraph "Step 1: Define Workspace"
+        YAML[📄 workspace.yaml<br/>---<br/>name: customer-analytics<br/>env: dev<br/>description: Analytics workspace<br/>capacity_id: xxx<br/>template: standard<br/>git_integration: true ✅<br/>naming_validation: true ✅]
+    end
+
+    subgraph "Step 2: Execute Command"
+        CMD[💻 Command Line<br/>python ops/scripts/onboard_data_product.py<br/>--yaml workspace.yaml<br/>--feature optional for feature branch]
+        
+        subgraph "Processing 9 seconds ⚡"
+            VALIDATE[✅ Validate YAML<br/>item_naming_validator.py]
+            AUTH[🔐 Authenticate to Fabric<br/>Azure AD Service Principal]
+            CREATE[🏗️ Create Workspace<br/>workspace_manager.py]
+            GIT_LINK[🔗 Link Git Repo ✅<br/>fabric_git_connector.py<br/>Automated bidirectional sync]
+            SCAFFOLD[📁 Scaffold Folders<br/>data_products/*/]
+            REGISTER[📝 Register State<br/>.workspace_registry.json]
+            LOG[📊 Write Audit Log<br/>audit_logger.py → JSONL]
+        end
+    end
+
+    subgraph "Step 3: Results"
+        subgraph "Fabric Cloud ☁️"
+            WORKSPACE[🏢 Workspace Created<br/>Customer Analytics DEV<br/>ID: be8d1df8-9067-...<br/>Capacity: FTL64 Trial ✅<br/>Git: Linked ✅]
+            LAKEHOUSE[🗄️ Lakehouse Item<br/>Optional resources<br/>Medallion folders ✅]
+        end
+
+        subgraph "Git Repository 📚"
+            GIT_BRANCH[🌿 Feature Branch ✅<br/>feature/customer_analytics/<br/>Automated creation<br/>Bidirectional sync]
+            FOLDERS[📂 Folder Structure<br/>data_products/<br/>  customer_analytics/<br/>    src/<br/>    tests/<br/>    config/<br/>    docs/<br/>    README.md]
+        end
+
+        subgraph "Audit & State 📋"
+            AUDIT[📋 Audit Log ✅<br/>audit_trail.jsonl<br/>---<br/>event: workspace_created<br/>timestamp: 2025-10-27<br/>duration: 9s<br/>status: success<br/>git_linked: true<br/>validation: passed]
+            
+            REGISTRY_FILE[📦 Registry Entry<br/>.workspace_registry.json<br/>---<br/>workspace_id: be8d...<br/>name: customer-analytics<br/>created: 2025-10-27<br/>git_repo: linked<br/>naming_pattern: validated]
+        end
+    end
+
+    subgraph "v2.0 Features ✅ PRODUCTION"
+        V2_GIT[🔗 Automated Git Integration<br/>No manual setup required]
+        V2_NAMING[📛 Naming Validation<br/>Medallion architecture<br/>Sequential numbering]
+        V2_AUDIT[📝 Enhanced Audit Trail<br/>JSONL format<br/>10+ event types]
+    end
+
+    YAML --> CMD
+    CMD --> VALIDATE
+    VALIDATE --> AUTH
+    AUTH --> CREATE
+    CREATE --> GIT_LINK
+    GIT_LINK --> SCAFFOLD
+    SCAFFOLD --> REGISTER
+    REGISTER --> LOG
+
+    CREATE --> WORKSPACE
+    WORKSPACE --> LAKEHOUSE
+    GIT_LINK --> GIT_BRANCH
+    SCAFFOLD --> FOLDERS
+    LOG --> AUDIT
+    REGISTER --> REGISTRY_FILE
+
+    V2_NAMING --> VALIDATE
+    V2_GIT --> GIT_LINK
+    V2_AUDIT --> LOG
+
+    classDef inputStyle fill:#E3F2FD,stroke:#0078D4,stroke-width:3px
+    classDef processStyle fill:#FFF3E0,stroke:#FF8C00,stroke-width:2px
+    classDef outputStyle fill:#E8F5E9,stroke:#107C10,stroke-width:2px
+    classDef cloudStyle fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px
+    classDef v2Style fill:#0078D4,stroke:#005A9E,stroke-width:2px
+
+    class YAML inputStyle
+    class CMD,VALIDATE,AUTH,CREATE,GIT_LINK,SCAFFOLD,REGISTER,LOG processStyle
+    class WORKSPACE,LAKEHOUSE cloudStyle
+    class GIT_BRANCH,FOLDERS,AUDIT,REGISTRY_FILE outputStyle
+    class V2_GIT,V2_NAMING,V2_AUDIT v2Style
+
+    linkStyle default stroke:#0078D4,stroke-width:2px

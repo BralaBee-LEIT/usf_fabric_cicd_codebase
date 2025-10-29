@@ -1,0 +1,102 @@
+graph LR
+    subgraph "Data Sources"
+        SRC_RAW[📊 Raw Data<br/>Excel, CSV, JSON, API]
+        SRC_EXT[🌐 External Systems<br/>3rd Party APIs]
+        SRC_USER[👤 User Input<br/>YAML Descriptors<br/>project.config.json ✅<br/>Principals files ✅]
+    end
+
+    subgraph "Ingestion Layer"
+        INGEST_PARSE[🔍 YAML Parser<br/>Validate & Extract]
+        INGEST_AUTH[🔐 Authentication<br/>Azure AD OAuth 2<br/>Token Management]
+        INGEST_CONFIG[⚙️ Configuration<br/>project.config.json ✅<br/>Environment variables<br/>Defaults & overrides]
+    end
+
+    subgraph "Processing Layer - v2.0 ✅"
+        PROC_VALIDATE[✅ Data Validation<br/>item_naming_validator.py ✅<br/>Schema Checks<br/>Medallion architecture]
+        PROC_TRANSFORM[🔄 Transformation<br/>Name Normalization<br/>Sequential numbering ✅<br/>Ticket-based naming ✅]
+        PROC_ENRICH[➕ Enrichment<br/>Add Metadata<br/>Audit context ✅<br/>Git linkage info ✅]
+        PROC_LOGIC[🧠 Business Logic<br/>Workspace Rules<br/>Capacity validation<br/>Principal assignments ✅]
+    end
+
+    subgraph "API Integration Layer"
+        API_FABRIC[☁️ Fabric REST API<br/>Workspace CRUD<br/>Item Management<br/>Git Integration ✅]
+        API_GIT[📦 Git API<br/>fabric git connector ✅<br/>Repository Ops<br/>Automated linking]
+        API_REGISTRY[📝 Registry API<br/>State Management<br/>.workspace_registry.json]
+        API_AUDIT[📋 Audit API<br/>audit logger ✅<br/>JSONL format<br/>10 plus event types]
+    end
+
+    subgraph "Storage Layer"
+        STORE_CLOUD[🏢 Fabric Cloud<br/>Workspaces + Items<br/>Capacity assigned<br/>Git linked ✅]
+        STORE_LOCAL[💾 Local Filesystem<br/>Git Repository<br/>data products wildcard<br/>Scaffolded structure]
+        STORE_AUDIT[📋 Audit Logs ✅<br/>audit_trail.jsonl<br/>Immutable trail<br/>Compliance ready]
+        STORE_REGISTRY[🗂️ Registry<br/>.workspace_registry.json<br/>Metadata catalog<br/>Version controlled]
+    end
+
+    subgraph "Output Layer"
+        OUT_WORKSPACE[✅ Created Workspace<br/>With Lakehouse<br/>Users configured ✅<br/>Git synced ✅]
+        OUT_FOLDERS[📁 Scaffolded Files<br/>data products wildcard<br/>Template structure<br/>README.md]
+        OUT_LOGS[📊 Audit Trail ✅<br/>JSONL Logs<br/>Complete history<br/>Event tracking]
+        OUT_REGISTRY[📦 Registry Entry<br/>Workspace Metadata<br/>Naming validated ✅<br/>Git repo linked ✅]
+        OUT_GIT[🌿 Git Branch ✅<br/>Feature branch<br/>Bidirectional sync<br/>Automated creation]
+    end
+
+    subgraph "Monitoring & Feedback"
+        MON_CONSOLE[💻 Console Output<br/>Rich Progress Display<br/>⚡ 9-second execution]
+        MON_LOGS[📄 Log Files<br/>Debug Information]
+        MON_METRICS[📈 Metrics<br/>Duration, Success Rate<br/>Optional: App Insights]
+    end
+
+    SRC_USER --> INGEST_PARSE
+    SRC_RAW -.->|Future| INGEST_PARSE
+    SRC_EXT -.->|Future| API_FABRIC
+    
+    INGEST_PARSE --> PROC_VALIDATE
+    INGEST_AUTH --> API_FABRIC
+    INGEST_CONFIG --> PROC_LOGIC
+
+    PROC_VALIDATE --> PROC_TRANSFORM
+    PROC_TRANSFORM --> PROC_ENRICH
+    PROC_ENRICH --> PROC_LOGIC
+
+    PROC_LOGIC --> API_FABRIC
+    PROC_LOGIC --> API_GIT
+    PROC_LOGIC --> API_REGISTRY
+    PROC_LOGIC --> API_AUDIT
+
+    API_FABRIC --> STORE_CLOUD
+    API_GIT --> STORE_LOCAL
+    API_REGISTRY --> STORE_REGISTRY
+    API_AUDIT --> STORE_AUDIT
+
+    STORE_CLOUD --> OUT_WORKSPACE
+    STORE_LOCAL --> OUT_FOLDERS
+    STORE_AUDIT --> OUT_LOGS
+    STORE_REGISTRY --> OUT_REGISTRY
+    API_GIT --> OUT_GIT
+
+    OUT_WORKSPACE --> MON_CONSOLE
+    OUT_FOLDERS --> MON_CONSOLE
+    OUT_GIT --> MON_CONSOLE
+    OUT_LOGS --> MON_LOGS
+    OUT_REGISTRY --> MON_METRICS
+
+    MON_CONSOLE -.->|Feedback| SRC_USER
+    MON_LOGS -.->|Debug Info| PROC_LOGIC
+    MON_METRICS -.->|Performance| PROC_LOGIC
+
+    classDef source fill:#E3F2FD,stroke:#0078D4,stroke-width:2px
+    classDef process fill:#FFF3E0,stroke:#FF8C00,stroke-width:2px
+    classDef v2process fill:#E8F5E9,stroke:#107C10,stroke-width:3px
+    classDef storage fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px
+    classDef output fill:#E8F5E9,stroke:#107C10,stroke-width:2px
+    classDef monitor fill:#FFF9C4,stroke:#F57F17,stroke-width:2px
+
+    class SRC_RAW,SRC_EXT,SRC_USER source
+    class INGEST_PARSE,INGEST_AUTH,INGEST_CONFIG process
+    class PROC_VALIDATE,PROC_TRANSFORM,PROC_ENRICH,PROC_LOGIC v2process
+    class API_FABRIC,API_GIT,API_REGISTRY,API_AUDIT v2process
+    class STORE_CLOUD,STORE_LOCAL,STORE_AUDIT,STORE_REGISTRY storage
+    class OUT_WORKSPACE,OUT_FOLDERS,OUT_LOGS,OUT_REGISTRY,OUT_GIT output
+    class MON_CONSOLE,MON_LOGS,MON_METRICS monitor
+
+    linkStyle default stroke:#0078D4,stroke-width:2px

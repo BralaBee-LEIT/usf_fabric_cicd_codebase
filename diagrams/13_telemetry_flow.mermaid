@@ -1,0 +1,40 @@
+flowchart LR
+    A[Application Code] --> B{LOG_LEVEL<br/>Filter}
+    
+    B --> C[Structured Logger]
+    
+    C --> D[Console Handler<br/>Development]
+    C --> E[File Handler<br/>Rotation 10MB]
+    C --> F[App Insights Handler<br/>Production]
+    
+    D --> G[Terminal Output<br/>Colored Format]
+    E --> H[Log Files<br/>logs/fabric-cicd.log]
+    F --> I[Azure App Insights]
+    
+    I --> J[Kusto Queries<br/>Log Analytics]
+    
+    J --> K[Dashboards]
+    J --> L[Alerts]
+    J --> M[Custom Metrics]
+    
+    K --> N[Grafana Visualization]
+    L --> O[Email/Teams Notifications]
+    M --> P[Performance Counters]
+    
+    subgraph "Log Levels"
+        Q1[DEBUG] --> Q2[INFO] --> Q3[WARNING] --> Q4[ERROR] --> Q5[CRITICAL]
+    end
+    
+    subgraph "Telemetry Types"
+        R1[Traces<br/>Execution Flow]
+        R2[Metrics<br/>Performance Data]
+        R3[Dependencies<br/>External Calls]
+        R4[Exceptions<br/>Error Details]
+    end
+    
+    style A fill:#e1f5ff
+    style C fill:#00bcd4
+    style F fill:#ff9800
+    style I fill:#4caf50
+    style N fill:#9c27b0
+    style O fill:#f44336

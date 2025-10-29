@@ -22,8 +22,8 @@
 ### List Workspaces
 ```bash
 # Using CLI wrapper
-./fabric-cli.sh list
-./fabric-cli.sh list --details
+./tools/fabric-cli.sh list
+./tools/fabric-cli.sh list --details
 
 # Using Python directly
 python ops/scripts/manage_workspaces.py list
@@ -33,7 +33,7 @@ python ops/scripts/manage_workspaces.py list --details
 ### Create Workspace
 ```bash
 # Using CLI
-./fabric-cli.sh create "My Workspace" -e dev
+./tools/fabric-cli.sh create "My Workspace" -e dev
 
 # Using Python (note: -e flag goes before subcommand)
 python ops/scripts/manage_workspaces.py -e dev create \
@@ -99,7 +99,7 @@ python ops/scripts/onboard_data_product.py \
 
 ### 2. List All Workspaces
 ```bash
-./fabric-cli.sh list
+./tools/fabric-cli.sh list
 ```
 
 ### 3. Clean Up After Testing
@@ -135,13 +135,13 @@ Before creating a new script, check if it already exists:
 
 ```bash
 # 1. List what exists
-./fabric-cli.sh list
+./tools/fabric-cli.sh list
 
 # 2. Delete all workspaces
 python bulk_delete_workspaces.py --all
 
 # 3. Verify deletion
-./fabric-cli.sh list
+./tools/fabric-cli.sh list
 # Should show: "No workspaces found"
 ```
 

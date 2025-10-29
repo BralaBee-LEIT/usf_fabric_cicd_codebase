@@ -247,10 +247,10 @@ cp .env.example .env
 python init_project_config.py
 
 # 4. Create workspaces (2 minutes)
-./fabric-cli.sh create-set your-project-name
+./tools/fabric-cli.sh create-set your-project-name
 
 # 5. Verify (1 minute)
-./fabric-cli.sh lsd
+./tools/fabric-cli.sh lsd
 
 Total: ~15 minutes after prerequisites are ready!
 ```
