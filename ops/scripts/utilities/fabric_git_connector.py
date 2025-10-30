@@ -11,7 +11,8 @@ https://learn.microsoft.com/en-us/rest/api/fabric/core/git
 import os
 import json
 import logging
-from typing import Dict, Any, Optional, List
+import time
+from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
 
 from .fabric_api import FabricClient
@@ -314,6 +315,227 @@ class FabricGitConnector:
             print_error(f"✗ Failed to connect workspace to Git: {str(e)}")
             raise
 
+    def validate_git_prerequisites(
+        self,
+        workspace_id: str,
+        branch_name: str,
+        directory_path: str = "/",
+        github_token: Optional[str] = None,
+    ) -> Tuple[bool, Optional[str]]:
+        """
+        Validate prerequisites before attempting Git connection
+        
+        Performs comprehensive pre-flight checks to catch configuration issues early:
+        - Workspace exists and is accessible
+        - Workspace is not already connected to Git
+        - Git credentials are valid
+        - Repository and branch are accessible
+        - User has required permissions
+        
+        Args:
+            workspace_id: Fabric workspace GUID
+            branch_name: Git branch to validate
+            directory_path: Folder path in repo
+            github_token: GitHub PAT (from env if not provided)
+            
+        Returns:
+            Tuple of (is_valid: bool, error_message: Optional[str])
+            
+        Example:
+            is_valid, error = connector.validate_git_prerequisites(
+                workspace_id="abc-123",
+                branch_name="main"
+            )
+            if not is_valid:
+                print(f"Validation failed: {error}")
+                return
+        """
+        validation_errors = []
+        
+        # 1. Validate workspace exists and is accessible
+        print_info("→ Validating workspace access...")
+        try:
+            workspace = self.fabric_client._make_request(
+                "GET", f"workspaces/{workspace_id}"
+            ).json()
+            print_success(f"  ✓ Workspace found: {workspace.get('displayName', 'Unknown')}")
+        except Exception as e:
+            error_msg = (
+                f"Workspace '{workspace_id}' not found or not accessible.\n"
+                f"  Error: {str(e)}\n"
+                f"  Troubleshooting:\n"
+                f"    • Verify workspace ID is correct\n"
+                f"    • Ensure you have Contributor or Admin role\n"
+                f"    • Check authentication token is valid\n"
+                f"  Docs: https://learn.microsoft.com/en-us/rest/api/fabric/core/workspaces"
+            )
+            validation_errors.append(error_msg)
+            logger.error(f"Workspace validation failed: {e}")
+        
+        # 2. Check if workspace is already connected
+        print_info("→ Checking existing Git connection...")
+        try:
+            current_state = self.get_git_connection_state(workspace_id)
+            if current_state.get("gitConnectionState") == GitConnectionState.CONNECTED:
+                print_warning(f"  ⚠ Workspace already connected to Git")
+                print_info(f"    Current branch: {current_state.get('gitBranchName')}")
+                print_info(f"    Current directory: {current_state.get('gitDirectoryPath')}")
+                # This is a warning, not an error - return early with success
+                return (True, None)
+        except Exception as e:
+            logger.debug(f"Unable to check existing connection (may be expected): {e}")
+        
+        # 3. Validate Git credentials and connection
+        print_info("→ Validating Git credentials...")
+        try:
+            connection_id = self.get_or_create_git_connection(github_token)
+            print_success(f"  ✓ Git connection available: {connection_id[:8]}...")
+        except Exception as e:
+            error_msg = (
+                f"Git credentials validation failed.\n"
+                f"  Error: {str(e)}\n"
+                f"  Troubleshooting:\n"
+                f"    • Set GITHUB_TOKEN env var with valid Personal Access Token\n"
+                f"    • OR set FABRIC_GIT_CONNECTION_ID with existing connection\n"
+                f"    • Ensure PAT has 'repo' scope for private repositories\n"
+                f"    • Verify PAT has not expired\n"
+                f"  Create PAT: https://github.com/settings/tokens"
+            )
+            validation_errors.append(error_msg)
+            logger.error(f"Git credentials validation failed: {e}")
+        
+        # 4. Validate repository configuration
+        print_info("→ Validating repository configuration...")
+        if not self.organization_name:
+            validation_errors.append(
+                "Git organization not configured.\n"
+                "  Set GIT_ORGANIZATION environment variable."
+            )
+        if not self.repository_name:
+            validation_errors.append(
+                "Git repository not configured.\n"
+                "  Set GIT_REPOSITORY environment variable."
+            )
+        
+        if self.organization_name and self.repository_name:
+            print_success(
+                f"  ✓ Repository: {self.organization_name}/{self.repository_name}"
+            )
+            print_success(f"  ✓ Branch: {branch_name}")
+            print_success(f"  ✓ Directory: {directory_path}")
+        
+        # Compile results
+        if validation_errors:
+            error_message = "\n\n".join(validation_errors)
+            print_error("✗ Pre-flight validation failed")
+            return (False, error_message)
+        
+        print_success("✓ All pre-flight checks passed")
+        return (True, None)
+
+    def initialize_git_connection_with_retry(
+        self,
+        workspace_id: str,
+        branch_name: str,
+        directory_path: str = "/",
+        auto_commit: bool = False,
+        max_retries: int = 3,
+        initial_backoff: float = 2.0,
+    ) -> Dict[str, Any]:
+        """
+        Initialize Git connection with automatic retry and exponential backoff
+        
+        This method wraps initialize_git_connection with retry logic to handle
+        transient failures. Implements exponential backoff: 2s, 4s, 8s delays.
+        
+        Args:
+            workspace_id: Fabric workspace GUID
+            branch_name: Git branch to connect
+            directory_path: Folder path in repo (default: "/")
+            auto_commit: If True, automatically commit after connection
+            max_retries: Maximum number of retry attempts (default: 3)
+            initial_backoff: Initial backoff delay in seconds (default: 2.0)
+            
+        Returns:
+            Connection response from Fabric API
+            
+        Raises:
+            Exception: If all retry attempts fail
+            
+        Example:
+            try:
+                result = connector.initialize_git_connection_with_retry(
+                    workspace_id="abc-123",
+                    branch_name="main",
+                    max_retries=3
+                )
+            except Exception as e:
+                print(f"Connection failed after retries: {e}")
+        """
+        # Run pre-flight validation first
+        print_info("Running pre-flight validation...")
+        is_valid, error_message = self.validate_git_prerequisites(
+            workspace_id, branch_name, directory_path
+        )
+        
+        if not is_valid:
+            raise ValueError(f"Pre-flight validation failed:\n{error_message}")
+        
+        # Attempt connection with retry logic
+        last_exception = None
+        
+        for attempt in range(1, max_retries + 1):
+            try:
+                print_info(f"Connection attempt {attempt}/{max_retries}...")
+                
+                result = self.initialize_git_connection(
+                    workspace_id=workspace_id,
+                    branch_name=branch_name,
+                    directory_path=directory_path,
+                    auto_commit=auto_commit,
+                )
+                
+                print_success(f"✓ Connection successful on attempt {attempt}")
+                return result
+                
+            except Exception as e:
+                last_exception = e
+                logger.warning(f"Attempt {attempt} failed: {str(e)}")
+                
+                if attempt < max_retries:
+                    # Calculate exponential backoff
+                    backoff_delay = initial_backoff * (2 ** (attempt - 1))
+                    print_warning(
+                        f"⚠ Attempt {attempt} failed: {str(e)}"
+                    )
+                    print_info(
+                        f"  Retrying in {backoff_delay:.1f} seconds "
+                        f"({attempt}/{max_retries})..."
+                    )
+                    time.sleep(backoff_delay)
+                else:
+                    print_error(
+                        f"✗ All {max_retries} connection attempts failed"
+                    )
+        
+        # All retries exhausted
+        error_msg = (
+            f"Git connection failed after {max_retries} attempts.\n"
+            f"Last error: {str(last_exception)}\n\n"
+            f"Troubleshooting steps:\n"
+            f"  1. Verify workspace ID: {workspace_id}\n"
+            f"  2. Check Git credentials (GITHUB_TOKEN or FABRIC_GIT_CONNECTION_ID)\n"
+            f"  3. Confirm repository access: {self.organization_name}/{self.repository_name}\n"
+            f"  4. Verify branch exists: {branch_name}\n"
+            f"  5. Check Fabric service health: https://admin.fabric.microsoft.com/monitoring/servicestatus\n\n"
+            f"For manual connection:\n"
+            f"  • Open workspace in Fabric Portal\n"
+            f"  • Go to Workspace settings → Git integration\n"
+            f"  • Connect manually and run this script again\n\n"
+            f"Documentation: https://learn.microsoft.com/en-us/fabric/cicd/git-integration/intro-to-git-integration"
+        )
+        raise Exception(error_msg)
+
     def initialize_git_connection(
         self,
         workspace_id: str,
@@ -371,6 +593,9 @@ class FabricGitConnector:
         }
 
         try:
+            logger.info(f"Sending initializeConnection request for workspace {workspace_id}")
+            logger.debug(f"Git config payload: {json.dumps(git_config, indent=2)}")
+            
             response = self.fabric_client._make_request(
                 "POST",
                 f"workspaces/{workspace_id}/git/initializeConnection",
@@ -378,20 +603,35 @@ class FabricGitConnector:
             )
 
             print_success("✓ Git connection initialized successfully")
+            logger.info(f"Git connection initialized for workspace {workspace_id}")
 
             # Verify connection
             connection_state = self.get_git_connection_state(workspace_id)
-            if (
-                connection_state.get("gitConnectionState")
-                != GitConnectionState.CONNECTED
-            ):
-                raise Exception(
-                    f"Connection initialized but state is: {connection_state.get('gitConnectionState')}"
+            actual_state = connection_state.get("gitConnectionState")
+            
+            if actual_state != GitConnectionState.CONNECTED:
+                error_details = (
+                    f"Connection request succeeded but workspace is not connected.\n"
+                    f"  Current state: {actual_state}\n"
+                    f"  Expected state: {GitConnectionState.CONNECTED}\n"
+                    f"  This may indicate:\n"
+                    f"    • Repository requires authentication\n"
+                    f"    • Branch '{branch_name}' does not exist\n"
+                    f"    • Directory '{directory_path}' is invalid\n"
+                    f"    • Service is experiencing delays\n\n"
+                    f"  Try:\n"
+                    f"    1. Verify branch exists in repo\n"
+                    f"    2. Check directory path format (should start with '/')\n"
+                    f"    3. Wait 30 seconds and check connection state\n"
+                    f"    4. Review Fabric service status"
                 )
+                logger.error(f"Connection state mismatch: {actual_state}")
+                raise Exception(error_details)
 
             print_success(
                 f"✓ Connection verified: {connection_state.get('gitConnectionState')}"
             )
+            logger.info(f"Connection state verified as CONNECTED")
 
             # Auto-commit if requested
             if auto_commit:
@@ -404,8 +644,36 @@ class FabricGitConnector:
             return response.json() if response.text else {}
 
         except Exception as e:
-            print_error(f"✗ Failed to initialize Git connection: {str(e)}")
-            raise
+            error_type = type(e).__name__
+            error_details = str(e)
+            
+            logger.error(
+                f"Git connection failed: {error_type}: {error_details}",
+                exc_info=True
+            )
+            
+            # Enhanced error message with troubleshooting
+            enhanced_error = (
+                f"Failed to initialize Git connection for workspace {workspace_id[:8]}...\n\n"
+                f"Error Type: {error_type}\n"
+                f"Error Details: {error_details}\n\n"
+                f"Common Issues & Solutions:\n"
+                f"  • 'WorkspaceNotFound' → Check workspace ID is correct\n"
+                f"  • 'Unauthorized' → Verify you have Contributor/Admin role\n"
+                f"  • 'RepositoryNotFound' → Confirm repo exists: {self.organization_name}/{self.repository_name}\n"
+                f"  • 'BranchNotFound' → Verify branch '{branch_name}' exists in repo\n"
+                f"  • 'InvalidPath' → Check directory path format: '{directory_path}'\n"
+                f"  • '400 Bad Request' → Review Git provider configuration\n\n"
+                f"Workspace: {workspace_id}\n"
+                f"Repository: {self.organization_name}/{self.repository_name}\n"
+                f"Branch: {branch_name}\n"
+                f"Directory: {directory_path}\n\n"
+                f"Documentation:\n"
+                f"  https://learn.microsoft.com/en-us/fabric/cicd/git-integration/git-get-started"
+            )
+            
+            print_error(f"✗ {enhanced_error}")
+            raise Exception(enhanced_error) from e
 
     def get_git_connection_state(self, workspace_id: str) -> Dict[str, Any]:
         """
@@ -525,6 +793,103 @@ class FabricGitConnector:
             print_error(f"✗ Git update failed: {str(e)}")
             raise
 
+    def prompt_manual_connection(
+        self,
+        workspace_id: str,
+        branch_name: str,
+        directory_path: str = "/",
+        wait_for_user: bool = True,
+    ) -> bool:
+        """
+        Guide user through manual Git connection and verify completion
+        
+        When automated connection fails, this provides step-by-step manual
+        instructions and optionally waits for user to complete the process
+        in Fabric Portal.
+        
+        Args:
+            workspace_id: Fabric workspace GUID
+            branch_name: Git branch to connect
+            directory_path: Folder path in repo
+            wait_for_user: If True, prompt user and wait for manual completion
+            
+        Returns:
+            True if manual connection successful, False otherwise
+            
+        Example:
+            try:
+                connector.initialize_git_connection_with_retry(...)
+            except Exception as e:
+                print(f"Automated connection failed: {e}")
+                if connector.prompt_manual_connection(workspace_id, "main"):
+                    print("Manual connection successful!")
+        """
+        print_warning("\n" + "=" * 70)
+        print_warning("AUTOMATED GIT CONNECTION FAILED - MANUAL INTERVENTION REQUIRED")
+        print_warning("=" * 70)
+        
+        print_info("\n📋 Manual Connection Steps:\n")
+        print_info("1. Open Microsoft Fabric Portal:")
+        print_info(f"   https://app.fabric.microsoft.com")
+        print_info("")
+        print_info("2. Navigate to your workspace:")
+        print_info(f"   Workspace ID: {workspace_id}")
+        print_info("")
+        print_info("3. Open Workspace Settings:")
+        print_info("   • Click workspace name in left nav")
+        print_info("   • Click 'Workspace settings' (gear icon)")
+        print_info("")
+        print_info("4. Configure Git Integration:")
+        print_info("   • Select 'Git integration' tab")
+        print_info("   • Click 'Connect' button")
+        print_info(f"   • Repository: {self.organization_name}/{self.repository_name}")
+        print_info(f"   • Branch: {branch_name}")
+        print_info(f"   • Folder: {directory_path}")
+        print_info("   • Click 'Connect and sync'")
+        print_info("")
+        print_info("5. Verify Connection:")
+        print_info("   • Wait for sync to complete")
+        print_info("   • Status should show 'Connected'")
+        print_info("")
+        
+        print_info("📚 Documentation:")
+        print_info("   https://learn.microsoft.com/en-us/fabric/cicd/git-integration/git-get-started")
+        print_info("")
+        
+        if not wait_for_user:
+            print_warning("Skipping manual connection (wait_for_user=False)")
+            return False
+        
+        # Wait for user to complete manual steps
+        print_warning("\n⏸  Paused - Complete the manual steps above")
+        user_input = input("\nHave you completed the manual Git connection? (yes/no): ").strip().lower()
+        
+        if user_input not in ['yes', 'y']:
+            print_warning("Manual connection cancelled by user")
+            return False
+        
+        # Verify the connection was successful
+        print_info("\n🔍 Verifying manual connection...")
+        try:
+            connection_state = self.get_git_connection_state(workspace_id)
+            actual_state = connection_state.get("gitConnectionState")
+            
+            if actual_state == GitConnectionState.CONNECTED:
+                print_success("\n✓ Manual Git connection verified successfully!")
+                print_info(f"  Branch: {connection_state.get('gitBranchName')}")
+                print_info(f"  Directory: {connection_state.get('gitDirectoryPath')}")
+                logger.info(f"Manual Git connection verified for workspace {workspace_id}")
+                return True
+            else:
+                print_error(f"\n✗ Workspace not connected. Current state: {actual_state}")
+                print_warning("Please review the manual steps and try again")
+                return False
+                
+        except Exception as e:
+            print_error(f"\n✗ Failed to verify connection: {str(e)}")
+            logger.error(f"Manual connection verification failed: {e}")
+            return False
+
     def disconnect_git(self, workspace_id: str) -> None:
         """
         Disconnect workspace from Git
@@ -542,10 +907,13 @@ class FabricGitConnector:
             )
 
             print_success("✓ Git connection disconnected")
+            logger.info(f"Git connection disconnected for workspace {workspace_id}")
 
         except Exception as e:
-            print_error(f"✗ Disconnect failed: {str(e)}")
-            raise
+            error_msg = f"Disconnect failed: {str(e)}"
+            print_error(f"✗ {error_msg}")
+            logger.error(f"Git disconnect failed for workspace {workspace_id}: {e}")
+            raise Exception(error_msg) from e
 
     def get_git_status(self, workspace_id: str) -> Dict[str, Any]:
         """

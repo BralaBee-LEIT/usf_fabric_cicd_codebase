@@ -203,8 +203,24 @@ def create_workspace(
         return None
 
 
-def connect_git(workspace_id, product_config, dry_run=False):
-    """Step 2: Connect workspace to Git repository"""
+def connect_git(workspace_id, product_config, dry_run=False, enable_manual_fallback=True):
+    """
+    Step 2: Connect workspace to Git repository with retry logic
+    
+    Uses enhanced Git connector with:
+    - Pre-flight validation
+    - Automatic retry with exponential backoff
+    - Manual fallback option if automated connection fails
+    
+    Args:
+        workspace_id: Fabric workspace GUID
+        product_config: Product configuration dict with git settings
+        dry_run: If True, only simulate the connection
+        enable_manual_fallback: If True, prompt user for manual connection on failure
+        
+    Returns:
+        True if connection successful, False otherwise
+    """
     print_step(2, 8, "Connecting to Git Repository")
 
     if not product_config.get("git", {}).get("enabled"):
@@ -214,28 +230,68 @@ def connect_git(workspace_id, product_config, dry_run=False):
     git_config = product_config["git"]
     git_org = os.getenv("GITHUB_ORG", "${GITHUB_ORG}")
     git_repo = os.getenv("GITHUB_REPO", "${GITHUB_REPO}")
+    branch_name = git_config.get("branch", "main")
+    directory_path = git_config["directory"]
+    max_retries = git_config.get("max_retries", 3)
 
     print_info(f"Git Org: {git_org}")
     print_info(f"Repository: {git_repo}")
-    print_info(f"Directory: {git_config['directory']}")
+    print_info(f"Branch: {branch_name}")
+    print_info(f"Directory: {directory_path}")
+    print_info(f"Max Retries: {max_retries}")
 
     if dry_run:
-        print_warning("DRY RUN: Would connect to Git")
+        print_warning("DRY RUN: Would connect to Git with retry logic")
         return True
 
     try:
         git_connector = FabricGitConnector(git_org, git_repo)
-        git_connector.initialize_git_connection(
+        
+        # Attempt automated connection with retry logic
+        print_info("\n🔄 Attempting automated Git connection with retry...")
+        git_connector.initialize_git_connection_with_retry(
             workspace_id=workspace_id,
-            branch_name=git_config.get("branch", "main"),
-            directory_path=git_config["directory"],
+            branch_name=branch_name,
+            directory_path=directory_path,
             auto_commit=git_config.get("auto_commit", False),
+            max_retries=max_retries,
         )
-        print_success("✓ Git connection established")
+        
+        print_success("✓ Git connection established successfully")
         return True
+        
     except Exception as e:
-        print_error(f"Failed to connect to Git: {e}")
-        print_warning("Continuing without Git integration...")
+        print_error(f"✗ Automated Git connection failed after retries")
+        print_error(f"  Error: {str(e)[:200]}...")  # Truncate long error messages
+        
+        # Offer manual fallback option
+        if enable_manual_fallback:
+            print_warning("\n⚠ Attempting manual fallback...")
+            
+            try:
+                git_connector = FabricGitConnector(git_org, git_repo)
+                manual_success = git_connector.prompt_manual_connection(
+                    workspace_id=workspace_id,
+                    branch_name=branch_name,
+                    directory_path=directory_path,
+                    wait_for_user=True,
+                )
+                
+                if manual_success:
+                    print_success("✓ Manual Git connection successful")
+                    return True
+                else:
+                    print_warning("Manual connection cancelled or failed")
+                    
+            except Exception as manual_error:
+                print_error(f"Manual fallback failed: {manual_error}")
+        
+        # Connection failed - continue without Git
+        print_warning("\n⚠ Continuing deployment without Git integration...")
+        print_info("  You can connect Git manually later:")
+        print_info(f"    1. Open workspace in Fabric Portal")
+        print_info(f"    2. Go to Workspace Settings → Git integration")
+        print_info(f"    3. Connect to: {git_org}/{git_repo} (branch: {branch_name})")
         return False
 
 
