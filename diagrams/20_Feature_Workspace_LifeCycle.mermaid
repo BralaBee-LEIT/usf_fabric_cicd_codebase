@@ -1,0 +1,89 @@
+---
+config:
+  layout: dagre
+---
+flowchart LR
+ subgraph L1["FEATURE WORKSPACE"]
+    direction TB
+        A1["1️⃣ CREATE FEATURE WORKSPACE - Empty
+Customer Analytics [FEAT-789]
+• Connected to Git: feature/FEAT-789
+• No items (clean slate)"]
+        A2["2️⃣ DEVELOPER BUILDS (Fabric UI / CLI)
+• Lakehouses: FEAT789_BRONZE_*, SILVER_*, GOLD_*
+• Notebooks: FEAT789_01_*, FEAT789_02_*
+• Semantic Models: FEAT789_CustomerAnalytics_*
+• Uses ticket prefix to avoid conflicts"]
+        A3["3️⃣ TEST IN ISOLATION
+• Small test datasets in feature lakehouses
+• End-to-end validation
+• No impact on DEV / TEST / PROD"]
+        N1["Note: Prefix Guard"]
+  end
+ subgraph L2["GIT (Source Control)"]
+    direction TB
+        G1["4️⃣ COMMIT TO GIT (Feature Branch)
+• Commit to feature/FEAT-789
+• Item definitions stored in Git
+• Folder structure preserved"]
+        G2["5️⃣ PR MERGE (feature/FEAT-789 → main)
+• Code review
+• Tests pass
+• Merged to main branch"]
+  end
+ subgraph L3["ENVIRONMENTS & PIPELINE"]
+    direction TB
+        D1["6️⃣ DEPLOY TO DEV (Git → Workspace)
+• DEV pulls from main
+• Items appear in DEV (FEAT prefix removed)
+• Connections remapped to DEV IDs"]
+        T1["7️⃣ PROMOTE DEV → TEST
+• Fabric API: promote_to_next_stage()
+• Items copied DEV → TEST
+• Auto-remap connections"]
+        P1["8️⃣ PROMOTE TEST → PROD
+• Manual approval required
+• Items copied TEST → PROD
+• Production validation"]
+        N2["Note: Prefix dropped"]
+        N3["Note: Connection remap per stage"]
+        N4["Note: Manual approval gate"]
+  end
+ subgraph L4["HOUSEKEEPING"]
+    direction TB
+        C1["9️⃣ CLEANUP FEATURE WORKSPACE
+• Delete after merge
+• Free up capacity
+• Archive feature branch"]
+  end
+    A1 --> A2
+    A2 --> A3
+    N1 --- A2
+    G1 --> G2
+    D1 --> T1
+    T1 --> P1
+    N2 --- D1
+    N3 --- T1
+    N4 --- P1
+    A3 --> G1
+    G2 --> D1
+    P1 --> C1
+     A1:::feature
+     A2:::feature
+     A3:::feature
+     N1:::note
+     G1:::git
+     G2:::git
+     D1:::env
+     T1:::pipeline
+     P1:::pipeline
+     N2:::note
+     N3:::note
+     N4:::note
+     C1:::cleanup
+    classDef feature fill:#E6F4EA,stroke:#2E7D32,stroke-width:1,color:#0B3D0B
+    classDef git fill:#E3F2FD,stroke:#1565C0,stroke-width:1,color:#0D3A66
+    classDef env fill:#FFF8E1,stroke:#EF6C00,stroke-width:1,color:#5D3200
+    classDef pipeline fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1,color:#2E063F
+    classDef cleanup fill:#FBE9E7,stroke:#BF360C,stroke-width:1,color:#4A1B07
+    classDef note fill:#F5F5F5,stroke:#9E9E9E,color:#424242,stroke-dasharray: 4 2

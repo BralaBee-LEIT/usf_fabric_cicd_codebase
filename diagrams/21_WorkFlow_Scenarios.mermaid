@@ -1,0 +1,74 @@
+---
+config:
+  layout: dagre
+---
+flowchart LR
+ subgraph A["ETL PLATFORM DEVELOPMENT — Code-only Enhancement"]
+    direction LR
+        A1["Step 1 • Feature Workspace (empty)
+ETL Platform [FEAT-456]
+No lakehouses copied
+Creates:
+• FEAT456_DataQuality_Notebook
+• FEAT456_CustomerValidation_Notebook
+• FEAT456_QualityRules_Pipeline"]
+        A2["Step 2 • Test in Feature
+• Shortcuts to DEV lakehouses (read-only)
+• Small test data
+• Focus: CODE not DATA"]
+        A3@{ label: "Step 3 • Commit to Git\ngit commit -m 'Add data quality notebooks'\ngit push origin feature/FEAT-456-data-quality" }
+        A4["Step 4 • PR → Merge to main"]
+        A5@{ label: "Step 5 • Deploy to DEV\nops/scripts/deploy_fabric.py --workspace 'ETL Platform [DEV]' --mode standard\n\nResult:\nExisting lakehouses unchanged\nNew items added:\n• FEAT456_DataQuality_Notebook\n• FEAT456_CustomerValidation_Notebook\n• FEAT456_QualityRules_Pipeline" }
+        AN1["Note: No lakehouses needed in feature — only code assets"]
+  end
+ subgraph B["NEW PRODUCT DEVELOPMENT — Full Mini-Architecture"]
+    direction LR
+        B1["Step 1 • Feature Workspace (isolated)
+Customer Analytics [FEAT-789]
+Creates complete mini-architecture:
+• FEAT789_BRONZE_CustomerData_Lakehouse
+• FEAT789_SILVER_CustomerData_Lakehouse
+• FEAT789_GOLD_CustomerSegments_Lakehouse
+• FEAT789_01_DataIngestion_Notebook
+• FEAT789_02_Segmentation_Notebook
+• FEAT789_CustomerAnalytics_SemanticModel
+Uses small test data"]
+        B2["Step 2 • Test end-to-end in Feature
+Full isolated run
+Architecture proven"]
+        B3@{ label: "Step 3 • Commit to Git\ngit commit -m 'Add customer segmentation pipeline'\ngit push origin feature/FEAT-789-customer-segmentation" }
+        B4["Step 4 • PR → Merge to main"]
+        B5@{ label: "Step 5 • Deploy to DEV\nops/scripts/deploy_fabric.py --workspace 'Customer Analytics [DEV]' --mode standard\n\nResult:\nDEV gets first copy of architecture:\n• BRONZE_CustomerData_Lakehouse\n• SILVER_CustomerData_Lakehouse\n• GOLD_CustomerSegments_Lakehouse\n• 01_DataIngestion_Notebook\n• 02_Segmentation_Notebook\n• CustomerAnalytics_SemanticModel" }
+        BN1["Note: Full isolated pipeline created safely; no impact until merge"]
+  end
+    A1 --> A2
+    A2 --> A3
+    A3 --> A4
+    A4 --> A5
+    AN1 --- A1
+    B1 --> B2
+    B2 --> B3
+    B3 --> B4
+    B4 --> B5
+    BN1 --- B1
+    A5 -.-> B1
+    A3@{ shape: rect}
+    A5@{ shape: rect}
+    B3@{ shape: rect}
+    B5@{ shape: rect}
+     A1:::feature
+     A2:::feature
+     A3:::git
+     A4:::git
+     A5:::dev
+     AN1:::note
+     B1:::feature
+     B2:::feature
+     B3:::git
+     B4:::git
+     B5:::dev
+     BN1:::note
+    classDef feature fill:#E6F4EA,stroke:#2E7D32,stroke-width:1,color:#0B3D0B
+    classDef git fill:#E3F2FD,stroke:#1565C0,stroke-width:1,color:#0D3A66
+    classDef dev fill:#FFF8E1,stroke:#EF6C00,stroke-width:1,color:#5D3200
+    classDef note fill:#F5F5F5,stroke:#9E9E9E,color:#424242,stroke-dasharray:4 2
