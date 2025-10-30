@@ -30,6 +30,14 @@ try:
 except ImportError:
     AUDIT_LOGGER_AVAILABLE = False
 
+# Optional: Import folder manager
+try:
+    from .fabric_folder_manager import FabricFolderManager, FolderOperationError
+
+    FOLDER_MANAGER_AVAILABLE = True
+except ImportError:
+    FOLDER_MANAGER_AVAILABLE = False
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -100,6 +108,11 @@ class WorkspaceManager:
 
         # Load config manager for environment-aware naming
         self.config_manager = get_config_manager()
+
+        # Initialize folder manager if available
+        self.folder_manager = None
+        if FOLDER_MANAGER_AVAILABLE:
+            self.folder_manager = FabricFolderManager()
 
         logger.info(
             f"WorkspaceManager initialized for environment: {self.environment or 'all'}"
@@ -282,6 +295,173 @@ class WorkspaceManager:
                 logger.error(f"✗ Workspace '{workspace_name}' already exists")
                 raise ValueError(f"Workspace '{workspace_name}' already exists")
             raise
+
+    def create_workspace_with_structure(
+        self,
+        name: str,
+        folder_structure: Optional[Dict[str, Any]] = None,
+        use_medallion_architecture: bool = False,
+        description: Optional[str] = None,
+        capacity_id: Optional[str] = None,
+        capacity_type: CapacityType = CapacityType.TRIAL,
+    ) -> Dict[str, Any]:
+        """
+        Create a new Fabric workspace with folder structure
+
+        Args:
+            name: Workspace name (will be suffixed with environment if configured)
+            folder_structure: Custom folder structure (dict with folder names and subfolders)
+            use_medallion_architecture: Use Bronze/Silver/Gold medallion architecture (default: False)
+            description: Workspace description
+            capacity_id: Optional capacity ID (for Premium/Fabric capacities)
+            capacity_type: Capacity type (default: Trial)
+
+        Returns:
+            Dict containing workspace details and folder IDs
+
+        Example:
+            # Create with medallion architecture
+            result = manager.create_workspace_with_structure(
+                name="Data Platform",
+                use_medallion_architecture=True
+            )
+
+            # Create with custom structure
+            result = manager.create_workspace_with_structure(
+                name="Analytics",
+                folder_structure={
+                    "Reports": {"subfolders": ["Sales", "Finance"]},
+                    "Dashboards": {},
+                    "Data": {"subfolders": ["Raw", "Processed"]}
+                }
+            )
+        """
+        if not self.folder_manager:
+            raise RuntimeError(
+                "Folder manager not available. Install fabric_folder_manager module."
+            )
+
+        # Create workspace first
+        workspace = self.create_workspace(
+            name=name,
+            description=description,
+            capacity_id=capacity_id,
+            capacity_type=capacity_type,
+        )
+
+        workspace_id = workspace.get("id")
+        workspace_name = workspace.get("displayName")
+
+        # Determine folder structure to create
+        structure = None
+        if use_medallion_architecture:
+            logger.info(f"Creating medallion architecture folders in {workspace_name}...")
+            structure = {
+                "Bronze Layer": {
+                    "subfolders": ["Raw Data", "Archive", "External Sources"]
+                },
+                "Silver Layer": {
+                    "subfolders": ["Cleaned", "Transformed", "Validated"]
+                },
+                "Gold Layer": {
+                    "subfolders": ["Analytics", "Reports", "Business Metrics"]
+                },
+            }
+        elif folder_structure:
+            logger.info(f"Creating custom folder structure in {workspace_name}...")
+            structure = folder_structure
+
+        # Create folders if structure specified
+        folder_ids = {}
+        if structure:
+            try:
+                folder_ids = self.folder_manager.create_folder_structure(
+                    workspace_id, structure
+                )
+                logger.info(
+                    f"✓ Created {len(folder_ids)} folder(s) in workspace {workspace_name}"
+                )
+
+                # Show folder tree
+                logger.info(f"\nFolder structure for {workspace_name}:")
+                self.folder_manager.print_folder_tree(workspace_id)
+
+            except FolderOperationError as e:
+                logger.warning(
+                    f"⚠ Workspace created but folder creation failed: {e}"
+                )
+                # Don't fail the whole operation if folders fail
+                # Workspace is still created
+
+        return {
+            "workspace": workspace,
+            "folder_ids": folder_ids,
+            "workspace_id": workspace_id,
+            "workspace_name": workspace_name,
+        }
+
+    def add_folder_structure(
+        self,
+        workspace_id: str,
+        folder_structure: Optional[Dict[str, Any]] = None,
+        use_medallion_architecture: bool = False,
+    ) -> Dict[str, str]:
+        """
+        Add folder structure to an existing workspace
+
+        Args:
+            workspace_id: Target workspace ID
+            folder_structure: Custom folder structure
+            use_medallion_architecture: Use Bronze/Silver/Gold medallion architecture
+
+        Returns:
+            Dict mapping folder names to folder IDs
+
+        Example:
+            # Add medallion architecture to existing workspace
+            folder_ids = manager.add_folder_structure(
+                workspace_id="abc123",
+                use_medallion_architecture=True
+            )
+        """
+        if not self.folder_manager:
+            raise RuntimeError(
+                "Folder manager not available. Install fabric_folder_manager module."
+            )
+
+        workspace = self.get_workspace_details(workspace_id)
+        workspace_name = workspace.get("displayName", workspace_id)
+
+        # Determine folder structure
+        structure = None
+        if use_medallion_architecture:
+            logger.info(f"Adding medallion architecture to {workspace_name}...")
+            structure = {
+                "Bronze Layer": {
+                    "subfolders": ["Raw Data", "Archive", "External Sources"]
+                },
+                "Silver Layer": {
+                    "subfolders": ["Cleaned", "Transformed", "Validated"]
+                },
+                "Gold Layer": {
+                    "subfolders": ["Analytics", "Reports", "Business Metrics"]
+                },
+            }
+        elif folder_structure:
+            logger.info(f"Adding custom folders to {workspace_name}...")
+            structure = folder_structure
+        else:
+            raise ValueError("Must specify either folder_structure or use_medallion_architecture=True")
+
+        # Create folders
+        folder_ids = self.folder_manager.create_folder_structure(workspace_id, structure)
+        logger.info(f"✓ Created {len(folder_ids)} folder(s) in {workspace_name}")
+
+        # Show folder tree
+        logger.info(f"\nFolder structure for {workspace_name}:")
+        self.folder_manager.print_folder_tree(workspace_id)
+
+        return folder_ids
 
     def delete_workspace(self, workspace_id: str, force: bool = False) -> bool:
         """
