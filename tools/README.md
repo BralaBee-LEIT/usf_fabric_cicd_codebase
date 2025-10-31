@@ -41,6 +41,48 @@ Command-line tools for day-to-day Microsoft Fabric workspace operations, bulk ac
 
 ---
 
+### Folder Management ⭐ NEW
+
+**`manage_fabric_folders.py`** - Complete folder management for Fabric workspaces
+- Create, list, update, delete workspace folders
+- Medallion architecture template (Bronze/Silver/Gold)
+- Parent-child folder relationships
+- Intelligent folder structure creation
+
+**Quick Commands:**
+```bash
+# List folders in workspace
+python tools/manage_fabric_folders.py list <workspace-id>
+
+# Create medallion architecture (Bronze/Silver/Gold + subfolders)
+python tools/manage_fabric_folders.py create-medallion <workspace-id>
+
+# Create single folder
+python tools/manage_fabric_folders.py create <workspace-id> "Bronze Layer"
+
+# Create subfolder
+python tools/manage_fabric_folders.py create <workspace-id> "Raw Data" \
+    --parent-id <bronze-folder-id>
+
+# Delete folder
+python tools/manage_fabric_folders.py delete <workspace-id> <folder-id>
+
+# Show folder tree
+python tools/manage_fabric_folders.py tree <workspace-id>
+```
+
+**Medallion Architecture:**
+- Bronze Layer (Raw Data, Archive, External Sources)
+- Silver Layer (Cleaned, Transformed, Validated)
+- Gold Layer (Analytics, Reports, Business Metrics)
+
+**Documentation:**
+- [Folder Management Guide](../docs/workspace-management/FOLDER_MANAGEMENT_GUIDE.md)
+- [Folder API Implementation](../FOLDER_API_IMPLEMENTATION_SUMMARY.md)
+- [Known API Limitations](../FOLDER_PLACEMENT_FIX.md)
+
+---
+
 ### Bulk Operations
 
 **`bulk_delete_workspaces.py`** - Bulk workspace deletion tool
