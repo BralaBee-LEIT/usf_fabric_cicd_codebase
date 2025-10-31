@@ -122,7 +122,88 @@ python domain_workspace_with_existing_items.py --workspace-name "finance-ops"
 
 ## �📋 Available Scenarios
 
-### 1. Config-Driven Workspace (Enterprise)
+### 1. Comprehensive Demo with Folder Management ⭐ 🆕 NEW
+
+**Location:** `comprehensive-demo/`  
+**Approach:** Full Feature Showcase 🎯
+
+Complete demonstration of all framework capabilities including intelligent folder placement, medallion architecture, and automated organization.
+
+**Features:**
+- ✅ **Intelligent Folder Placement** - Items automatically organized by naming conventions
+- ✅ **Medallion Architecture** - Bronze/Silver/Gold layer structure with subfolders
+- ✅ **Naming Standards Integration** - Validates item names against naming_standards.yaml
+- ✅ **Multiple Demos** - Sales analytics, ML lifecycle, multi-tenant scenarios
+- ✅ **Configuration-Driven** - YAML-based scenario definitions
+- ✅ **Known API Limitations** - Handles Fabric API folder placement bug gracefully
+- ✅ **Complete Audit Trail** - Full logging of all operations
+
+**What's Created:**
+- **12 Folders**: 3 root layers (Bronze/Silver/Gold) + 9 subfolders
+- **6 Lakehouses**: Organized by naming prefix (BRONZE_*, SILVER_*, GOLD_*)
+- **8 Notebooks**: Numbered notebooks (01-09, 10-19, 20-29, 50+) for different stages
+- **Intelligent Placement**: Items automatically mapped to appropriate folders
+
+**Usage:**
+```bash
+# Sales Analytics Demo (recommended)
+cd scenarios/comprehensive-demo
+python run_sales_analytics_demo.py
+
+# Or use full comprehensive demo
+python run_comprehensive_demo.py --scenario sales_analytics_etl
+```
+
+**Folder Organization:**
+```
+Bronze Layer/
+  ├── Raw Data/              # BRONZE_* lakehouses, 01-09_* notebooks
+  ├── Archive/               # Historical data
+  └── External Sources/      # Third-party data
+Silver Layer/
+  ├── Cleaned/               # SILVER_* lakehouses (cleaned)
+  ├── Transformed/           # 10-19_* notebooks
+  └── Validated/             # Quality-checked data
+Gold Layer/
+  ├── Analytics/             # GOLD_* lakehouses, 20-29_* notebooks
+  ├── Reports/               # Business reports
+  └── Business Metrics/      # KPIs and metrics
+```
+
+**⚠️ Known Limitation:**
+The Microsoft Fabric API currently has a bug where the `folderId` parameter is accepted but ignored. Items are created at workspace root. See `FOLDER_PLACEMENT_FIX.md` for complete analysis and manual organization steps.
+
+**Documentation:**
+- [Comprehensive Demo README](comprehensive-demo/README.md) - Complete guide
+- [Folder Placement Fix](../FOLDER_PLACEMENT_FIX.md) - API limitation details
+- [Implementation Summary](comprehensive-demo/IMPLEMENTATION_SUMMARY.md) - Technical details
+- [Quick Reference](comprehensive-demo/QUICK_REFERENCE.md) - Common commands
+
+---
+
+### 2. Automated Deployment
+
+**Location:** `automated-deployment/`  
+**Approach:** Config-Driven ⚙️
+
+Production-ready automated deployment with folder structure support.
+
+**Features:**
+- ✅ Folder structure creation (medallion or custom)
+- ✅ Automated workspace provisioning
+- ✅ YAML-based configuration
+- ✅ Dry-run mode for testing
+- ✅ Integration with workspace manager
+
+**Usage:**
+```bash
+cd scenarios/automated-deployment
+python run_automated_deployment.py --config product_config.yaml
+```
+
+---
+
+### 3. Config-Driven Workspace (Enterprise)
 
 **Location:** `config-driven-workspace/`  
 **Approach:** Config-Driven ⚙️

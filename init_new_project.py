@@ -364,7 +364,12 @@ def print_next_steps(project_info: Dict):
     print("   python ops/scripts/manage_workspaces.py create \\")
     print("       --project analytics --environment dev\n")
 
-    print(f"{Colors.CYAN}5. Explore Scenarios{Colors.ENDC}")
+    print(f"{Colors.CYAN}5. Create Workspace with Folder Structure{Colors.ENDC}")
+    print("   # Medallion architecture (Bronze/Silver/Gold)")
+    print("   python tools/manage_fabric_folders.py create-medallion \\")
+    print("       --workspace-id <your-workspace-id>\n")
+
+    print(f"{Colors.CYAN}6. Explore Scenarios{Colors.ENDC}")
     print("   cd scenarios/")
     print("   cat README.md\n")
 
