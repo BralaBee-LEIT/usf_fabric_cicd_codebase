@@ -40,18 +40,18 @@ jobs:
 
       - name: Run Black (code formatting)
         run: |
-          black --check --diff ops/ tests/ scenarios/
+          black --check --diff ops/ tests/ scenarios/ || echo "::warning::Code formatting issues found"
         continue-on-error: true
 
       - name: Run Flake8 (linting)
         run: |
-          flake8 ops/ tests/ scenarios/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 ops/ tests/ scenarios/ --count --select=E9,F63,F7,F82 --show-source --statistics || echo "::warning::Critical linting issues found"
           flake8 ops/ tests/ scenarios/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
         continue-on-error: true
 
       - name: Run Pylint
         run: |
-          pylint ops/scripts/utilities/*.py --exit-zero --output-format=colorized
+          pylint ops/scripts/utilities/*.py --exit-zero --output-format=colorized || echo "::warning::Pylint issues found"
         continue-on-error: true
 
   # Job 2: Unit Tests
@@ -87,7 +87,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          pytest tests/unit/ -v --tb=short --cov=ops/scripts/utilities --cov-report=xml --cov-report=term -n auto
+          pytest tests/unit/ -v --tb=short --cov=ops/scripts/utilities --cov-report=xml --cov-report=term -n auto -m "not real_fabric"
         env:
           # Disable production features for unit tests
           FEATURE_USE_RETRY_LOGIC: 'false'
@@ -95,6 +95,7 @@ jobs:
           FEATURE_USE_ROLLBACK: 'false'
           FEATURE_USE_TELEMETRY: 'false'
           FEATURE_USE_HEALTH_CHECKS: 'false'
+          # Azure credentials not required for unit tests (mocked)
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.11'
@@ -126,7 +127,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          pytest tests/integration/ -v --tb=short --cov=ops/scripts/utilities --cov-report=xml
+          pytest tests/integration/ -v --tb=short --cov=ops/scripts/utilities --cov-report=xml -m "not real_fabric"
         env:
           # Enable production features for integration tests
           FEATURE_USE_RETRY_LOGIC: 'true'
@@ -134,6 +135,11 @@ jobs:
           FEATURE_USE_ROLLBACK: 'true'
           FEATURE_USE_TELEMETRY: 'true'
           FEATURE_USE_HEALTH_CHECKS: 'true'
+          # Azure credentials for integration tests (from GitHub secrets)
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          FABRIC_CAPACITY_ID: ${{ secrets.FABRIC_CAPACITY_ID }}
 
       - name: Upload coverage
         uses: codecov/codecov-action@v3

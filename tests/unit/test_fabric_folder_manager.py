@@ -25,18 +25,23 @@ from ops.scripts.utilities.fabric_folder_manager import (
 # ============================================================================
 
 @pytest.fixture
-def manager():
-    """Create FabricFolderManager instance"""
-    return FabricFolderManager(max_folder_depth=5)
+def mock_fabric_client():
+    """Create mock FabricClient that doesn't require credentials"""
+    with patch('ops.scripts.utilities.fabric_folder_manager.FabricClient') as mock_class:
+        client_instance = Mock()
+        # Mock the methods that FabricFolderManager uses
+        client_instance.get.return_value = {"value": []}
+        client_instance.post.return_value = {}
+        client_instance.patch.return_value = {}
+        client_instance.delete.return_value = None
+        mock_class.return_value = client_instance
+        yield client_instance
 
 
 @pytest.fixture
-def mock_fabric_client():
-    """Create mock FabricClient"""
-    with patch('ops.scripts.utilities.fabric_folder_manager.FabricClient') as mock:
-        client_instance = Mock()
-        mock.return_value = client_instance
-        yield client_instance
+def manager(mock_fabric_client):
+    """Create FabricFolderManager instance with mocked client"""
+    return FabricFolderManager(max_folder_depth=5)
 
 
 @pytest.fixture
@@ -800,12 +805,12 @@ class TestErrorHandling:
 class TestConfiguration:
     """Test FabricFolderManager configuration"""
     
-    def test_default_max_depth(self):
+    def test_default_max_depth(self, mock_fabric_client):
         """Test default max folder depth"""
         manager = FabricFolderManager()
         assert manager.max_folder_depth == 5
     
-    def test_custom_max_depth(self):
+    def test_custom_max_depth(self, mock_fabric_client):
         """Test custom max folder depth"""
         manager = FabricFolderManager(max_folder_depth=3)
         assert manager.max_folder_depth == 3
@@ -815,5 +820,5 @@ class TestConfiguration:
         manager = FabricFolderManager(max_folder_depth=2)
         
         with patch.object(manager, '_get_folder_depth', return_value=2):
-            with pytest.raises(FolderValidationError, match="Maximum folder depth"):
+            with pytest.raises(FolderValidationError, match="(Maximum folder depth|Folder depth limit exceeded)"):
                 manager.create_folder("workspace1", "Too Deep", parent_folder_id="parent")

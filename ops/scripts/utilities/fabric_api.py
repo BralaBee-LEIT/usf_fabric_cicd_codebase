@@ -29,14 +29,15 @@ logger = logging.getLogger(__name__)
 class FabricClient:
     """Enhanced Fabric API client using fabric-cicd and direct REST calls"""
 
-    def __init__(self):
+    def __init__(self, skip_auth_check: bool = False):
         self.tenant_id = os.getenv("AZURE_TENANT_ID")
         self.client_id = os.getenv("AZURE_CLIENT_ID")
         self.client_secret = os.getenv("AZURE_CLIENT_SECRET")
         self.base_url = FABRIC_API_BASE_URL
         self.token = None
 
-        if not all([self.tenant_id, self.client_id, self.client_secret]):
+        # Allow skipping auth check for testing purposes
+        if not skip_auth_check and not all([self.tenant_id, self.client_id, self.client_secret]):
             raise ValueError(ERROR_MISSING_CREDENTIALS)
 
     def _get_access_token(self) -> str:
