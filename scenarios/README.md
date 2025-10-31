@@ -7,6 +7,17 @@ This directory contains ready-to-use scenario scripts for setting up complete Mi
 ```
 scenarios/
 ├── README.md                           # This file
+├── automated-deployment/               # Automated end-to-end deployment
+│   ├── run_automated_deployment.py
+│   ├── product_config.yaml
+│   └── README.md
+├── comprehensive-demo/                 # 🆕 NEW: Full feature showcase with folders
+│   ├── run_comprehensive_demo.py      # Complete demo with intelligent folders
+│   ├── comprehensive_demo_config.yaml  # Full-featured configuration
+│   ├── example_basic_medallion.yaml   # Simple medallion demo
+│   ├── example_ml_lifecycle.yaml      # ML/Data science config
+│   ├── example_multi_tenant.yaml      # Departmental multi-tenant
+│   └── README.md                      # Comprehensive documentation
 ├── config-driven-workspace/            # Enterprise config-driven workspace
 │   ├── config_driven_workspace.py
 │   ├── README.md
@@ -21,7 +32,7 @@ scenarios/
 │   └── leit_ricoh_setup.sh
 ├── leit-ricoh-fresh-setup/             # LEIT-Ricoh fresh setup variant
 │   └── leit_ricoh_fresh_setup.py
-├── feature-branch-workflow/           # NEW: Feature branch workspace workflow
+├── feature-branch-workflow/            # Feature branch workspace workflow
 │   ├── README.md
 │   ├── FEATURE_WORKFLOW_GUIDE.md
 │   ├── QUICK_REFERENCE.md

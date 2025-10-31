@@ -1,0 +1,166 @@
+# ============================================================================
+# Sales Analytics ETL - Demo Configuration
+# ============================================================================
+# Location: config/scenarios/sales_analytics_etl.yaml
+# Principals: config/principals/sales_analytics_dev_principals.txt
+# ============================================================================
+
+product:
+  name: "sales-analytics-etl"
+  description: "Sales Analytics ETL with medallion architecture"
+  owner_email: "${FABRIC_USER_EMAIL}"  # Set in .env
+  domain: "Sales Analytics"
+
+environments:
+  dev:
+    enabled: true
+    capacity_type: "fabric"
+    capacity_id: "${FABRIC_CAPACITY_ID}"  # Set in .env
+    description: "Development environment for sales ETL"
+    auto_deploy: true
+    folder_structure:
+      enabled: true
+      template: "medallion"
+
+folder_structure:
+  template: "medallion"
+  
+  medallion:
+    layers:
+      - name: "Bronze Layer"
+        description: "Raw data ingestion layer"
+        naming_pattern: "BRONZE_*"
+        subfolders:
+          - name: "Raw Data"
+            description: "Ingested raw data"
+          - name: "Archive"
+            description: "Historical data archive"
+          - name: "External Sources"
+            description: "Third-party data sources"
+      
+      - name: "Silver Layer"
+        description: "Cleansed and validated data"
+        naming_pattern: "SILVER_*"
+        subfolders:
+          - name: "Cleaned"
+            description: "Cleansed datasets"
+          - name: "Transformed"
+            description: "Transformed data"
+          - name: "Validated"
+            description: "Quality validated data"
+      
+      - name: "Gold Layer"
+        description: "Analytics-ready data"
+        naming_pattern: "GOLD_*"
+        subfolders:
+          - name: "Analytics"
+            description: "Analytics datasets"
+          - name: "Business Metrics"
+            description: "Business KPIs and metrics"
+          - name: "Reports"
+            description: "Report-ready data"
+
+git:
+  enabled: false  # Set to true when ready
+  organization: "BralaBee-LEIT"
+  repository: "usf_fabric_cicd_codebase"
+  branch: "main"
+  directory: "/data_products/sales-analytics-etl"
+  auto_connect: false
+
+workspace:
+  create_items: true
+  validate_naming: true
+  description_template: "Sales Analytics ETL - {environment} environment"
+
+items:
+  lakehouses:
+    - name: "BRONZE_SalesTransactions_Lakehouse"
+      description: "Raw sales transaction data from POS systems"
+      target_folder: "Bronze Layer/Raw Data"
+    
+    - name: "BRONZE_CustomerMaster_Lakehouse"
+      description: "Raw customer information from CRM"
+      target_folder: "Bronze Layer/Raw Data"
+    
+    - name: "SILVER_SalesTransactions_Lakehouse"
+      description: "Cleansed and validated sales transactions"
+      target_folder: "Silver Layer/Cleaned"
+    
+    - name: "SILVER_CustomerData_Lakehouse"
+      description: "Cleansed customer master data"
+      target_folder: "Silver Layer/Cleaned"
+    
+    - name: "GOLD_SalesAnalytics_Lakehouse"
+      description: "Sales analytics and KPIs"
+      target_folder: "Gold Layer/Analytics"
+    
+    - name: "GOLD_CustomerInsights_Lakehouse"
+      description: "Customer behavior and insights"
+      target_folder: "Gold Layer/Analytics"
+  
+  notebooks:
+    - name: "01_IngestSalesTransactions_Notebook"
+      description: "Ingest sales data from POS API"
+      target_folder: "Bronze Layer/Raw Data"
+    
+    - name: "02_IngestCustomerData_Notebook"
+      description: "Ingest customer data from CRM"
+      target_folder: "Bronze Layer/Raw Data"
+    
+    - name: "10_TransformSalesData_Notebook"
+      description: "Cleanse and validate sales transactions"
+      target_folder: "Silver Layer/Transformed"
+    
+    - name: "11_TransformCustomerData_Notebook"
+      description: "Cleanse and enrich customer data"
+      target_folder: "Silver Layer/Transformed"
+    
+    - name: "20_CalculateSalesKPIs_Notebook"
+      description: "Generate sales performance KPIs"
+      target_folder: "Gold Layer/Analytics"
+    
+    - name: "21_BuildCustomerSegments_Notebook"
+      description: "Customer segmentation and insights"
+      target_folder: "Gold Layer/Analytics"
+    
+    - name: "50_MasterETL_Orchestration_Notebook"
+      description: "Master ETL pipeline orchestration"
+      target_folder: "root"
+    
+    - name: "70_DataQuality_Checks_Notebook"
+      description: "Data quality validation functions"
+      target_folder: "root"
+
+# Users are managed via config/principals/sales_analytics_dev_principals.txt
+# NO EMAIL ADDRESSES HERE - USE PRINCIPALS FILE!
+
+naming:
+  validate: true
+  auto_fix: false
+  strict_mode: false
+
+audit:
+  enabled: true
+  log_all_operations: true
+  log_file: "sales_analytics_etl_deployment.jsonl"
+
+deployment:
+  wait_for_completion: true
+  verify_items_created: true
+  rollback_on_error: false
+  
+  validation:
+    check_folder_structure: true
+    verify_git_connection: false
+    validate_all_items: true
+    check_user_permissions: true
+    generate_report: true
+
+features:
+  enable_folders: true
+  enable_git: false
+  enable_naming_validation: true
+  enable_user_management: true
+  enable_audit_logging: true
+  enable_auto_organization: true
