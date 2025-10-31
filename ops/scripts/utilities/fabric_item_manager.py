@@ -126,6 +126,7 @@ class FabricItem:
     type: Optional[FabricItemType] = None
     description: Optional[str] = None
     workspace_id: Optional[str] = None
+    folder_id: Optional[str] = None  # Folder ID for item placement
     definition: Optional[ItemDefinition] = None
 
     # Metadata
@@ -155,6 +156,7 @@ class FabricItem:
             type=FabricItemType(data.get("type")) if data.get("type") else None,
             description=data.get("description"),
             workspace_id=data.get("workspaceId"),
+            folder_id=data.get("folderId"),  # Extract folder ID from API response
             created_date=created_date,
             modified_date=modified_date,
         )
@@ -168,6 +170,9 @@ class FabricItem:
 
         if self.description:
             payload["description"] = self.description
+        
+        if self.folder_id:
+            payload["folderId"] = self.folder_id
 
         if self.definition:
             payload["definition"] = self.definition.to_dict()
@@ -222,6 +227,7 @@ class FabricItemManager:
         definition: Optional[ItemDefinition] = None,
         validate_naming: Optional[bool] = None,
         ticket_id: Optional[str] = None,
+        folder_id: Optional[str] = None,
     ) -> FabricItem:
         """Create a new Fabric item
 
@@ -233,6 +239,7 @@ class FabricItemManager:
             definition: Optional item definition with content
             validate_naming: Override validation setting for this call (default: use instance setting)
             ticket_id: Optional ticket ID for feature branch workflows
+            folder_id: Optional folder ID to create the item in
 
         Returns:
             FabricItem: The created item
@@ -293,14 +300,18 @@ class FabricItemManager:
             display_name=display_name,
             type=item_type,
             description=description,
+            folder_id=folder_id,  # Include folder ID for placement
             definition=definition,
         )
 
         payload = item.to_dict()
+        
+        # Build the API endpoint
+        endpoint = f"workspaces/{workspace_id}/items"
 
         try:
             response = self.client._make_request(
-                "POST", f"workspaces/{workspace_id}/items", json=payload
+                "POST", endpoint, json=payload
             )
 
             # Try to parse JSON response

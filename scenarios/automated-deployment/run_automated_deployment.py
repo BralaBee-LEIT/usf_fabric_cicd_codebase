@@ -151,7 +151,7 @@ def validate_prerequisites():
 def create_workspace(
     product_config: Dict, config_manager: ConfigManager, dry_run: bool
 ) -> Optional[str]:
-    """Create workspace with configured naming pattern"""
+    """Create workspace with configured naming pattern and optional folder structure"""
     print_step(1, 8, "Creating Workspace")
 
     product_name = product_config["product"]["name"]
@@ -167,8 +167,22 @@ def create_workspace(
     print_info(f"Workspace name (from pattern): {workspace_name}")
     print_info(f"Description: {env_config['description']}")
 
+    # Check for folder structure configuration
+    create_folders = env_config.get("create_folders", False)
+    folder_structure = env_config.get("folder_structure", None)
+    use_medallion = env_config.get("use_medallion_architecture", False)
+
+    if create_folders or folder_structure or use_medallion:
+        print_info(f"Folder structure will be created:")
+        if use_medallion:
+            print_info("  - Using medallion architecture (Bronze/Silver/Gold)")
+        elif folder_structure:
+            print_info(f"  - Custom structure with {len(folder_structure)} root folders")
+
     if dry_run:
         print_warning("DRY RUN: Would create workspace")
+        if create_folders or folder_structure or use_medallion:
+            print_warning("DRY RUN: Would create folder structure")
         return "dry-run-workspace-id"
 
     try:
@@ -179,18 +193,45 @@ def create_workspace(
         if existing:
             print_warning(f"Workspace already exists: {workspace_name}")
             workspace_id = existing["id"]
+
+            # Add folders to existing workspace if configured
+            if create_folders or folder_structure or use_medallion:
+                try:
+                    print_info("Adding folder structure to existing workspace...")
+                    workspace_manager.add_folder_structure(
+                        workspace_id=workspace_id,
+                        folder_structure=folder_structure,
+                        use_medallion_architecture=use_medallion,
+                    )
+                    print_success("Folder structure created")
+                except Exception as e:
+                    print_warning(f"Could not add folders: {e}")
+
         else:
             # Get capacity ID from config (optional)
             capacity_id = env_config.get("capacity_id")
 
-            # Create workspace
-            result = workspace_manager.create_workspace(
-                name=workspace_name,
-                description=env_config["description"],
-                capacity_id=capacity_id,
-            )
-            workspace_id = result["id"]
-            print_success(f"Created workspace: {workspace_name}")
+            # Create workspace with folder structure if configured
+            if create_folders or folder_structure or use_medallion:
+                result = workspace_manager.create_workspace_with_structure(
+                    name=workspace_name,
+                    description=env_config["description"],
+                    capacity_id=capacity_id,
+                    folder_structure=folder_structure,
+                    use_medallion_architecture=use_medallion,
+                )
+                workspace_id = result["workspace_id"]
+                folder_count = len(result["folder_ids"])
+                print_success(f"Created workspace with {folder_count} folders: {workspace_name}")
+            else:
+                # Create workspace without folders
+                result = workspace_manager.create_workspace(
+                    name=workspace_name,
+                    description=env_config["description"],
+                    capacity_id=capacity_id,
+                )
+                workspace_id = result["id"]
+                print_success(f"Created workspace: {workspace_name}")
 
             if capacity_id:
                 print_info(f"Assigned to capacity: {capacity_id}")
