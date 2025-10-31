@@ -39,44 +39,42 @@ python setup/init_project_config.py --validate
 
 See [docs/getting-started/NEW_PROJECT_SETUP.md](docs/getting-started/NEW_PROJECT_SETUP.md) for detailed instructions.
 
-## 🎯 Quick CLI Commands
+## 🎯 Quick Commands (Cross-Platform Python)
 
-Once setup is complete, use the **Enhanced Fabric CLI** for complete framework management:
+Once setup is complete, use these **Python commands** that work on all platforms (Windows, macOS, Linux):
 
 ```bash
-# Quick workspace listing
-./tools/fabric-cli-enhanced.sh ls
+# Workspace Management
+python ops/scripts/manage_workspaces.py list
+python ops/scripts/manage_workspaces.py create --workspace-name "My Workspace"
+python ops/scripts/manage_workspaces.py delete --workspace-name "My Workspace"
 
-# Get comprehensive help
-./tools/fabric-cli-enhanced.sh help
+# Folder Management (Medallion Architecture)
+python tools/manage_fabric_folders.py create-structure --workspace "My Workspace" --template medallion
+python tools/manage_fabric_folders.py list --workspace "My Workspace"
+python tools/manage_fabric_folders.py tree --workspace "My Workspace" --show-items
 
-# Data product onboarding
-./tools/fabric-cli-enhanced.sh onboard data_products/onboarding/my_product.yaml
+# Fabric Items Management
+python ops/scripts/manage_fabric_items.py list --workspace "My Workspace"
+python ops/scripts/manage_fabric_items.py create --workspace "My Workspace" --name "MyLakehouse" --type Lakehouse
 
-# Fabric items management
-./tools/fabric-cli-enhanced.sh items list --workspace dev-workspace
-./tools/fabric-cli-enhanced.sh items create --workspace dev-ws --name MyLakehouse --type Lakehouse
+# Data Product Onboarding
+python ops/scripts/onboard_data_product.py --config data_products/onboarding/my_product.yaml
 
-# Git integration
-./tools/fabric-cli-enhanced.sh git sync-to-workspace --workspace dev-ws
-./tools/fabric-cli-enhanced.sh git sync-to-git --workspace dev-ws
+# Git Integration
+python ops/scripts/sync_fabric_git.py --workspace-id <workspace-id> --action commit
+python ops/scripts/sync_fabric_git.py --workspace-id <workspace-id> --action update
 
-# Deployment
-./tools/fabric-cli-enhanced.sh deploy --workspace prod-ws --bundle deploy.zip
-
-# Health & monitoring
-./tools/fabric-cli-enhanced.sh health --workspace dev-ws -e dev
-
-# Data quality
-./tools/fabric-cli-enhanced.sh dq validate --workspace dev-ws
+# Preview Folder Structure (No Credentials Required)
+python tools/preview_folder_structure.py --show-placement
 ```
 
-**📚 CLI Documentation:**
-- **Quick Reference:** [`docs/fabric-items-crud/FABRIC_CLI_QUICKREF.md`](docs/fabric-items-crud/FABRIC_CLI_QUICKREF.md) - All 37+ commands with examples
-- **Enhancement Summary:** [`CLI_ENHANCEMENT_SUMMARY.md`](CLI_ENHANCEMENT_SUMMARY.md) - Why & how the CLI was enhanced
-- **Test Report:** [`CLI_COMPREHENSIVE_TESTING.md`](CLI_COMPREHENSIVE_TESTING.md) - Complete verification results
+**📚 Documentation:**
+- **Folder Management:** [`docs/workspace-management/FOLDER_MANAGEMENT_GUIDE.md`](docs/workspace-management/FOLDER_MANAGEMENT_GUIDE.md)
+- **Workspace Guide:** [`docs/guides/WORKSPACE_PROVISIONING_GUIDE.md`](docs/guides/WORKSPACE_PROVISIONING_GUIDE.md)
+- **Implementation Guide:** [`docs/guides/IMPLEMENTATION_GUIDE.md`](docs/guides/IMPLEMENTATION_GUIDE.md)
 
-**Note:** The enhanced CLI (`./tools/fabric-cli-enhanced.sh`) provides access to **100% of framework functionality** (14 scripts, 10 categories). The legacy CLI (`./tools/fabric-cli.sh`) is still available for backward compatibility.
+**Note:** All commands are pure Python scripts that work across Windows, macOS, and Linux. For bash users, shell wrappers are available in `tools/` for convenience.
 
 ## ✨ New Features (v2.0)
 
@@ -115,14 +113,16 @@ pip install -r ops/requirements.txt
 pip install -r requirements-test.txt  # For testing (optional)
 
 # 3. Configure environment
-cp .env.example .env
-# Edit .env with your Azure/GitHub credentials
+# Copy .env.example to .env (or create manually on Windows)
+# Linux/macOS: cp .env.example .env
+# Windows: copy .env.example .env
+# Then edit .env with your Azure credentials
 
-# 4. Run preflight check
-./setup/preflight_check.sh
+# 4. Run preflight check (cross-platform)
+python quick_preflight_check.py
 
 # 5. Initialize project
-python setup/init_project_config.py
+python init_new_project.py
 
 # 6. Test validation
 python tests/validate_solution.py
@@ -134,13 +134,18 @@ pytest tests/ -v
 ### Alternative Setup (Python venv)
 ```bash
 # Create virtual environment
-python3 -m venv fabric-cicd-env
-source fabric-cicd-env/bin/activate
+python -m venv fabric-cicd-env
 
-# Continue with steps 3-6 above
-cp .env.example .env
-./setup/preflight_check.sh
-python setup/init_project_config.py
+# Activate (choose your platform):
+# Linux/macOS:
+source fabric-cicd-env/bin/activate
+# Windows:
+fabric-cicd-env\Scripts\activate
+
+# Continue with steps 2-7 above
+pip install -r ops/requirements.txt
+python quick_preflight_check.py
+python init_new_project.py
 python tests/validate_solution.py
 ```
 

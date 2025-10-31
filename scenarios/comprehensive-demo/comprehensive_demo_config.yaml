@@ -1,0 +1,217 @@
+# ============================================================================
+# Comprehensive Demo Configuration
+# ============================================================================
+# Complete demonstration of all framework capabilities including:
+# - Intelligent folder placement
+# - Medallion architecture
+# - Automated item organization
+# - Multiple demo scenarios
+# ============================================================================
+
+product:
+  name: "comprehensive-demo"
+  description: "Complete framework demonstration with folder management"
+  owner_email: "${FABRIC_USER_EMAIL}"  # Set in .env
+  domain: "Framework Demo"
+
+environments:
+  demo:
+    enabled: true
+    capacity_type: "fabric"
+    capacity_id: "${FABRIC_CAPACITY_ID}"  # Set in .env
+    description: "Demo environment showcasing all features"
+    auto_deploy: true
+    folder_structure:
+      enabled: true
+      template: "medallion"
+
+folder_structure:
+  template: "medallion"
+  
+  medallion:
+    layers:
+      - name: "Bronze Layer"
+        description: "Raw data ingestion layer"
+        naming_pattern: "BRONZE_*"
+        subfolders:
+          - name: "Raw Data"
+            description: "Ingested raw data"
+          - name: "Archive"
+            description: "Historical data archive"
+          - name: "External Sources"
+            description: "Third-party data sources"
+      
+      - name: "Silver Layer"
+        description: "Cleansed and validated data"
+        naming_pattern: "SILVER_*"
+        subfolders:
+          - name: "Cleaned"
+            description: "Cleansed datasets"
+          - name: "Transformed"
+            description: "Transformed data"
+          - name: "Validated"
+            description: "Quality validated data"
+      
+      - name: "Gold Layer"
+        description: "Analytics-ready data"
+        naming_pattern: "GOLD_*"
+        subfolders:
+          - name: "Analytics"
+            description: "Analytics datasets"
+          - name: "Reports"
+            description: "Report-ready data"
+          - name: "Business Metrics"
+            description: "Business KPIs and metrics"
+
+git:
+  enabled: false  # Set to true when ready
+  organization: "ABBA-REPLC"
+  repository: "usf_fabric_cicd_codebase"
+  branch: "main"
+  directory: "/scenarios/comprehensive-demo"
+  auto_connect: false
+
+workspace:
+  create_items: true
+  validate_naming: true
+  description_template: "Comprehensive Demo - {environment} environment"
+  name_prefix: "ComprehensiveDemo"
+
+items:
+  lakehouses:
+    - name: "BRONZE_SalesData_Lakehouse"
+      description: "Raw sales transaction data"
+      target_folder: "Bronze Layer/Raw Data"
+    
+    - name: "BRONZE_CustomerData_Lakehouse"
+      description: "Raw customer information"
+      target_folder: "Bronze Layer/Raw Data"
+    
+    - name: "SILVER_SalesProcessed_Lakehouse"
+      description: "Cleansed sales data"
+      target_folder: "Silver Layer/Cleaned"
+    
+    - name: "SILVER_CustomerEnriched_Lakehouse"
+      description: "Enriched customer data"
+      target_folder: "Silver Layer/Cleaned"
+    
+    - name: "GOLD_SalesAnalytics_Lakehouse"
+      description: "Sales analytics and KPIs"
+      target_folder: "Gold Layer/Analytics"
+    
+    - name: "GOLD_CustomerInsights_Lakehouse"
+      description: "Customer insights and segmentation"
+      target_folder: "Gold Layer/Analytics"
+  
+  notebooks:
+    - name: "01_IngestSalesData_Notebook"
+      description: "Ingest raw sales data from sources"
+      target_folder: "Bronze Layer/Raw Data"
+    
+    - name: "02_IngestCustomerData_Notebook"
+      description: "Ingest customer data from CRM"
+      target_folder: "Bronze Layer/Raw Data"
+    
+    - name: "05_ValidateRawData_Notebook"
+      description: "Validate ingested raw data quality"
+      target_folder: "Bronze Layer/Raw Data"
+    
+    - name: "10_CleanSalesData_Notebook"
+      description: "Cleanse sales transactions"
+      target_folder: "Silver Layer/Transformed"
+    
+    - name: "11_EnrichCustomerData_Notebook"
+      description: "Enrich and transform customer data"
+      target_folder: "Silver Layer/Transformed"
+    
+    - name: "15_ValidateSilverData_Notebook"
+      description: "Quality checks on cleansed data"
+      target_folder: "Silver Layer/Validated"
+    
+    - name: "20_BuildSalesKPIs_Notebook"
+      description: "Generate sales performance metrics"
+      target_folder: "Gold Layer/Analytics"
+    
+    - name: "21_CustomerSegmentation_Notebook"
+      description: "Customer behavior analysis"
+      target_folder: "Gold Layer/Analytics"
+    
+    - name: "25_GenerateReports_Notebook"
+      description: "Build business reports"
+      target_folder: "Gold Layer/Reports"
+    
+    - name: "50_MasterOrchestration_Notebook"
+      description: "Master ETL orchestration pipeline"
+      target_folder: "root"
+    
+    - name: "60_DataQuality_Framework_Notebook"
+      description: "Data quality validation framework"
+      target_folder: "root"
+    
+    - name: "70_Monitoring_Alerts_Notebook"
+      description: "Pipeline monitoring and alerting"
+      target_folder: "root"
+
+naming:
+  validate: true
+  auto_fix: false
+  strict_mode: false
+
+audit:
+  enabled: true
+  log_all_operations: true
+  log_file: "comprehensive_demo_deployment.jsonl"
+
+deployment:
+  wait_for_completion: true
+  verify_items_created: true
+  rollback_on_error: false
+  
+  validation:
+    check_folder_structure: true
+    verify_git_connection: false
+    validate_all_items: true
+    check_user_permissions: false
+    generate_report: true
+
+features:
+  enable_folders: true
+  enable_git: false
+  enable_naming_validation: true
+  enable_user_management: false
+  enable_audit_logging: true
+  enable_auto_organization: true
+  intelligent_placement: true
+
+# Intelligent Placement Rules
+intelligent_placement:
+  enabled: true
+  rules:
+    - pattern: "^BRONZE_.*"
+      folder: "Bronze Layer/Raw Data"
+    - pattern: "^SILVER_.*"
+      folder: "Silver Layer/Cleaned"
+    - pattern: "^GOLD_.*"
+      folder: "Gold Layer/Analytics"
+    - pattern: "^0[1-9]_.*"
+      folder: "Bronze Layer/Raw Data"
+    - pattern: "^1[0-9]_.*"
+      folder: "Silver Layer/Transformed"
+    - pattern: "^2[0-9]_.*"
+      folder: "Gold Layer/Analytics"
+    - pattern: "^[5-9][0-9]_.*"
+      folder: "root"
+
+# Demo Scenarios
+scenarios:
+  sales_analytics:
+    enabled: true
+    description: "Sales analytics with medallion architecture"
+  
+  ml_lifecycle:
+    enabled: false
+    description: "Machine learning model lifecycle"
+  
+  multi_tenant:
+    enabled: false
+    description: "Multi-tenant data isolation"
