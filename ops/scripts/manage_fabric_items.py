@@ -8,6 +8,12 @@ import sys
 import json
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+env_file = Path(__file__).parent.parent.parent / '.env'
+if env_file.exists():
+    load_dotenv(env_file)
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
