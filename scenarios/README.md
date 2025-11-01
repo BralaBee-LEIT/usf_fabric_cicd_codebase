@@ -2,6 +2,24 @@
 
 This directory contains ready-to-use scenario scripts for setting up complete Microsoft Fabric workspaces with various configurations.
 
+> **⚠️ FRAMEWORK REQUIREMENTS (MANDATORY):**
+> 
+> **ALL scenarios require these files before execution:**
+> 1. ✅ `project.config.json` - Organization naming standards (MANDATORY)
+> 2. ✅ `.env` - Azure credentials (MANDATORY)
+> 3. ✅ `naming_standards.yaml` - Naming validation rules (MANDATORY)
+> 
+> **Quick Setup:**
+> ```bash
+> cp project.config.template.json project.config.json
+> cp .env.example .env
+> nano project.config.json  # Edit with your org details
+> nano .env                 # Edit with your Azure credentials
+> python ops/scripts/utilities/framework_validator.py  # Verify setup
+> ```
+> 
+> **Scenarios will fail with helpful error messages if prerequisites are missing.**
+
 ## 📁 Directory Structure
 
 ```
@@ -51,15 +69,30 @@ scenarios/
     └── USER_ADDITION_GUIDE.md
 ```
 
+## 📋 Core Framework Principles (Enforced)
+
+**As of v2.0, the framework enforces these principles across ALL scenarios:**
+
+1. **Standardized Naming** - All workspaces/items follow `project.config.json` patterns
+2. **Infrastructure-as-Code** - Declarative YAML configurations for repeatable deployments
+3. **Governance & Compliance** - Naming validation via `naming_standards.yaml`
+4. **Proper Authentication** - Azure credentials via `.env` file
+
+**What This Means:**
+- ❌ No ad-hoc workspace creation without configuration
+- ❌ No bypassing organizational naming standards
+- ✅ All resources follow governance policies
+- ✅ Complete audit trail of all operations
+
 ## � Two Workflow Approaches
 
 This repository supports **two distinct approaches** to workspace provisioning. Choose based on your use case:
 
-### Approach 1: Config-Driven (Enterprise)
+### Approach 1: Config-Driven (Enterprise) - RECOMMENDED
 
-**📐 Standardized Naming via `project.config.json`**
+**📐 Standardized Naming via `project.config.json` (ENFORCED)**
 
-Uses ConfigManager to generate workspace names from organizational patterns. Best for enterprise environments with governance requirements.
+Uses ConfigManager to generate workspace names from organizational patterns. **Now required for ALL scenarios** to ensure governance.
 
 **When to use:**
 - ✅ Enterprise deployments with naming standards
@@ -80,25 +113,26 @@ python config_driven_workspace.py --project analytics --environment dev
 
 ---
 
-### Approach 2: Direct-Name (Simple)
+### Approach 2: Domain-Based (Structured)
 
-**📝 Explicit Naming You Control**
+**📝 Domain + Environment Pattern (ENFORCED)**
 
-You specify exact workspace names. Best for simple setups where you need full control over naming.
+You specify domain name and environment. Framework applies `project.config.json` patterns to ensure consistency.
+
+**⚠️ BREAKING CHANGE (v2.0):** Domain workspace scenario now requires ConfigManager and enforces naming standards.
 
 **When to use:**
-- ✅ Simple, one-off workspace creation
-- ✅ Small teams without formal naming standards
-- ✅ Need explicit control over names
-- ✅ Quick prototyping or testing
-- ✅ Non-standardized environments
+- ✅ Domain-oriented architecture
+- ✅ Logical grouping by business domain
+- ✅ Still needs governance/compliance
+- ✅ Multiple environments per domain
 
 **Example:**
 ```bash
-# You provide: exact workspace name
-python domain_workspace_with_existing_items.py --workspace-name "finance-ops"
+# You provide: domain name + environment
+python domain_workspace_with_existing_items.py --domain-name finance --environment dev
 
-# System uses: finance-ops (exactly as provided)
+# System generates: usf2-fabric-finance-dev (from project.config.json pattern)
 ```
 
 **Scenarios:** `domain-workspace/`, `leit-ricoh-setup/`, `leit-ricoh-fresh-setup/`
@@ -107,16 +141,19 @@ python domain_workspace_with_existing_items.py --workspace-name "finance-ops"
 
 ### Quick Decision Matrix
 
-| Requirement | Config-Driven | Direct-Name |
-|-------------|---------------|-------------|
-| Naming standards enforced | ✅ | ❌ |
-| Simple one-off setup | ❌ | ✅ |
-| Multi-environment consistency | ✅ | ⚠️ Manual |
-| Full naming control | ❌ | ✅ |
-| Requires config file | ✅ Required | ❌ Optional |
-| Setup complexity | Medium | Low |
-| Governance/Compliance | ✅ | ⚠️ Manual |
-| Quick prototyping | ❌ | ✅ |
+| Requirement | Config-Driven | Domain-Based |
+|-------------|---------------|--------------|
+| Naming standards enforced | ✅ Always | ✅ Always |
+| Simple one-off setup | ⚠️ Medium | ✅ Easy |
+| Multi-environment consistency | ✅ | ✅ |
+| Domain-oriented architecture | ⚠️ Optional | ✅ Core |
+| Requires project.config.json | ✅ Required | ✅ Required |
+| Requires YAML config | ⚠️ Optional | ⚠️ Optional |
+| Setup complexity | Medium | Medium |
+| Governance/Compliance | ✅ Always | ✅ Always |
+| Best for | Enterprise standard workspaces | Domain-organized workspaces |
+
+**Note:** As of v2.0, BOTH approaches enforce `project.config.json` for naming standards.
 
 ---
 

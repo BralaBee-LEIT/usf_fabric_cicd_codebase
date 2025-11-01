@@ -8,34 +8,51 @@
 
 ## 🚀 Quick Start for New Organizations
 
+> **⚠️ FRAMEWORK REQUIREMENTS (MANDATORY):**
+> 
+> This framework enforces core governance principles. Before running ANY command, you must have:
+> 1. ✅ `project.config.json` - Organization naming standards
+> 2. ✅ `.env` - Azure credentials
+> 3. ✅ `naming_standards.yaml` - Naming validation rules (included in repo)
+> 
+> **All scenarios and CLI tools will fail with helpful error messages if these files are missing.**
+
 ### Option 1: Interactive Setup (Recommended)
 ```bash
 # Clone this repository
 git clone https://github.com/YOUR-ORG/YOUR-REPO.git
 cd YOUR-REPO
 
-# Run initialization wizard
+# Run initialization wizard (creates required files)
 python init_new_project.py
 ```
 
 The wizard will:
 - ✅ Collect your organization details
-- ✅ Generate `project.config.json` from template
-- ✅ Create customized `.env` file
-- ✅ Validate setup
+- ✅ Generate `project.config.json` from template (REQUIRED)
+- ✅ Create customized `.env` file (REQUIRED)
+- ✅ Validate setup and check prerequisites
 
 ### Option 2: Manual Setup
 ```bash
-# 1. Copy template files
-cp project.config.template.json project.config.json
-cp .env.example .env
+# 1. Copy REQUIRED template files
+cp project.config.template.json project.config.json  # MANDATORY
+cp .env.example .env                                 # MANDATORY
 
 # 2. Edit project.config.json with your organization details
-# 3. Edit .env with your Azure credentials
+nano project.config.json  # Set prefix, naming patterns, environments
 
-# 4. Validate configuration
-python setup/init_project_config.py --validate
+# 3. Edit .env with your Azure credentials
+nano .env  # Set AZURE_TENANT_ID, AZURE_CLIENT_ID, etc.
+
+# 4. Validate framework prerequisites
+python ops/scripts/utilities/framework_validator.py
 ```
+
+**Why These Files Are Mandatory:**
+- **`project.config.json`**: Ensures consistent naming across all workspaces and items (governance)
+- **`.env`**: Required for authentication to Azure and Fabric APIs (security)
+- **`naming_standards.yaml`**: Enforces naming conventions and validates resource names (compliance)
 
 See [docs/getting-started/NEW_PROJECT_SETUP.md](docs/getting-started/NEW_PROJECT_SETUP.md) for detailed instructions.
 
