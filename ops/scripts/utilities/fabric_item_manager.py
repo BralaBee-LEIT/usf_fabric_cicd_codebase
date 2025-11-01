@@ -1,6 +1,11 @@
 """
 Microsoft Fabric Item CRUD Manager
 Handles Create, Read, Update, Delete operations for all Fabric item types
+
+FRAMEWORK REQUIREMENTS:
+- project.config.json: Organization naming standards (MANDATORY)
+- .env: Azure credentials (MANDATORY)
+- naming_standards.yaml: Naming validation rules (MANDATORY)
 """
 
 import json
@@ -12,6 +17,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from .fabric_api import FabricClient
+from .framework_validator import FrameworkValidator
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -188,6 +194,7 @@ class FabricItemManager:
         fabric_client: Optional[FabricClient] = None,
         enable_validation: bool = True,
         enable_audit_logging: bool = True,
+        skip_framework_validation: bool = False,
     ):
         """Initialize the item manager
 
@@ -195,7 +202,13 @@ class FabricItemManager:
             fabric_client: Optional FabricClient instance. If not provided, creates a new one.
             enable_validation: Enable naming validation (default: True)
             enable_audit_logging: Enable audit logging (default: True)
+            skip_framework_validation: Skip framework prerequisites validation (NOT RECOMMENDED)
         """
+        # ENFORCE FRAMEWORK PREREQUISITES
+        if not skip_framework_validation:
+            validator = FrameworkValidator(strict_mode=True)
+            validator.validate_or_exit("item operations")
+        
         self.client = fabric_client or FabricClient()
         self.enable_validation = enable_validation and VALIDATION_AVAILABLE
         self.enable_audit_logging = enable_audit_logging and AUDIT_LOGGING_AVAILABLE

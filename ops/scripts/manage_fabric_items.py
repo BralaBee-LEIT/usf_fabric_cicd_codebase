@@ -2,6 +2,11 @@
 """
 CLI for managing Microsoft Fabric items (CRUD operations)
 Supports all Fabric item types: Lakehouses, Notebooks, Pipelines, Warehouses, etc.
+
+FRAMEWORK REQUIREMENTS:
+- project.config.json: Organization naming standards (MANDATORY)
+- .env: Azure credentials (MANDATORY)
+- naming_standards.yaml: Naming validation rules (MANDATORY)
 """
 import argparse
 import sys
@@ -26,6 +31,7 @@ from ops.scripts.utilities.fabric_item_manager import (
     create_spark_job_definition,
 )
 from ops.scripts.utilities.workspace_manager import WorkspaceManager
+from ops.scripts.utilities.framework_validator import validate_framework_prerequisites
 from ops.scripts.utilities.output import (
     console_success as print_success,
     console_error as print_error,
@@ -412,6 +418,9 @@ def cmd_bulk_delete(args):
 
 def main():
     """Main CLI entry point"""
+    # ENFORCE FRAMEWORK PREREQUISITES
+    validate_framework_prerequisites("Fabric item management CLI")
+    
     parser = argparse.ArgumentParser(
         description="Manage Microsoft Fabric items (CRUD operations)",
         formatter_class=argparse.RawDescriptionHelpFormatter,

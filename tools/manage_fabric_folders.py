@@ -5,6 +5,11 @@ Microsoft Fabric Folder Management CLI
 Interactive command-line tool for managing folders and organizing items
 in Microsoft Fabric workspaces.
 
+FRAMEWORK REQUIREMENTS:
+- project.config.json: Organization naming standards (MANDATORY)
+- .env: Azure credentials (MANDATORY)
+- naming_standards.yaml: Naming validation rules (MANDATORY)
+
 Usage:
     # Create folder
     python manage_fabric_folders.py create --workspace "Analytics" --name "Bronze Layer"
@@ -71,6 +76,7 @@ from ops.scripts.utilities.fabric_folder_manager import (
     FolderOperationError
 )
 from ops.scripts.utilities.fabric_api import FabricClient
+from ops.scripts.utilities.framework_validator import validate_framework_prerequisites
 from ops.scripts.utilities.output import (
     console_info as print_info,
     console_success as print_success,
@@ -504,6 +510,9 @@ def _print_structure(structure: Dict[str, Any], indent: int = 0):
 # ============================================================================
 
 def main():
+    # ENFORCE FRAMEWORK PREREQUISITES
+    validate_framework_prerequisites("Fabric folder management CLI")
+    
     parser = argparse.ArgumentParser(
         description="Microsoft Fabric Folder Management CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,

@@ -44,6 +44,7 @@ from utilities.fabric_git_connector import FabricGitConnector
 from utilities.fabric_item_manager import FabricItemManager, FabricItemType
 from utilities.item_naming_validator import ItemNamingValidator
 from utilities.audit_logger import AuditLogger
+from utilities.framework_validator import validate_framework_prerequisites
 
 
 # ANSI Color Codes
@@ -713,13 +714,16 @@ def print_summary(
 
 def main():
     """Main deployment workflow"""
+    # ENFORCE FRAMEWORK PREREQUISITES FIRST
+    validate_framework_prerequisites("automated deployment")
+    
     parser = argparse.ArgumentParser(
         description="Automated End-to-End Fabric Deployment Scenario"
     )
     parser.add_argument(
         "--config",
         default="product_config.yaml",
-        help="Path to product configuration file",
+        help="Path to product configuration file (REQUIRED)",
     )
     parser.add_argument(
         "--dry-run",
@@ -736,6 +740,21 @@ def main():
 
     # Get configuration path
     config_path = Path(__file__).parent / args.config
+    
+    # VALIDATE YAML CONFIG EXISTS
+    if not config_path.exists():
+        print(f"\n{Colors.RED}{'=' * 80}{Colors.ENDC}")
+        print(f"{Colors.RED}❌ ERROR: Configuration file not found{Colors.ENDC}")
+        print(f"{Colors.RED}{'=' * 80}{Colors.ENDC}\n")
+        print(f"Looking for: {config_path}")
+        print(f"\nThis scenario requires a YAML configuration file to define:")
+        print("  - Workspace and item specifications")
+        print("  - Git integration settings")
+        print("  - User management (principals)")
+        print(f"\nCreate one by copying the template:")
+        print(f"  cp {Path(__file__).parent}/product_config.yaml my-product-config.yaml")
+        print(f"  python {Path(__file__).name} --config my-product-config.yaml")
+        sys.exit(1)
 
     # Load configurations
     product_config = load_product_config(config_path)

@@ -2,6 +2,11 @@
 """
 Microsoft Fabric Workspace Management CLI
 Command-line interface for managing workspaces and users across environments
+
+FRAMEWORK REQUIREMENTS:
+- project.config.json: Organization naming standards (MANDATORY)
+- .env: Azure credentials (MANDATORY)
+- naming_standards.yaml: Naming validation rules (MANDATORY)
 """
 import argparse
 import sys
@@ -25,6 +30,7 @@ from utilities.workspace_manager import (
     CapacityType,
     setup_complete_environment,
 )
+from utilities.framework_validator import validate_framework_prerequisites
 from utilities.output import (
     console_success as print_success,
     console_error as print_error,
@@ -831,6 +837,9 @@ def cmd_setup_environment(args):
 
 def main():
     """Main CLI entry point"""
+    # ENFORCE FRAMEWORK PREREQUISITES
+    validate_framework_prerequisites("workspace management CLI")
+    
     parser = argparse.ArgumentParser(
         description="Microsoft Fabric Workspace Management CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,

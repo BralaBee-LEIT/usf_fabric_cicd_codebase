@@ -1,6 +1,11 @@
 """
 Microsoft Fabric Workspace Management Module
 Supports workspace and user management across dev, test, and prod environments
+
+FRAMEWORK REQUIREMENTS:
+- project.config.json: Organization naming standards (MANDATORY)
+- .env: Azure credentials (MANDATORY)
+- naming_standards.yaml: Naming validation rules (MANDATORY)
 """
 
 import os
@@ -21,6 +26,7 @@ from .constants import (
     VALID_ENVIRONMENTS,
 )
 from .config_manager import get_config_manager
+from .framework_validator import FrameworkValidator
 
 # Optional: Import audit logger
 try:
@@ -74,7 +80,8 @@ class WorkspaceManager:
     """
 
     def __init__(
-        self, environment: Optional[str] = None, enable_audit_logging: bool = True
+        self, environment: Optional[str] = None, enable_audit_logging: bool = True,
+        skip_framework_validation: bool = False
     ):
         """
         Initialize workspace manager
@@ -82,7 +89,13 @@ class WorkspaceManager:
         Args:
             environment: Target environment (dev, test, prod). If None, no environment suffix is applied.
             enable_audit_logging: Whether to enable audit logging (default: True)
+            skip_framework_validation: Skip framework prerequisites validation (NOT RECOMMENDED)
         """
+        # ENFORCE FRAMEWORK PREREQUISITES
+        if not skip_framework_validation:
+            validator = FrameworkValidator(strict_mode=True)
+            validator.validate_or_exit("workspace operations")
+        
         self.tenant_id = os.getenv("AZURE_TENANT_ID")
         self.client_id = os.getenv("AZURE_CLIENT_ID")
         self.client_secret = os.getenv("AZURE_CLIENT_SECRET")

@@ -44,6 +44,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "ops" / "scripts"))
 from utilities.workspace_manager import WorkspaceManager
 from utilities.fabric_item_manager import FabricItemManager, FabricItemType
 from utilities.fabric_api import FabricClient
+from utilities.config_manager import ConfigManager
+from utilities.framework_validator import validate_framework_prerequisites
 from utilities.output import (
     console_success as print_success,
     console_error as print_error,
@@ -66,6 +68,7 @@ class DomainWorkspaceSetup:
     def __init__(
         self,
         domain_name: str,
+        environment: str = "dev",
         capacity_id: Optional[str] = None,
         principals_file: Optional[str] = None,
         existing_lakehouse_workspace: Optional[str] = None,
@@ -79,6 +82,7 @@ class DomainWorkspaceSetup:
 
         Args:
             domain_name: Logical domain name (e.g., 'finance-analytics', 'sales-ops')
+            environment: Target environment (dev, test, prod) - default: dev
             capacity_id: Fabric capacity GUID
             principals_file: Path to principals file for workspace access
             existing_lakehouse_workspace: Workspace ID containing existing lakehouse
@@ -87,8 +91,20 @@ class DomainWorkspaceSetup:
             existing_warehouse_name: Name of existing warehouse to reference
             skip_user_prompt: Skip interactive prompt for editing principals file (for automation)
         """
+        # ENFORCE FRAMEWORK PREREQUISITES
+        validate_framework_prerequisites("domain workspace setup")
+        
         self.domain_name = domain_name
-        self.workspace_name = f"{domain_name}-workspace"
+        self.environment = environment
+        
+        # Load ConfigManager for standardized naming
+        self.config_manager = ConfigManager()
+        
+        # Generate standardized workspace name using config pattern
+        self.workspace_name = self.config_manager.generate_name(
+            "workspace", self.environment, name=domain_name
+        )
+        
         self.workspace_id = None
         self.capacity_id = capacity_id
         self.principals_file = principals_file
@@ -100,8 +116,8 @@ class DomainWorkspaceSetup:
         self.existing_warehouse_workspace = existing_warehouse_workspace
         self.existing_warehouse_name = existing_warehouse_name
 
-        # Managers
-        self.workspace_mgr = WorkspaceManager()
+        # Managers (framework validation will be done automatically)
+        self.workspace_mgr = WorkspaceManager(environment=self.environment)
         self.item_mgr = FabricItemManager()
         self.fabric_client = FabricClient()
 
@@ -660,12 +676,18 @@ def main():
 
     parser = argparse.ArgumentParser(
         description="Domain-Based Workspace Setup with Existing and New Items",
-        epilog="Example: python domain_workspace_with_existing_items.py --domain-name finance-analytics --capacity-id abc123",
+        epilog="Example: python domain_workspace_with_existing_items.py --domain-name finance-analytics --environment dev --capacity-id abc123",
     )
     parser.add_argument(
         "--domain-name",
         required=True,
         help="Domain name (e.g., finance-analytics, sales-ops)",
+    )
+    parser.add_argument(
+        "--environment",
+        default="dev",
+        choices=["dev", "test", "prod"],
+        help="Target environment (default: dev)",
     )
     parser.add_argument(
         "--capacity-id",
@@ -699,6 +721,7 @@ def main():
 
     setup = DomainWorkspaceSetup(
         domain_name=args.domain_name,
+        environment=args.environment,
         capacity_id=args.capacity_id,
         principals_file=args.principals_file,
         existing_lakehouse_workspace=args.existing_lakehouse_workspace,
