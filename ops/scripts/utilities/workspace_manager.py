@@ -220,17 +220,41 @@ class WorkspaceManager:
 
         Returns:
             Environment-specific workspace name
+        
+        Note:
+            If base_name already contains the prefix or environment suffix,
+            it will be returned as-is to avoid double-prefixing like:
+            "usf2-fabric-usf2-fabric-Sales-dev-dev"
         """
         if not self.environment:
             return base_name
 
-        # Use config manager for consistent naming if available
+        # Check if name already follows the naming pattern (has prefix and/or environment)
+        # to avoid double-prefixing
         if self.config_manager:
+            prefix = self.config_manager.config.get("project", {}).get("prefix", "")
+            
+            # If name already starts with prefix AND ends with environment, return as-is
+            if prefix and base_name.startswith(prefix) and base_name.endswith(f"-{self.environment}"):
+                logger.info(f"Name '{base_name}' already formatted - using as-is")
+                return base_name
+            
+            # If name already starts with prefix, only add environment suffix
+            if prefix and base_name.startswith(prefix):
+                # Check if it already ends with the environment
+                if base_name.endswith(f"-{self.environment}"):
+                    return base_name
+                return f"{base_name}-{self.environment}"
+            
+            # Generate full name from pattern
             return self.config_manager.generate_name(
                 "workspace", self.environment, name=base_name
             )
 
-        # Fallback to simple suffix
+        # Fallback: check for duplicate environment suffix
+        if base_name.endswith(f"-{self.environment}"):
+            return base_name
+        
         return f"{base_name}-{self.environment}"
 
     # ==================== WORKSPACE OPERATIONS ====================

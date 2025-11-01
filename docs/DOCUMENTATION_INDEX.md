@@ -1,8 +1,22 @@
 # Documentation Index - Bird's Eye View
 
-**Date:** 21 October 2025  
+**Date:** 1 November 2025  
 **Purpose:** Organized index of all documentation by knowledge domain  
-**Total Documents:** 27 markdown files  
+**Total Documents:** 42 markdown files  
+**Status:** ✅ Reorganized into proper folder structure  
+
+---
+
+## 🎯 Recent Updates (1 November 2025)
+
+All markdown files have been organized into proper folder structure:
+- ✅ CLI guides moved to `docs/guides/`
+- ✅ Bug fixes moved to `docs/development-maintenance/`
+- ✅ Project status moved to `docs/project-status/`
+- ✅ Architecture docs moved to `docs/architecture/`
+- ✅ Deployment docs moved to `docs/deployment-cicd/`
+- ✅ Planning docs moved to `docs/planning/`
+- ✅ Only `README.md` remains in root directory
 
 ---
 
@@ -12,9 +26,13 @@
 2. [ETL & Data Platform (5 docs)](#2-etl--data-platform)
 3. [Workspace Management (5 docs)](#3-workspace-management)
 4. [Fabric Items & CRUD Operations (3 docs)](#4-fabric-items--crud-operations)
-5. [Deployment & CI/CD (3 docs)](#5-deployment--cicd)
+5. [Deployment & CI/CD (4 docs)](#5-deployment--cicd)
 6. [User Stories & Validation (3 docs)](#6-user-stories--validation)
-7. [Development & Maintenance (3 docs)](#7-development--maintenance)
+7. [Development & Maintenance (7 docs)](#7-development--maintenance)
+8. [Architecture (3 docs)](#8-architecture)
+9. [Project Status (9 docs)](#9-project-status)
+10. [Guides & Tutorials (6 docs)](#10-guides--tutorials)
+11. [Planning (2 docs)](#11-planning)
 
 ---
 
@@ -352,6 +370,133 @@
   - Testing notes
   - Review checklist
 - **When to read:** Reviewing pull requests
+
+---
+
+## 8. Architecture
+
+**Purpose:** System architecture, design patterns, technical structure
+
+**Location:** `docs/architecture/`
+
+### 🏗️ ENTERPRISE_ARCHITECTURE_GUIDE.md
+- **Type:** Architecture documentation
+- **Audience:** Architects, technical leads
+- **Content:** Enterprise-level architecture patterns and decisions
+- **When to read:** Understanding high-level system design
+
+### 📐 PROJECT_STRUCTURE.md
+- **Type:** Project organization
+- **Audience:** Developers, new team members
+- **Content:** Directory structure, code organization
+- **When to read:** Understanding codebase layout
+
+---
+
+## 9. Project Status
+
+**Purpose:** Release notes, progress tracking, completion summaries
+
+**Location:** `docs/project-status/`
+
+### 📋 FRAMEWORK_TRANSFORMATION_COMPLETE.md
+- **Type:** Milestone documentation
+- **Content:** Framework modernization completion status
+
+### 📦 CONFIG_ORGANIZATION_COMPLETE.md
+- **Type:** Status report
+- **Content:** Configuration reorganization summary
+
+### ✅ REVALIDATION_AFTER_CLEANUP.md
+- **Type:** Validation report
+- **Content:** Post-cleanup validation results
+
+### 🔒 PRODUCTION_HARDENING_COMPLETE.md
+- **Type:** Milestone documentation
+- **Content:** Production readiness checklist completion
+
+### 📊 FOLDER_API_IMPLEMENTATION_SUMMARY.md
+- **Type:** Implementation summary
+- **Content:** Folder API feature implementation details
+
+### 🧪 REAL_FABRIC_TESTS_COMPLETE.md
+- **Type:** Test report
+- **Content:** Real Fabric environment test results
+
+### 📝 PR_VALIDATION_REPORT.md
+- **Type:** Code review report
+- **Content:** Pull request validation results
+
+### 📰 RELEASE_NOTES_v1.0.0.md
+- **Type:** Release notes
+- **Content:** Version 1.0.0 release information
+
+### 📄 PULL_REQUEST_SUMMARY.md
+- **Type:** Development summary
+- **Content:** PR summaries and merged features
+
+---
+
+## 10. Guides & Tutorials
+
+**Purpose:** How-to guides, best practices, lessons learned
+
+**Location:** `docs/guides/`
+
+### 📘 CLI_TEST_REPORT.md ⭐ **COMPREHENSIVE**
+- **Type:** Test documentation
+- **Audience:** Developers, QA
+- **Content:** 
+  - Complete CLI command testing results
+  - Working vs failing commands
+  - Platform compatibility notes
+  - Troubleshooting solutions
+- **When to read:** Verifying CLI functionality or troubleshooting issues
+
+### ✅ CLI_VALIDATION_SUMMARY.md
+- **Type:** Executive summary
+- **Audience:** Team leads, stakeholders
+- **Content:** 
+  - CLI validation quick results
+  - Pass/fail summary
+  - Known limitations
+- **When to read:** Quick CLI status check
+
+### 🧪 CLI_COMPREHENSIVE_TESTING.md
+- **Type:** Testing guide
+- **Audience:** QA engineers
+- **Content:** Comprehensive CLI test procedures
+
+### ⚡ CLI_ENHANCEMENT_SUMMARY.md
+- **Type:** Enhancement documentation
+- **Content:** CLI improvements and new features
+
+### 🎓 REAL_FABRIC_LESSONS_LEARNED.md
+- **Type:** Best practices
+- **Audience:** All team members
+- **Content:** 
+  - Real-world lessons from Fabric testing
+  - Common pitfalls and solutions
+  - Production tips
+- **When to read:** Before working with live Fabric environments
+
+---
+
+## 11. Planning
+
+**Purpose:** Future roadmaps, action plans, next steps
+
+**Location:** `docs/planning/`
+
+### 🗺️ SEPARATION_OF_CONCERNS_ACTION_PLAN.md
+- **Type:** Technical planning
+- **Audience:** Architects, technical leads
+- **Content:** Code separation and refactoring plans
+
+### 📅 NEXT_STEPS.md
+- **Type:** Roadmap
+- **Audience:** Project managers, team leads
+- **Content:** Upcoming features and priorities
 
 ---
 
