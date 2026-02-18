@@ -243,7 +243,7 @@ Service Principal must have:
 
 ## 📦 Packaging & Distribution
 
-- **Wheel Build**: `make build` → `dist/usf_fabric_cli-1.7.6-py3-none-any.whl`
+- **Wheel Build**: `make build` → `dist/usf_fabric_cli-1.7.7-py3-none-any.whl`
 - **Entry Point**: `pyproject.toml` defines `fabric-cicd` command → `usf_fabric_cli.cli:app`
 - **Docker Image**: `Dockerfile` installs wheel + Fabric CLI, runs as non-root user
 
@@ -349,7 +349,7 @@ python -m usf_fabric_cli.cli promote --pipeline-name "MyPipeline" -s Test -t Pro
 
 ## �🔗 Related Projects
 
-- **usf-fabric-cicd**: Original monolithic framework (this CLI is the lightweight successor)
+- **usf_fabric_cli_cicd**: Modern CLI successor (v1.7.7) — the lightweight replacement for this repo
 - **usf_fabric_monitoring**: Monitor Hub analysis for operational insights
 - **fabric-purview-playbook-webapp**: Delivery playbook web application
 ## 🔄 CI/CD Protocols (MANDATORY)

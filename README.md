@@ -2,9 +2,9 @@
 
 Enterprise-grade Microsoft Fabric deployment automation leveraging the official Fabric CLI with 12-Factor App configuration management, Jinja2 artifact templating, and REST API Git integration. Designed for organization-agnostic operation with a clean, modular architecture.
 
-> **🎉 February 2026 Update:** Version **1.7.6** — Inline environment overrides, E2E feature branch workspace validation, plus notebook content import and Jinja2 rendering. See [CHANGELOG.md](CHANGELOG.md) for details.
+> **🎉 February 2026 Update:** Version **1.7.7** — Inline environment overrides, E2E feature branch workspace validation, plus notebook content import and Jinja2 rendering. See [CHANGELOG.md](CHANGELOG.md) for details.
 
-> **🔄 Modern Successor:** This project is the evolution of [usf-fabric-cicd](../usf-fabric-cicd), providing a full-featured enterprise CLI framework built around the official Fabric CLI with comprehensive CI/CD, Git integration, and deployment pipeline support.
+> **🔄 Modern Successor:** This project has been superseded by [usf_fabric_cli_cicd](../usf_fabric_cli_cicd), a full-featured enterprise CLI framework built around the official Fabric CLI with comprehensive CI/CD, Git integration, and deployment pipeline support.
 
 ## Core Capabilities
 
