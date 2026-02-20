@@ -12,7 +12,6 @@ import time
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import requests
-
 from packaging import version
 
 from usf_fabric_cli.exceptions import (
