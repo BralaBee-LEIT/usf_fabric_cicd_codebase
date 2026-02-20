@@ -623,8 +623,7 @@ class FabricCLIWrapper:
                 return access_token.token
             except Exception as exc:
                 logger.warning(
-                    "Could not acquire PBI token (%s); "
-                    "falling back to Fabric token",
+                    "Could not acquire PBI token (%s); " "falling back to Fabric token",
                     exc,
                 )
         return self.fabric_token
