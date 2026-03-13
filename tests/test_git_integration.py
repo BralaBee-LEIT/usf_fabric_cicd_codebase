@@ -53,9 +53,9 @@ class TestGetWorkspaceNameFromBranch:
         assert result == "ws-feature-myfeature"
 
     def test_slug_nested_branch_slashes_replaced(self):
-        """Slug-style names: nested branch paths have slashes replaced."""
+        """Slug-style names: project slug stripped from multi-segment branches."""
         result = self.git.get_workspace_name_from_branch("ws", "feature/team/auth")
-        assert result == "ws-feature-team-auth"
+        assert result == "ws-feature-auth"
 
     # ── Display-style names (contain spaces) → bracket notation ──
 
@@ -81,7 +81,17 @@ class TestGetWorkspaceNameFromBranch:
         )
         assert result == (
             "[F] RE Sales - Direct Sales Helicopter View "
-            "[FEATURE-re_sales_direct-dev-setup]"
+            "[FEATURE-dev-setup]"
+        )
+
+    def test_display_name_opco_data_mart_no_duplication(self):
+        """Display names: sc30gld multi-segment branch doesn't duplicate slug."""
+        result = self.git.get_workspace_name_from_branch(
+            "SC30GLD-DM30 - Opco Data Mart",
+            "feature/sc30gld_dm30_opco_data_mart/test-access",
+        )
+        assert result == (
+            "[F] SC30GLD-DM30 - Opco Data Mart [FEATURE-test-access]"
         )
 
     def test_display_name_non_feature_branch(self):
