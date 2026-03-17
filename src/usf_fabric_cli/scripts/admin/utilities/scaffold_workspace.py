@@ -1151,62 +1151,79 @@ def scaffold_workspace(
         print(f"   [!] git_directory conflict: {conflict}")
     print(f"   Output:       {base_path.parent}/")
     print()
-    # -- Next steps (context-aware based on brownfield/templatise mode) --
+    # -- Next steps (context-aware) --
+    # Check if a concrete project already exists (skip new-project step if so)
+    project_dir = Path(f"config/projects/{slug}")
+    project_exists = project_dir.is_dir()
+
     print("Next steps:")
+    step = 1
+
+    print(f"   {step}. Review the generated configs")
+    step += 1
+
     if brownfield:
-        print("   1. Review the generated configs (principals are actual GUIDs)")
+        if not project_exists:
+            display = _strip_dev_marker(workspace_name)
+            print(
+                f"   {step}. Create a concrete project from the template:\n"
+                f"      make new-project project={slug} "
+                f'display="{display}" template={slug}'
+            )
+            step += 1
+        else:
+            print(
+                f"   -- Project '{slug}' already exists "
+                f"-- no need for 'make new-project'"
+            )
         print(
-            f"   2. Create a concrete project from the template:\n"
-            f"      make new-project project={slug} "
-            f'display="{_strip_dev_marker(workspace_name)}" template={slug}'
-        )
-        print(
-            "   3. Verify mandatory governance secrets exist in GitHub:\n"
+            f"   {step}. Verify mandatory governance secrets exist in GitHub:\n"
             "      AZURE_CLIENT_ID, ADDITIONAL_ADMIN_PRINCIPAL_ID, "
             "ADDITIONAL_CONTRIBUTOR_PRINCIPAL_ID"
         )
-        print(
-            "   4. Run the 'Setup Base Workspaces' workflow to create "
-            "Test/Prod workspaces + deployment pipeline"
-        )
+        step += 1
     elif templatise:
-        print("   1. Review the generated template (CHANGE-ME placeholders)")
         print(
-            f"   2. Create a project from this template:\n"
+            f"   {step}. Create a project from this template:\n"
             f"      make new-project project=<slug> "
             f'display="<Name>" template={slug}'
         )
+        step += 1
         print(
-            f"   3. Add required secrets to GitHub "
+            f"   {step}. Add required secrets to GitHub "
             f"(run: make show-secrets project=<slug>)"
         )
-        print(
-            "   4. Run the 'Setup Base Workspaces' "
-            "GitHub Actions workflow for this project"
-        )
+        step += 1
     else:
-        print("   1. Review the generated configs and adjust as needed")
         if discovered_principals:
             print(
-                "   2. Replace literal principal IDs with env var "
+                f"   {step}. Replace literal principal IDs with env var "
                 "references (${...}) for portability"
             )
-            step = 3
+            step += 1
+        if not project_exists:
+            display = _strip_dev_marker(workspace_name)
+            print(
+                f"   {step}. Create a concrete project from the template:\n"
+                f"      make new-project project={slug} "
+                f'display="{display}" template={slug}'
+            )
+            step += 1
         else:
-            step = 2
+            print(
+                f"   -- Project '{slug}' already exists "
+                f"-- no need for 'make new-project'"
+            )
         print(
-            f"   {step}. Create a concrete project from the template:\n"
-            f"      make new-project project={slug} "
-            f'display="{_strip_dev_marker(workspace_name)}" template={slug}'
-        )
-        print(
-            f"   {step + 1}. Add required secrets to GitHub "
+            f"   {step}. Add required secrets to GitHub "
             f"(run: make show-secrets project={slug})"
         )
-        print(
-            f"   {step + 2}. Run the 'Setup Base Workspaces' "
-            f"GitHub Actions workflow for this project"
-        )
+        step += 1
+
+    print(
+        f"   {step}. Run the 'Setup Base Workspaces' "
+        f"GitHub Actions workflow for this project"
+    )
     print()
 
     return results
