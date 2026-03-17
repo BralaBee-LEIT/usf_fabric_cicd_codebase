@@ -129,13 +129,12 @@ class TestBulkDestroyParseWorkspaceList:
         result = parse_workspace_list(str(ws_file))
         assert result == ["MyProject", "OtherProject"]
 
-    def test_skips_comments_headers_blank_lines(self, tmp_path):
+    def test_skips_comments_and_blank_lines(self, tmp_path):
         from usf_fabric_cli.scripts.admin.bulk_destroy import parse_workspace_list
 
         content = textwrap.dedent(
             """\
             # This is a comment
-            Name  Type  Id
 
             ActualWorkspace
             # Another comment
@@ -167,15 +166,23 @@ class TestBulkDestroyParseWorkspaceList:
         result = parse_workspace_list(str(ws_file))
         assert result == []
 
-    def test_multicolumn_extracts_first_column(self, tmp_path):
+    def test_workspace_names_with_spaces(self, tmp_path):
         from usf_fabric_cli.scripts.admin.bulk_destroy import parse_workspace_list
 
-        content = "MyWorkspace.Workspace  GUID-123  active\n"
+        content = (
+            "E2E Test Consumer [DEV]\n"
+            "edp-test-v17 [TEST]\n"
+            "e2e-test-scaffold [PROD]\n"
+        )
         ws_file = tmp_path / "workspaces.txt"
         ws_file.write_text(content)
 
         result = parse_workspace_list(str(ws_file))
-        assert result == ["MyWorkspace"]
+        assert result == [
+            "E2E Test Consumer [DEV]",
+            "edp-test-v17 [TEST]",
+            "e2e-test-scaffold [PROD]",
+        ]
 
 
 class TestBulkDestroyDryRun:

@@ -293,7 +293,7 @@ Scenario YAML files in `webapp/backend/app/content/scenarios/`:
 
 ## 📚 Key Documentation Files
 
-- **README.md**: Quick start, Make Targets Reference (49 targets), CLI Flags Reference
+- **README.md**: Quick start, Make Targets Reference (54 targets), CLI Flags Reference
 - **docs/01_User_Guides/03_Project_Configuration.md**: Comprehensive project config generation guide
 - **docs/01_User_Guides/07_Blueprint_Catalog.md**: All 11 blueprint templates with selection guidance
 - **.env.template**: Environment variable template with Azure credential structure

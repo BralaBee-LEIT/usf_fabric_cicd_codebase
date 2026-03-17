@@ -769,7 +769,10 @@ class TestCLIBulkDestroy:
         result = runner.invoke(app, ["bulk-destroy", str(ws_file), "--force"])
 
         assert result.exit_code == 0
-        mock_fn.assert_called_once_with(str(ws_file), False, True)
+        mock_fn.assert_called_once_with(
+            str(ws_file), False, True,
+            teardown_pipelines=True, delete_items=True,
+        )
 
     @patch("usf_fabric_cli.cli.bulk_destroy_fn")
     def test_bulk_destroy_dry_run(self, mock_fn, runner, tmp_path):
@@ -780,7 +783,27 @@ class TestCLIBulkDestroy:
         result = runner.invoke(app, ["bulk-destroy", str(ws_file), "--dry-run"])
 
         assert result.exit_code == 0
-        mock_fn.assert_called_once_with(str(ws_file), True, False)
+        mock_fn.assert_called_once_with(
+            str(ws_file), True, False,
+            teardown_pipelines=True, delete_items=True,
+        )
+
+    @patch("usf_fabric_cli.cli.bulk_destroy_fn")
+    def test_bulk_destroy_skip_flags(self, mock_fn, runner, tmp_path):
+        """Skip flags disable pipeline teardown and item deletion."""
+        ws_file = tmp_path / "workspaces.txt"
+        ws_file.write_text("ws-1\n")
+
+        result = runner.invoke(app, [
+            "bulk-destroy", str(ws_file), "--force",
+            "--skip-pipeline-teardown", "--skip-item-deletion",
+        ])
+
+        assert result.exit_code == 0
+        mock_fn.assert_called_once_with(
+            str(ws_file), False, True,
+            teardown_pipelines=False, delete_items=False,
+        )
 
 
 class TestCLIGenerate:
