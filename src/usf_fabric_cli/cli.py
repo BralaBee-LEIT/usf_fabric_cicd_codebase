@@ -1220,13 +1220,20 @@ def discover_folders_cmd(
         "--dry-run",
         help="Show what would change without writing to the config file",
     ),
+    prune: bool = typer.Option(
+        False,
+        "--prune",
+        help=(
+            "Remove folders and folder_rules from config that no longer "
+            "exist in the live workspace"
+        ),
+    ),
 ):
     """Discover new folders from a live workspace and update the YAML config.
 
-    Scans a workspace (typically a feature workspace) for folders and item
-    placements not yet in the project's base_workspace.yaml, then adds them.
-    Run this in CI before PR merge to capture folder changes made in feature
-    workspaces.
+    Scans a workspace for folders and item placements not yet in the project's
+    base_workspace.yaml, then adds them. With --prune, also removes folders
+    and rules that no longer exist in the live workspace.
 
     Examples:
 
@@ -1235,6 +1242,9 @@ def discover_folders_cmd(
 
         fabric-cicd discover-folders config/projects/edp/base_workspace.yaml \\
             --branch feature/edp/new-reports --dry-run
+
+        fabric-cicd discover-folders config/projects/edp/base_workspace.yaml \\
+            --workspace "EDP [DEV]" --prune
     """
     try:
         from usf_fabric_cli.scripts.admin.utilities.discover_folders import (
@@ -1246,14 +1256,24 @@ def discover_folders_cmd(
             workspace_name=workspace,
             branch=branch,
             dry_run=dry_run,
+            prune=prune,
         )
 
-        total = result["new_folders"] + result["new_rules"]
-        if total:
-            console.print(
-                f"\n[green]Discovered {result['new_folders']} new folder(s) "
-                f"and {result['new_rules']} new rule(s).[/green]"
-            )
+        added = result["new_folders"] + result["new_rules"]
+        pruned = result["stale_folders"] + result["stale_rules"]
+        if added or pruned:
+            parts = []
+            if added:
+                parts.append(
+                    f"{result['new_folders']} new folder(s), "
+                    f"{result['new_rules']} new rule(s)"
+                )
+            if pruned:
+                parts.append(
+                    f"{result['stale_folders']} stale folder(s), "
+                    f"{result['stale_rules']} stale rule(s) pruned"
+                )
+            console.print(f"\n[green]{'; '.join(parts)}.[/green]")
             if not dry_run:
                 console.print(f"[green]Updated: {result['config']}[/green]")
         else:
