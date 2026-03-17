@@ -1154,11 +1154,11 @@ def scaffold_workspace(
     # -- Next steps (context-aware based on brownfield/templatise mode) --
     print("Next steps:")
     if brownfield:
-        print("   1. Review the generated YAML configs (principals are actual GUIDs)")
+        print("   1. Review the generated configs (principals are actual GUIDs)")
         print(
-            f"   2. Copy output to your consumer repo:\n"
-            f"      cp {base_path.parent}/*.yaml "
-            f"<consumer_repo>/config/projects/{slug}/"
+            f"   2. Create a concrete project from the template:\n"
+            f"      make new-project project={slug} "
+            f'display="{_strip_dev_marker(workspace_name)}" template={slug}'
         )
         print(
             "   3. Verify mandatory governance secrets exist in GitHub:\n"
@@ -1185,7 +1185,7 @@ def scaffold_workspace(
             "GitHub Actions workflow for this project"
         )
     else:
-        print("   1. Review the generated YAML configs and adjust as needed")
+        print("   1. Review the generated configs and adjust as needed")
         if discovered_principals:
             print(
                 "   2. Replace literal principal IDs with env var "
@@ -1195,13 +1195,13 @@ def scaffold_workspace(
         else:
             step = 2
         print(
-            f"   {step}. Copy output to your consumer repo:\n"
-            f"      cp {base_path.parent}/*.yaml "
-            f"<consumer_repo>/config/projects/{slug}/"
+            f"   {step}. Create a concrete project from the template:\n"
+            f"      make new-project project={slug} "
+            f'display="{_strip_dev_marker(workspace_name)}" template={slug}'
         )
         print(
             f"   {step + 1}. Add required secrets to GitHub "
-            f"(run: make show-secrets project=<slug>)"
+            f"(run: make show-secrets project={slug})"
         )
         print(
             f"   {step + 2}. Run the 'Setup Base Workspaces' "
