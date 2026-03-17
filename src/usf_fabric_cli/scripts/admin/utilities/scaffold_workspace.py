@@ -1151,29 +1151,62 @@ def scaffold_workspace(
         print(f"   [!] git_directory conflict: {conflict}")
     print(f"   Output:       {base_path.parent}/")
     print()
+    # -- Next steps (context-aware based on brownfield/templatise mode) --
     print("Next steps:")
-    print("   1. Review the generated YAML template and adjust as needed")
-    if discovered_principals:
+    if brownfield:
+        print("   1. Review the generated YAML configs (principals are actual GUIDs)")
         print(
-            "   2. Replace literal principal IDs with env var "
-            "references (${...}) for portability"
+            f"   2. Copy output to your consumer repo:\n"
+            f"      cp {base_path.parent}/*.yaml "
+            f"<consumer_repo>/config/projects/{slug}/"
         )
-        step = 3
+        print(
+            "   3. Verify mandatory governance secrets exist in GitHub:\n"
+            "      AZURE_CLIENT_ID, ADDITIONAL_ADMIN_PRINCIPAL_ID, "
+            "ADDITIONAL_CONTRIBUTOR_PRINCIPAL_ID"
+        )
+        print(
+            "   4. Run the 'Setup Base Workspaces' workflow to create "
+            "Test/Prod workspaces + deployment pipeline"
+        )
+    elif templatise:
+        print("   1. Review the generated template (CHANGE-ME placeholders)")
+        print(
+            f"   2. Create a project from this template:\n"
+            f"      make new-project project=<slug> "
+            f'display="<Name>" template={slug}'
+        )
+        print(
+            f"   3. Add required secrets to GitHub "
+            f"(run: make show-secrets project=<slug>)"
+        )
+        print(
+            "   4. Run the 'Setup Base Workspaces' "
+            "GitHub Actions workflow for this project"
+        )
     else:
-        step = 2
-    print(
-        f"   {step}. Create a project from this template:\n"
-        f"      make new-project project=<slug> "
-        f'display="<Name>" template={slug}'
-    )
-    print(
-        f"   {step + 1}. Add required secrets to GitHub "
-        f"(run: make show-secrets project=<slug>)"
-    )
-    print(
-        f"   {step + 2}. Run the 'Setup Base Workspaces' "
-        f"GitHub Actions workflow for this project"
-    )
+        print("   1. Review the generated YAML configs and adjust as needed")
+        if discovered_principals:
+            print(
+                "   2. Replace literal principal IDs with env var "
+                "references (${...}) for portability"
+            )
+            step = 3
+        else:
+            step = 2
+        print(
+            f"   {step}. Copy output to your consumer repo:\n"
+            f"      cp {base_path.parent}/*.yaml "
+            f"<consumer_repo>/config/projects/{slug}/"
+        )
+        print(
+            f"   {step + 1}. Add required secrets to GitHub "
+            f"(run: make show-secrets project=<slug>)"
+        )
+        print(
+            f"   {step + 2}. Run the 'Setup Base Workspaces' "
+            f"GitHub Actions workflow for this project"
+        )
     print()
 
     return results
