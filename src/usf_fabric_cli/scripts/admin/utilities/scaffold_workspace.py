@@ -1152,9 +1152,28 @@ def scaffold_workspace(
     print(f"   Output:       {base_path.parent}/")
     print()
     # -- Next steps (context-aware) --
-    # Check if a concrete project already exists (skip new-project step if so)
+    # A project is fully onboarded when BOTH exist:
+    #   1. config/projects/<slug>/  (config directory)
+    #   2. slug appears in a workflow dropdown (e.g., setup-base-workspaces.yml)
+    # If only the directory exists (manual copy), we still need make new-project
+    # to wire up workflow dropdowns and env vars.
     project_dir = Path(f"config/projects/{slug}")
-    project_exists = project_dir.is_dir()
+    project_dir_exists = project_dir.is_dir()
+
+    # Check if slug appears in any workflow dropdown
+    in_workflow = False
+    workflows_dir = Path(".github/workflows")
+    if workflows_dir.is_dir():
+        for wf in workflows_dir.glob("*.yml"):
+            try:
+                content = wf.read_text(encoding="utf-8")
+                if f"- {slug}" in content:
+                    in_workflow = True
+                    break
+            except OSError:
+                pass
+
+    project_exists = project_dir_exists and in_workflow
 
     print("Next steps:")
     step = 1
