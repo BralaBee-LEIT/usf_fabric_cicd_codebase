@@ -181,25 +181,49 @@ generate: ## Generate project config (Usage: make generate org="Org" project="Pr
 	fi
 	export PYTHONPATH="$${PYTHONPATH}$(PATHSEP)$(PWD)/src" && $(PYTHON) -m usf_fabric_cli.scripts.dev.generate_project "$(org)" "$(project)" --template $(or $(template),medallion)
 
-scaffold: ## Scaffold config from live workspace (Usage: make scaffold workspace="Name" [output=path] [feature=1] [pipeline="Name"] [slug=override])
+scaffold: ## Scaffold config from live workspace (Usage: make scaffold workspace="Name" [brownfield=1] [slug=override])
 	@if [ -z "$(workspace)" ]; then \
-	printf "\033[31mError: 'workspace' argument is missing.\033[0m\n"; \
-		echo "Usage: make scaffold workspace=\"My Workspace [DEV]\" [output=path] [feature=1] [pipeline=\"Name\"] [slug=override]"; \
-	echo ""; \
-	echo "Options:"; \
-	echo "  workspace  -- Name of the existing Fabric workspace to scan (required)"; \
-	echo "  output     -- Output path for base_workspace.yaml (default: config/projects/_templates/<slug>/)"; \
-	echo "  feature=1  -- (Required for CI/CD flow) Set feature=1 to also generate feature_workspace.yaml"; \
-	echo "  pipeline   -- (Required for Prod promotion) Pipeline name to scaffold dev/test/prod stages"; \
-	echo "  slug       -- Override the auto-generated project slug"; \
-	echo "  test_ws    -- Explicit Test stage workspace name"; \
-	echo "  prod_ws    -- Explicit Production stage workspace name"; \
-	echo "  brownfield=1 -- Emit discovered principals as active entries (for existing workspaces)"; \
-	echo ""; \
-	echo "Example:"; \
-		echo "  make scaffold workspace=\"Sales\" slug=sales_analytics feature=true pipeline=\"Sales Pipeline\""; \		echo ""; \
-		printf "\033[33mNote: Do not put spaces around the '=' sign (e.g., workspace= \"...\").\033[0m\n"; \
-		echo ""; \	exit 1; \
+		printf "\033[31mError: 'workspace' argument is missing.\033[0m\n"; \
+		echo ""; \
+		echo "Scaffold a YAML config by scanning a live Fabric workspace."; \
+		echo "Discovers folders, items, principals, Git connection, and"; \
+		echo "auto-generates deployment pipeline + feature workspace configs."; \
+		echo ""; \
+		printf "\033[1mUsage:\033[0m\n"; \
+		echo "  make scaffold workspace=\"My Workspace [DEV]\""; \
+		echo ""; \
+		printf "\033[1mOptions:\033[0m\n"; \
+		echo "  workspace     -- Name of the existing Fabric workspace to scan (required)"; \
+		echo "  brownfield=1  -- Emit discovered principals as active YAML entries with actual"; \
+		echo "                   GUIDs. Use for EXISTING workspaces that already have principals."; \
+		echo "                   Without this flag, principals are commented out as reference and"; \
+		echo "                   placeholder env vars are generated instead."; \
+		echo "  slug          -- Override the auto-generated project slug"; \
+		echo "  output        -- Output path for base_workspace.yaml"; \
+		echo "                   (default: config/projects/_templates/<slug>/)"; \
+		echo "  pipeline      -- Override the auto-inferred deployment pipeline name"; \
+		echo "  test_ws       -- Explicit Test stage workspace name"; \
+		echo "  prod_ws       -- Explicit Production stage workspace name"; \
+		echo "  skip_pipeline=1 -- Do not include the deployment_pipeline section"; \
+		echo "  skip_feature=1  -- Do not generate feature_workspace.yaml"; \
+		echo ""; \
+		printf "\033[1mExamples:\033[0m\n"; \
+		echo "  # Scaffold an EXISTING workspace (brownfield -- principals as actual GUIDs)"; \
+		echo '  make scaffold workspace="SC30GLD-DM30 - Opco Data Mart [DEV]" brownfield=1'; \
+		echo ""; \
+		echo "  # Scaffold for a NEW project (greenfield -- placeholder env vars for principals)"; \
+		echo '  make scaffold workspace="Sales [DEV]" slug=sales_analytics'; \
+		echo ""; \
+		echo "  # Scaffold without pipeline or feature workspace"; \
+		echo '  make scaffold workspace="My WS [DEV]" skip_pipeline=1 skip_feature=1'; \
+		echo ""; \
+		printf "\033[1mAuto-generated outputs:\033[0m\n"; \
+		echo "  base_workspace.yaml     -- Full workspace config with pipeline + principals"; \
+		echo "  feature_workspace.yaml  -- Ephemeral feature branch workspace config"; \
+		echo ""; \
+		printf "\033[33mNote: Do not put spaces around the '=' sign.\033[0m\n"; \
+		echo ""; \
+		exit 1; \
 	fi
 	export PYTHONPATH="$${PYTHONPATH}$(PATHSEP)$(PWD)/src" && $(PYTHON) -m usf_fabric_cli.scripts.admin.utilities.scaffold_workspace "$(workspace)" \
 		$(if $(output),--output "$(output)",) \
@@ -208,7 +232,9 @@ scaffold: ## Scaffold config from live workspace (Usage: make scaffold workspace
 		$(if $(slug),--project-slug "$(slug)",) \
 		$(if $(test_ws),--test-workspace-name "$(test_ws)",) \
 		$(if $(prod_ws),--prod-workspace-name "$(prod_ws)",) \
-		$(if $(brownfield),--brownfield,)
+		$(if $(brownfield),--brownfield,) \
+		$(if $(skip_pipeline),--skip-pipeline,) \
+		$(if $(skip_feature),--skip-feature-template,)
 
 discover-folders: ## Discover new folders from live workspace and update YAML config (Usage: make discover-folders config=path/to/config.yaml [workspace="Name"] [branch=feature/x] [dry_run=1])
 	@if [ -z "$(config)" ]; then \
