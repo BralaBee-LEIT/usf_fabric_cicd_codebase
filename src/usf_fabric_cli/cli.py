@@ -1370,6 +1370,15 @@ def scaffold(
             "making the output a reusable template for 'make new-project'"
         ),
     ),
+    brownfield: bool = typer.Option(
+        False,
+        "--brownfield",
+        help=(
+            "Emit discovered principals as active YAML entries with actual GUIDs "
+            "instead of placeholder env vars. Use for existing workspaces that "
+            "already have principals which need to propagate to Test/Prod/Feature."
+        ),
+    ),
 ):
     """Scaffold a YAML config from an existing Fabric workspace.
 
@@ -1383,6 +1392,8 @@ def scaffold(
     Examples:
 
         fabric-cicd scaffold "EDP [DEV]"
+
+        fabric-cicd scaffold "SC30GLD [DEV]" --brownfield
 
         fabric-cicd scaffold "Sales [DEV]" -p "Sales - Pipeline"
 
@@ -1406,6 +1417,7 @@ def scaffold(
             templatise=templatise,
             skip_pipeline=skip_pipeline,
             skip_feature_template=skip_feature_template,
+            brownfield=brownfield,
         )
 
         if not results:
