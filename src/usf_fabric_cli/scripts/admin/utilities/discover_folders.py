@@ -181,8 +181,10 @@ def _update_yaml_file(
         # Match a two-line block: "  - type: X\n    folder: Y\n"
         # Handle quoted and unquoted folder values
         pattern = re.compile(
-            r'^[ \t]*-\s+type:\s+' + re.escape(rule_type)
-            + r'\s*\n[ \t]+folder:\s+["\']?' + re.escape(rule_folder)
+            r"^[ \t]*-\s+type:\s+"
+            + re.escape(rule_type)
+            + r'\s*\n[ \t]+folder:\s+["\']?'
+            + re.escape(rule_folder)
             + r'["\']?\s*\n',
             re.MULTILINE,
         )
@@ -310,7 +312,10 @@ def discover_folders(
 
     # Compute diff (including stale items when pruning)
     new_folders, new_rules, stale_folders, stale_rules = _compute_diff(
-        config, live_folders, live_rules, prune=prune,
+        config,
+        live_folders,
+        live_rules,
+        prune=prune,
     )
 
     has_additions = bool(new_folders or new_rules)
@@ -360,7 +365,12 @@ def discover_folders(
 
     # Update the YAML file
     updated_content = _update_yaml_file(
-        path, raw_content, new_folders, new_rules, stale_folders, stale_rules,
+        path,
+        raw_content,
+        new_folders,
+        new_rules,
+        stale_folders,
+        stale_rules,
     )
     path.write_text(updated_content, encoding="utf-8")
     print(f"\nUpdated: {path}")
